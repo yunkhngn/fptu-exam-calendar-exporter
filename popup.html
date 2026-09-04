@@ -60,15 +60,17 @@
     </header>
 
     <section id="examList" class="popup-list">
-      <div class="tab-navigation" role="tablist">
-        <button type="button" id="scheduleTabBtn" class="tab-btn active" role="tab" aria-selected="true">
-          <svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg>
-          <span class="tab-btn__text">Lịch học</span>
-        </button>
-        <button type="button" id="upcomingTab" class="tab-btn" role="tab" aria-selected="false">
-          <svg class="icon" aria-hidden="true"><use href="#icon-clipboard"/></svg>
-          <span class="tab-btn__text">Kỳ thi</span>
-        </button>
+      <div class="tab-bar">
+        <div class="tab-navigation" role="tablist">
+          <button type="button" id="scheduleTabBtn" class="tab-btn active" role="tab" aria-selected="true">
+            <svg class="icon" aria-hidden="true"><use href="#icon-book"/></svg>
+            <span class="tab-btn__text">Lịch học</span>
+          </button>
+          <button type="button" id="upcomingTab" class="tab-btn" role="tab" aria-selected="false">
+            <svg class="icon" aria-hidden="true"><use href="#icon-clipboard"/></svg>
+            <span class="tab-btn__text">Kỳ thi</span>
+          </button>
+        </div>
       </div>
 
       <div id="examSyncLoading" class="exam-sync-feedback" hidden>Đang tải lịch thi…</div>

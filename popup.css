@@ -143,12 +143,29 @@ html, body {
   background: var(--bg-app);
 }
 
-/* Tabs: segment control */
+/* Tabs: segment control, pinned to the top of the scrolling list.
+   The bar bleeds over .popup-list's 12px/16px padding so cards cannot
+   scroll through the gutters beside it; its own padding restores the
+   spacing the pill had before. */
+.tab-bar {
+  position: sticky;
+  top: -12px;   /* cancels .popup-list's padding-top so nothing scrolls through above the bar */
+  z-index: 5;
+  margin: -12px -16px 6px;
+  padding: 8px 12px;
+  background: var(--bg-app);
+  transition: box-shadow 0.15s ease;
+}
+
+.tab-bar.is-stuck {
+  box-shadow: 0 1px 0 var(--border), 0 8px 10px -10px rgba(15, 23, 42, 0.25);
+}
+
 .tab-navigation {
   display: flex;
   gap: 4px;
   padding: 4px;
-  margin: -4px -4px 14px -4px;
+  margin: 0;
   background: var(--bg-subtle);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);

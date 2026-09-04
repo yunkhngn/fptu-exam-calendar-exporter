@@ -179,6 +179,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (upcomingTab) upcomingTab.addEventListener("click", () => activateTab("exams"));
     if (scheduleTabBtn) scheduleTabBtn.addEventListener("click", () => activateTab("schedule"));
 
+    // The tab bar is position:sticky; drop a shadow on it only once content
+    // is actually scrolling underneath, so it stays flat at rest.
+    const tabBar = document.querySelector(".tab-bar");
+    if (tabBar && examListSection) {
+      const syncStuck = () => tabBar.classList.toggle("is-stuck", examListSection.scrollTop > 0);
+      examListSection.addEventListener("scroll", syncStuck, { passive: true });
+      syncStuck();
+    }
+
     // Mặc định: Lịch học (khớp tab active trên HTML)
     activateTab("schedule");
   }
@@ -1394,6 +1403,12 @@ function autoSyncSchedule() {
   });
 }
 
+/** Mirrors the "Lịch học (n)" count that renderClassSchedule puts on its own tab. */
+function setExamTabCount(upcomingCount) {
+  const label = document.getElementById("upcomingTab")?.querySelector(".tab-btn__text");
+  if (label) label.textContent = upcomingCount ? `Kỳ thi (${upcomingCount})` : "Kỳ thi";
+}
+
 function renderExamList(events) {
   if (!Array.isArray(events)) events = [];
   const upcomingContainer = document.getElementById("upcomingExams");
@@ -1425,6 +1440,7 @@ function renderExamList(events) {
     emptyDiv.className = "exam-list-hint";
     emptyDiv.textContent = "Không có lịch thi nào.";
     upcomingContainer.appendChild(emptyDiv);
+    setExamTabCount(0);
     return;
   }
 
@@ -1451,6 +1467,7 @@ function renderExamList(events) {
   // Update headings with counts
   upHead.textContent = `Chưa thi (${upcomingExams.length})`;
   compHead.textContent = `Đã thi (${completedExams.length})`;
+  setExamTabCount(upcomingExams.length);
 
   // Render upcoming exams
   if (upcomingExams.length === 0) {
