@@ -122,8 +122,10 @@ test("the class filter button opens its modal and applies a range", async () => 
   const modal = doc.getElementById("scheduleFilterModal");
 
   assert.ok(btn, "Lọc sits beside Xoá in the schedule actions");
-  assert.strictEqual(btn.classList.contains("action-btn--icon"), true,
-    "secondary actions are icon-only, matching the exam row's toolbar shape");
+  assert.strictEqual(btn.classList.contains("action-btn--compact"), true,
+    "secondary actions size to icon + short label, matching the exam row's toolbar shape");
+  assert.strictEqual(btn.querySelector(".action-btn__label").textContent.trim(), "Lọc",
+    "label stays visible so the icon alone doesn't have to carry the meaning");
   assert.strictEqual(modal.style.display, "none");
   assert.strictEqual(btn.classList.contains("action-btn--filtering"), false, "untinted while showing all");
 
@@ -197,19 +199,28 @@ test("every range in the modal is one the filter understands", async () => {
     "the radio list and lib/schedule.js must not drift apart");
 });
 
-test("secondary action buttons keep an accessible name once icon-only", async () => {
+test("secondary action buttons show a short label, not just an icon", async () => {
   const { window } = await boot();
   const doc = window.document;
-  for (const id of ["syncButton", "settingsButton", "syncScheduleBtn", "scheduleFilterBtn", "clearBtn"]) {
+  const expected = {
+    syncButton: "Đồng bộ",
+    settingsButton: "Lọc",
+    syncScheduleBtn: "Đồng bộ",
+    weekRangeBtn: "Nhiều tuần",
+    scheduleFilterBtn: "Lọc",
+    clearBtn: "Xoá",
+  };
+  for (const [id, text] of Object.entries(expected)) {
     const btn = doc.getElementById(id);
-    assert.strictEqual(btn.classList.contains("action-btn--icon"), true, `${id} is icon-only`);
-    assert.ok(btn.title.length > 0, `${id} keeps a tooltip via title`);
+    assert.strictEqual(btn.classList.contains("action-btn--compact"), true, `${id} sizes to its content`);
+    assert.ok(btn.title.length > text.length, `${id} keeps the fuller phrase as a tooltip via title`);
     const label = btn.querySelector(".action-btn__label");
-    assert.ok(label && label.textContent.trim().length > 0, `${id} keeps a text label for screen readers`);
+    assert.strictEqual(label.textContent.trim(), text, `${id} shows a visible short label`);
+    assert.notStrictEqual(window.getComputedStyle(label).position, "absolute", `${id} label is not visually hidden`);
   }
-  // Tải lịch is the one primary, labeled action in each row
+  // Tải lịch is the one full-width, fully-labeled primary action in each row
   for (const id of ["exportBtn", "downloadBtn"]) {
-    assert.strictEqual(doc.getElementById(id).classList.contains("action-btn--icon"), false, `${id} stays labeled`);
+    assert.strictEqual(doc.getElementById(id).classList.contains("action-btn--compact"), false, `${id} stays the growing primary`);
   }
 });
 
@@ -220,7 +231,8 @@ test("Đồng bộ nhiều tuần moved into the row as an icon button that open
   const modal = doc.getElementById("weekRangeModal");
 
   assert.ok(btn, "trigger sits in the schedule action row");
-  assert.strictEqual(btn.classList.contains("action-btn--icon"), true, "icon-only, like the other secondary actions");
+  assert.strictEqual(btn.classList.contains("action-btn--compact"), true, "icon + short label, like the other secondary actions");
+  assert.strictEqual(btn.querySelector(".action-btn__label").textContent.trim(), "Nhiều tuần");
   assert.strictEqual(btn.closest("#scheduleActions") !== null, true, "hidden/shown together with the schedule row");
   assert.strictEqual(modal.style.display, "none");
 

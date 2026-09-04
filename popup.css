@@ -444,29 +444,14 @@ html, body {
 }
 
 /*
- * Secondary/tertiary actions (sync, filter, delete) collapse to a square icon
- * button — same toolbar shape as Notion/Linear/VS Code: one labeled primary
- * action plus icon-only supporting ones. The label stays in the DOM (visually
- * hidden) as the accessible name; `title` on the button still gives a hover
- * tooltip.
+ * Secondary/tertiary actions (sync, multi-week, filter, delete) size to their
+ * icon + short label instead of stretching with the row, so the one primary,
+ * fully-labeled action (Tải lịch) keeps most of the width without the others
+ * losing their text — icon-only tooltips turned out not to read as buttons.
  */
-.action-btn--icon {
+.action-btn--compact {
   flex: 0 0 auto;
-  width: 36px;
-  padding: 0;
-  gap: 0;
-}
-
-.action-btn--icon .action-btn__label {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+  padding: 8px 10px;
 }
 
 .action-btn:active {
