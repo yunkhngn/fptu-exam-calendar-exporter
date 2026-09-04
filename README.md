@@ -77,6 +77,11 @@ fptu-schedule/
 ├── popup.css
 ├── popup.js
 ├── content.js
+├── lib/
+│   ├── ics.js                  # iCalendar output (escaping, folding, both calendars)
+│   └── schedule.js             # Class-schedule dedupe/merge, shared with the worker
+├── tests/                      # node --test suites (npm test)
+├── package.json                # devDependency: jsdom, for the tests only
 ├── study-sources.json          # Optional per-course study links
 ├── study-suggestions.js          # Resolve suggestions + fallbacks
 ├── icon-16.png / icon-48.png / icon-128.png
@@ -87,6 +92,17 @@ fptu-schedule/
 └── README.md
 ```
 
+## Tests
+
+```bash
+npm install   # jsdom, used only by the tests
+npm test
+```
+
+Covers `.ics` output (escaping, folding, timestamps), class-schedule dedupe/merge, the FAP
+weekly-table scraper (both header shapes, month boundaries, unparseable cells) and popup
+start-up. The extension itself ships as plain files — npm is not part of the build.
+
 ## Contributing
 
 1. Fork the repo  
@@ -95,9 +111,26 @@ fptu-schedule/
 
 ## Changelog
 
-### v3.2.0 (current)
+### v3.2.1 (current)
+- **Fix:** the weekly scraper dropped every class in the last day column. FAP renders
+  the `Slot` corner cell with `rowspan="2"`, so the date header row has one cell fewer;
+  the old code sliced both header rows alike and compensated with a "subtract one day"
+  patch. Headers are now aligned to the body's day columns, and the whole week comes through.
+- **Fix:** `.ics` correctness — TEXT values are escaped (a comma in "MULTIPLE_CHOICES, ESSAY"
+  no longer acts as a separator), content lines are folded at 75 octets without splitting
+  UTF-8, and the class export no longer emits invalid `DTSTAMP:…ZZ` timestamps.
+- Weekly scraping now reports cells it could not parse instead of skipping them silently,
+  so a FAP redesign surfaces as a warning rather than a shrinking timetable.
+- Blocking `alert()` dialogs replaced with toasts; the tab bar sticks to the top while the
+  list scrolls; the exam tab shows an upcoming count like the class tab.
+- `lib/` extracted from `popup.js`/`background.js` so both share one implementation, plus a
+  `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
+- Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
+  and `shared-schedule.js`.
+- Manifest **3.2.1**; release zip `fptu-schedule.zip`
+
+### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
-- Manifest **3.2.0**; release zip `fptu-schedule.zip`
 
 ### v3.x (high level)
 - **Lịch học** tab, class timetable extraction and `.ics` export  

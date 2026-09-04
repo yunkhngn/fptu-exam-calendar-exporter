@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "FPTU Schedule",
   "description": "Modern Chrome extension for FPT University students to view and export schedules from FAP system to .ics calendar files.",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "permissions": [
     "scripting",
     "tabs",
@@ -34,7 +34,9 @@
         "https://fap.fpt.edu.vn/Schedule/*",
         "https://fap.fpt.edu.vn/Report/*"
       ],
-      "js": ["content.js"],
+      "js": [
+        "content.js"
+      ],
       "run_at": "document_idle"
     }
   ]
