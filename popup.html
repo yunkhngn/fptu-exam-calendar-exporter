@@ -106,10 +106,16 @@
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
           <span class="action-btn__label">Tải lịch</span>
         </button>
-        <button type="button" id="clearBtn" class="action-btn action-btn--danger" title="Xoá lịch học đã lưu">
-          <svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg>
-          <span class="action-btn__label">Xoá</span>
-        </button>
+        <div class="action-btn-pair">
+          <button type="button" id="scheduleFilterBtn" class="action-btn action-btn--ghost" title="Lọc lịch học theo khoảng thời gian">
+            <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
+            <span class="action-btn__label">Lọc</span>
+          </button>
+          <button type="button" id="clearBtn" class="action-btn action-btn--danger" title="Xoá lịch học đã lưu">
+            <svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg>
+            <span class="action-btn__label">Xoá</span>
+          </button>
+        </div>
       </div>
 
       <details id="scheduleWeekRangeBlock" class="week-range-block">
@@ -140,6 +146,42 @@
           <div id="weekRangeStatus" class="week-range-status" hidden role="status"></div>
         </div>
       </details>
+    </div>
+
+    <div id="scheduleFilterModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="scheduleFilterTitle">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="scheduleFilterTitle">Lọc lịch học</h3>
+          <button type="button" id="closeScheduleFilter" class="close-btn" aria-label="Đóng">
+            <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="filter-hint">Khoảng tính từ hôm nay; tiết đã qua được ẩn.</p>
+          <div class="filter-group" role="radiogroup" aria-labelledby="scheduleFilterTitle">
+            <label class="filter-item">
+              <input type="radio" name="classRange" value="all" checked>
+              <span>Tất cả<span class="filter-item__note">kể cả tiết đã học</span></span>
+            </label>
+            <label class="filter-item">
+              <input type="radio" name="classRange" value="today">
+              <span>Hôm nay</span>
+            </label>
+            <label class="filter-item">
+              <input type="radio" name="classRange" value="week">
+              <span>Tuần này<span class="filter-item__note">đến hết Chủ nhật</span></span>
+            </label>
+            <label class="filter-item">
+              <input type="radio" name="classRange" value="2weeks">
+              <span>2 tuần<span class="filter-item__note">hết tuần sau</span></span>
+            </label>
+            <label class="filter-item">
+              <input type="radio" name="classRange" value="month">
+              <span>Tháng này<span class="filter-item__note">đến hết tháng</span></span>
+            </label>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div id="filterModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="filterModalTitle">

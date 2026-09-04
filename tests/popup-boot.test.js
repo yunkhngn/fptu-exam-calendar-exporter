@@ -114,3 +114,35 @@ test("no blocking alert() survives in the popup", () => {
   const src = fs.readFileSync(path.join(root, "popup.js"), "utf8");
   assert.strictEqual(/\balert\s*\(/.test(src), false, "errors go through showError/showToast");
 });
+
+test("the class filter button opens its modal and applies a range", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  const btn = doc.getElementById("scheduleFilterBtn");
+  const modal = doc.getElementById("scheduleFilterModal");
+
+  assert.ok(btn, "Lọc sits beside Xoá in the schedule actions");
+  assert.strictEqual(doc.querySelectorAll(".action-btn-pair .action-btn").length, 2,
+    "the two share one slot of the row");
+  assert.strictEqual(modal.style.display, "none");
+  assert.strictEqual(btn.classList.contains("action-btn--filtering"), false, "untinted while showing all");
+
+  btn.dispatchEvent(new window.Event("click"));
+  assert.strictEqual(modal.style.display, "block", "clicking Lọc opens the modal");
+
+  const week = doc.querySelector('input[name="classRange"][value="week"]');
+  week.checked = true;
+  week.dispatchEvent(new window.Event("change"));
+
+  assert.strictEqual(window.localStorage.getItem("classRangeFilter"), "week", "choice is remembered");
+  assert.strictEqual(modal.style.display, "none", "picking a range closes the modal");
+  assert.strictEqual(btn.classList.contains("action-btn--filtering"), true, "button shows a range is active");
+});
+
+test("every range in the modal is one the filter understands", async () => {
+  const { window } = await boot();
+  const { CLASS_RANGE_MODES } = require("../lib/schedule.js");
+  const offered = [...window.document.querySelectorAll('input[name="classRange"]')].map((i) => i.value);
+  assert.deepStrictEqual(offered, CLASS_RANGE_MODES,
+    "the radio list and lib/schedule.js must not drift apart");
+});

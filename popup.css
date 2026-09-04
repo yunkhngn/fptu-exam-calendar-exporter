@@ -443,6 +443,19 @@ html, body {
   min-width: 0;
 }
 
+/* Two buttons sharing one slot of the action row. */
+.action-btn-pair {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.action-btn-pair .action-btn {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .action-btn:active {
   transform: translateY(1px);
 }
@@ -616,7 +629,28 @@ html, body {
   color: var(--text);
 }
 
-.filter-item input[type="checkbox"] {
+.filter-hint {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.filter-item__note {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+/* Marks the Lọc button while a range is hiding part of the timetable. */
+.action-btn--filtering {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.filter-item input[type="checkbox"],
+.filter-item input[type="radio"] {
   width: 16px;
   height: 16px;
   cursor: pointer;

@@ -405,12 +405,17 @@ function renderClassSchedule(schedule) {
   // Clear existing
   while (container.firstChild) container.removeChild(container.firstChild);
 
+  // The range filter only narrows what is shown; nothing is removed from storage.
+  const stored = Array.isArray(schedule) ? schedule : [];
+  const mode = getClassRangeFilter();
+  const visible = filterClassScheduleByRange(stored, mode);
+  syncClassFilterButton();
+
   // Update tab label with count
   const btn = document.getElementById("scheduleTabBtn");
   const tabText = btn?.querySelector(".tab-btn__text");
   if (tabText) {
-    const n = Array.isArray(schedule) ? schedule.length : 0;
-    tabText.textContent = n ? `Lịch học (${n})` : "Lịch học";
+    tabText.textContent = visible.length ? `Lịch học (${visible.length})` : "Lịch học";
   }
 
   // Normalize and sort schedule by date/time ascending
@@ -425,12 +430,14 @@ function renderClassSchedule(schedule) {
     }
     return Number.MAX_SAFE_INTEGER; // push unknown dates to the end
   };
-  const sorted = Array.isArray(schedule) ? [...schedule].sort((a,b) => toMillis(a) - toMillis(b)) : [];
+  const sorted = [...visible].sort((a, b) => toMillis(a) - toMillis(b));
 
-  if (!Array.isArray(schedule) || schedule.length === 0) {
+  if (visible.length === 0) {
     const empty = document.createElement("div");
     empty.className = "schedule-empty";
-    empty.textContent = "Chưa có lịch học. Nhấn \"Sync lịch học\" để tải.";
+    empty.textContent = stored.length
+      ? "Không có tiết học nào trong khoảng đã lọc. Đổi bộ lọc để xem thêm."
+      : "Chưa có lịch học. Nhấn «Đồng bộ lịch học» để tải.";
     container.appendChild(empty);
     return;
   }
@@ -651,6 +658,49 @@ window.renderClassSchedule = renderClassSchedule;
     clearBtn.addEventListener("click", handleClearClassSchedule);
   }
 
+  const scheduleFilterBtn = document.getElementById("scheduleFilterBtn");
+  const scheduleFilterModal = document.getElementById("scheduleFilterModal");
+  const closeScheduleFilter = document.getElementById("closeScheduleFilter");
+  const rangeInputs = () => document.querySelectorAll('input[name="classRange"]');
+
+  const closeScheduleFilterModal = () => {
+    if (scheduleFilterModal) scheduleFilterModal.style.display = "none";
+  };
+
+  if (scheduleFilterBtn && scheduleFilterModal) {
+    scheduleFilterBtn.addEventListener("click", () => {
+      const current = getClassRangeFilter();
+      rangeInputs().forEach((input) => {
+        input.checked = input.value === current;
+      });
+      scheduleFilterModal.style.display = "block";
+    });
+
+    // Picking a range applies it straight away — one choice, no Apply button needed.
+    rangeInputs().forEach((input) => {
+      input.addEventListener("change", () => {
+        if (!input.checked) return;
+        setClassRangeFilter(input.value);
+        closeScheduleFilterModal();
+        let saved = [];
+        try {
+          saved = JSON.parse(localStorage.getItem("classSchedule") || "[]");
+        } catch (_) {}
+        renderClassSchedule(saved);
+      });
+    });
+
+    scheduleFilterModal.addEventListener("click", (e) => {
+      if (e.target === scheduleFilterModal) closeScheduleFilterModal();
+    });
+  }
+
+  if (closeScheduleFilter) {
+    closeScheduleFilter.addEventListener("click", closeScheduleFilterModal);
+  }
+
+  syncClassFilterButton();
+
   const loadWeekOptionsBtn = document.getElementById("loadWeekOptionsBtn");
   const syncWeekRangeBtn = document.getElementById("syncWeekRangeBtn");
   if (loadWeekOptionsBtn) {
@@ -660,6 +710,29 @@ window.renderClassSchedule = renderClassSchedule;
     syncWeekRangeBtn.addEventListener("click", handleSyncClassScheduleWeekRange);
   }
 });
+
+const CLASS_RANGE_STORAGE_KEY = "classRangeFilter";
+
+function getClassRangeFilter() {
+  try {
+    const saved = localStorage.getItem(CLASS_RANGE_STORAGE_KEY);
+    return CLASS_RANGE_MODES.includes(saved) ? saved : "all";
+  } catch (_) {
+    return "all";
+  }
+}
+
+function setClassRangeFilter(mode) {
+  try {
+    localStorage.setItem(CLASS_RANGE_STORAGE_KEY, mode);
+  } catch (_) {}
+}
+
+/** Tints the Lọc button while a range is hiding part of the timetable. */
+function syncClassFilterButton() {
+  const btn = document.getElementById("scheduleFilterBtn");
+  if (btn) btn.classList.toggle("action-btn--filtering", getClassRangeFilter() !== "all");
+}
 
 function persistClassSchedule(jsonString) {
   try {

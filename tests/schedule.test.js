@@ -55,3 +55,90 @@ test("merging into an empty schedule keeps everything", () => {
   assert.strictEqual(uniqueNewEvents.length, 2);
   assert.strictEqual(merged.length, 2);
 });
+
+const {
+  classScheduleRangeBounds,
+  filterClassScheduleByRange,
+  CLASS_RANGE_MODES,
+} = require("../lib/schedule.js");
+
+const at = (y, m, d) => new Date(y, m - 1, d);
+const span = (mode, now) => {
+  const b = classScheduleRangeBounds(mode, now);
+  return b && [b.from.getDate(), b.from.getMonth() + 1, b.to.getDate(), b.to.getMonth() + 1];
+};
+
+test("ranges run from today to a calendar boundary", () => {
+  const wed = at(2026, 9, 2); // Wednesday
+  assert.strictEqual(classScheduleRangeBounds("all", wed), null, "'all' means no bounds");
+  assert.deepStrictEqual(span("today", wed), [2, 9, 2, 9]);
+  assert.deepStrictEqual(span("week", wed), [2, 9, 6, 9], "to Sunday of this week");
+  assert.deepStrictEqual(span("2weeks", wed), [2, 9, 13, 9], "to Sunday of next week");
+  assert.deepStrictEqual(span("month", wed), [2, 9, 30, 9], "to the last day of the month");
+});
+
+test("a Sunday is still the end of its own week, not the start of the next", () => {
+  const sun = at(2026, 9, 6);
+  assert.deepStrictEqual(span("week", sun), [6, 9, 6, 9], "week collapses to today");
+  assert.deepStrictEqual(span("2weeks", sun), [6, 9, 13, 9]);
+});
+
+test("a Monday spans its full week", () => {
+  const mon = at(2026, 9, 7);
+  assert.deepStrictEqual(span("week", mon), [7, 9, 13, 9]);
+});
+
+test("ranges cross month and year boundaries", () => {
+  assert.deepStrictEqual(span("week", at(2026, 9, 30)), [30, 9, 4, 10], "week runs into October");
+  assert.deepStrictEqual(span("month", at(2026, 9, 30)), [30, 9, 30, 9], "month stops at the 30th");
+  assert.deepStrictEqual(span("month", at(2026, 2, 10)), [10, 2, 28, 2], "February, non-leap");
+  assert.deepStrictEqual(span("month", at(2024, 2, 10)), [10, 2, 29, 2], "February, leap year");
+  assert.deepStrictEqual(span("week", at(2026, 12, 31)), [31, 12, 3, 1], "week runs into January");
+});
+
+const onDay = (title, y, m, d) => ({
+  title,
+  rawDate: { year: y, month: m, day: d, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 },
+});
+
+test("filtering keeps only what falls inside the range", () => {
+  const wed = at(2026, 9, 2);
+  const schedule = [
+    onDay("PAST", 2026, 9, 1),   // yesterday
+    onDay("TODAY", 2026, 9, 2),
+    onDay("FRI", 2026, 9, 4),
+    onDay("NEXT_WEEK", 2026, 9, 9),
+    onDay("LATER", 2026, 9, 25),
+    onDay("NEXT_MONTH", 2026, 10, 5),
+  ];
+  const titles = (mode) => filterClassScheduleByRange(schedule, mode, wed).map((e) => e.title);
+
+  assert.deepStrictEqual(titles("all"), schedule.map((e) => e.title), "'all' keeps everything, past included");
+  assert.deepStrictEqual(titles("today"), ["TODAY"]);
+  assert.deepStrictEqual(titles("week"), ["TODAY", "FRI"]);
+  assert.deepStrictEqual(titles("2weeks"), ["TODAY", "FRI", "NEXT_WEEK"]);
+  assert.deepStrictEqual(titles("month"), ["TODAY", "FRI", "NEXT_WEEK", "LATER"]);
+
+  for (const mode of CLASS_RANGE_MODES) {
+    if (mode === "all") continue;
+    assert.ok(!titles(mode).includes("PAST"), `${mode} hides classes that already happened`);
+  }
+});
+
+test("filtering never mutates the stored schedule", () => {
+  const schedule = [onDay("A", 2026, 9, 1), onDay("B", 2026, 9, 2)];
+  filterClassScheduleByRange(schedule, "today", at(2026, 9, 2));
+  assert.strictEqual(schedule.length, 2);
+});
+
+test("events with no usable date are kept rather than vanishing", () => {
+  const wed = at(2026, 9, 2);
+  const odd = { title: "NO_DATE" };
+  assert.deepStrictEqual(filterClassScheduleByRange([odd], "today", wed).map((e) => e.title), ["NO_DATE"]);
+  assert.deepStrictEqual(filterClassScheduleByRange(null, "today", wed), []);
+});
+
+test("an unknown mode falls back to showing everything", () => {
+  const schedule = [onDay("A", 2026, 9, 1), onDay("B", 2026, 9, 20)];
+  assert.strictEqual(filterClassScheduleByRange(schedule, "nonsense", at(2026, 9, 2)).length, 2);
+});
