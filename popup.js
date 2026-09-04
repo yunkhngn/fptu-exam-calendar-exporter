@@ -38,8 +38,8 @@ document.addEventListener("DOMContentLoaded", () => {
         if (chrome.runtime.lastError) return;
         if (r.weekRangeSyncRunning) {
           weekRangeSyncInProgress = true;
-          const wrb = document.getElementById("scheduleWeekRangeBlock");
-          if (wrb && wrb.tagName === "DETAILS") wrb.open = true;
+          const weekRangeModal = document.getElementById("weekRangeModal");
+          if (weekRangeModal) weekRangeModal.style.display = "block";
           setWeekRangeControlsDisabled(true);
           setWeekRangeStatus("Đồng bộ nhiều tuần vẫn đang chạy…", true);
           pollWeekRangeSyncUntilIdle();
@@ -74,15 +74,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const examAct = document.getElementById("examActions");
       const schedAct = document.getElementById("scheduleActions");
-      const weekRangeBlock = document.getElementById("scheduleWeekRangeBlock");
       if (name === "schedule") {
         if (examAct) examAct.hidden = true;
         if (schedAct) schedAct.hidden = false;
-        if (weekRangeBlock) weekRangeBlock.hidden = false;
       } else {
         if (examAct) examAct.hidden = false;
         if (schedAct) schedAct.hidden = true;
-        if (weekRangeBlock) weekRangeBlock.hidden = true;
       }
 
       if (name === "schedule") {
@@ -719,6 +716,26 @@ window.renderClassSchedule = renderClassSchedule;
   if (syncWeekRangeBtn) {
     syncWeekRangeBtn.addEventListener("click", handleSyncClassScheduleWeekRange);
   }
+
+  const weekRangeBtn = document.getElementById("weekRangeBtn");
+  const weekRangeModal = document.getElementById("weekRangeModal");
+  const closeWeekRangeModal = document.getElementById("closeWeekRangeModal");
+
+  const closeWeekRangeModalFn = () => {
+    if (weekRangeModal) weekRangeModal.style.display = "none";
+  };
+
+  if (weekRangeBtn && weekRangeModal) {
+    weekRangeBtn.addEventListener("click", () => {
+      weekRangeModal.style.display = "block";
+    });
+    weekRangeModal.addEventListener("click", (e) => {
+      if (e.target === weekRangeModal) closeWeekRangeModalFn();
+    });
+  }
+  if (closeWeekRangeModal) {
+    closeWeekRangeModal.addEventListener("click", closeWeekRangeModalFn);
+  }
 });
 
 const CLASS_RANGE_STORAGE_KEY = "classRangeFilter";
@@ -896,8 +913,6 @@ function handleSyncClassScheduleWeekRange() {
 
     const tabId = tab.id;
     const total = endIdx - startIdx + 1;
-    const wrb = document.getElementById("scheduleWeekRangeBlock");
-    if (wrb && wrb.tagName === "DETAILS") wrb.open = true;
     weekRangeSyncInProgress = true;
     setWeekRangeControlsDisabled(true);
     setWeekRangeStatus(

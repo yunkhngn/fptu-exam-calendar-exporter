@@ -34,6 +34,9 @@
     <symbol id="icon-heart" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
     </symbol>
+    <symbol id="icon-calendar" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 5h16v15H4V5zM4 10h16M8 3v4M16 3v4"/>
+    </symbol>
     <symbol id="icon-external" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
     </symbol>
@@ -83,7 +86,7 @@
 
     <div class="popup-actions">
       <div id="examActions" class="actions-row" hidden>
-        <button type="button" id="syncButton" class="action-btn action-btn--secondary" title="Đồng bộ lịch thi">
+        <button type="button" id="syncButton" class="action-btn action-btn--secondary action-btn--icon" title="Đồng bộ lịch thi">
           <svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
           <span class="action-btn__label">Đồng bộ lịch thi</span>
         </button>
@@ -91,61 +94,36 @@
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
           <span class="action-btn__label">Tải lịch</span>
         </button>
-        <button type="button" id="settingsButton" class="action-btn action-btn--ghost" title="Lọc loại kỳ thi">
+        <button type="button" id="settingsButton" class="action-btn action-btn--ghost action-btn--icon" title="Lọc loại kỳ thi">
           <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
           <span class="action-btn__label">Lọc</span>
         </button>
       </div>
 
       <div id="scheduleActions" class="actions-row">
-        <button type="button" id="syncScheduleBtn" class="action-btn action-btn--secondary" title="Đồng bộ lịch học">
+        <button type="button" id="syncScheduleBtn" class="action-btn action-btn--secondary action-btn--icon" title="Đồng bộ lịch học">
           <svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
           <span class="action-btn__label">Đồng bộ lịch học</span>
+        </button>
+        <button type="button" id="weekRangeBtn" class="action-btn action-btn--secondary action-btn--icon" title="Đồng bộ nhiều tuần">
+          <svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg>
+          <span class="action-btn__label">Đồng bộ nhiều tuần</span>
         </button>
         <button type="button" id="downloadBtn" class="action-btn action-btn--primary" title="Tải lịch học (file .ics)">
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
           <span class="action-btn__label">Tải lịch</span>
         </button>
-        <div class="action-btn-pair">
-          <button type="button" id="scheduleFilterBtn" class="action-btn action-btn--ghost" title="Lọc lịch học theo khoảng thời gian">
-            <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
-            <span class="action-btn__label">Lọc</span>
-          </button>
-          <button type="button" id="clearBtn" class="action-btn action-btn--danger" title="Xoá lịch học đã lưu">
-            <svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg>
-            <span class="action-btn__label">Xoá</span>
-          </button>
-        </div>
+        <button type="button" id="scheduleFilterBtn" class="action-btn action-btn--ghost action-btn--icon" title="Lọc lịch học theo khoảng thời gian">
+          <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
+          <span class="action-btn__label">Lọc</span>
+        </button>
+        <button type="button" id="clearBtn" class="action-btn action-btn--danger action-btn--icon" title="Xoá lịch học đã lưu">
+          <svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg>
+          <span class="action-btn__label">Xoá</span>
+        </button>
       </div>
 
-      <details id="scheduleWeekRangeBlock" class="week-range-block">
-        <summary class="week-range-summary">
-          <span class="week-range-summary__title">Đồng bộ nhiều tuần</span>
-          <a
-            class="week-range-link"
-            href="https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx"
-            target="_blank"
-            rel="noopener"
-            onclick="event.stopPropagation()"
-          >Lịch tuần FAP</a>
-        </summary>
-        <div class="week-range-body">
-          <p class="week-range-hint">Mở lịch tuần trên FAP (chọn năm nếu cần), rồi «Tải tuần» và chọn khoảng.</p>
-          <div class="week-range-toolbar" role="group" aria-label="Đồng bộ nhiều tuần">
-            <button type="button" id="loadWeekOptionsBtn" class="week-range-btn">Tải tuần</button>
-            <div class="week-range-field">
-              <label class="week-range-micro" for="weekRangeStart">Từ</label>
-              <select id="weekRangeStart" class="week-range-select" disabled aria-label="Tuần bắt đầu"></select>
-            </div>
-            <div class="week-range-field">
-              <label class="week-range-micro" for="weekRangeEnd">Đến</label>
-              <select id="weekRangeEnd" class="week-range-select" disabled aria-label="Tuần kết thúc"></select>
-            </div>
-            <button type="button" id="syncWeekRangeBtn" class="week-range-btn week-range-btn--primary" disabled>Đồng bộ</button>
-          </div>
-          <div id="weekRangeStatus" class="week-range-status" hidden role="status"></div>
-        </div>
-      </details>
+
     </div>
 
     <div id="scheduleFilterModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="scheduleFilterTitle">
@@ -183,6 +161,36 @@
             <button type="button" id="resetClassFilter" class="filter-btn">Đặt lại</button>
             <button type="button" id="applyClassFilter" class="filter-btn apply-btn">Áp dụng</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="weekRangeModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="weekRangeModalTitle">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="weekRangeModalTitle">Đồng bộ nhiều tuần</h3>
+          <button type="button" id="closeWeekRangeModal" class="close-btn" aria-label="Đóng">
+            <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="week-range-hint">
+            Mở lịch tuần trên FAP (chọn năm nếu cần), rồi «Tải tuần» và chọn khoảng.
+            <a class="week-range-link" href="https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx" target="_blank" rel="noopener">Lịch tuần FAP</a>
+          </p>
+          <div class="week-range-toolbar" role="group" aria-label="Đồng bộ nhiều tuần">
+            <button type="button" id="loadWeekOptionsBtn" class="week-range-btn">Tải tuần</button>
+            <div class="week-range-field">
+              <label class="week-range-micro" for="weekRangeStart">Từ</label>
+              <select id="weekRangeStart" class="week-range-select" disabled aria-label="Tuần bắt đầu"></select>
+            </div>
+            <div class="week-range-field">
+              <label class="week-range-micro" for="weekRangeEnd">Đến</label>
+              <select id="weekRangeEnd" class="week-range-select" disabled aria-label="Tuần kết thúc"></select>
+            </div>
+            <button type="button" id="syncWeekRangeBtn" class="week-range-btn week-range-btn--primary" disabled>Đồng bộ</button>
+          </div>
+          <div id="weekRangeStatus" class="week-range-status" hidden role="status"></div>
         </div>
       </div>
     </div>

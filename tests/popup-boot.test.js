@@ -122,8 +122,8 @@ test("the class filter button opens its modal and applies a range", async () => 
   const modal = doc.getElementById("scheduleFilterModal");
 
   assert.ok(btn, "Lọc sits beside Xoá in the schedule actions");
-  assert.strictEqual(doc.querySelectorAll(".action-btn-pair .action-btn").length, 2,
-    "the two share one slot of the row");
+  assert.strictEqual(btn.classList.contains("action-btn--icon"), true,
+    "secondary actions are icon-only, matching the exam row's toolbar shape");
   assert.strictEqual(modal.style.display, "none");
   assert.strictEqual(btn.classList.contains("action-btn--filtering"), false, "untinted while showing all");
 
@@ -195,4 +195,51 @@ test("every range in the modal is one the filter understands", async () => {
   const offered = [...window.document.querySelectorAll('input[name="classRange"]')].map((i) => i.value);
   assert.deepStrictEqual(offered, CLASS_RANGE_MODES,
     "the radio list and lib/schedule.js must not drift apart");
+});
+
+test("secondary action buttons keep an accessible name once icon-only", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  for (const id of ["syncButton", "settingsButton", "syncScheduleBtn", "scheduleFilterBtn", "clearBtn"]) {
+    const btn = doc.getElementById(id);
+    assert.strictEqual(btn.classList.contains("action-btn--icon"), true, `${id} is icon-only`);
+    assert.ok(btn.title.length > 0, `${id} keeps a tooltip via title`);
+    const label = btn.querySelector(".action-btn__label");
+    assert.ok(label && label.textContent.trim().length > 0, `${id} keeps a text label for screen readers`);
+  }
+  // Tải lịch is the one primary, labeled action in each row
+  for (const id of ["exportBtn", "downloadBtn"]) {
+    assert.strictEqual(doc.getElementById(id).classList.contains("action-btn--icon"), false, `${id} stays labeled`);
+  }
+});
+
+test("Đồng bộ nhiều tuần moved into the row as an icon button that opens a modal", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  const btn = doc.getElementById("weekRangeBtn");
+  const modal = doc.getElementById("weekRangeModal");
+
+  assert.ok(btn, "trigger sits in the schedule action row");
+  assert.strictEqual(btn.classList.contains("action-btn--icon"), true, "icon-only, like the other secondary actions");
+  assert.strictEqual(btn.closest("#scheduleActions") !== null, true, "hidden/shown together with the schedule row");
+  assert.strictEqual(modal.style.display, "none");
+
+  // controls inside must keep their ids: background.js and the sync handlers address them directly
+  for (const id of ["loadWeekOptionsBtn", "weekRangeStart", "weekRangeEnd", "syncWeekRangeBtn", "weekRangeStatus"]) {
+    assert.ok(modal.querySelector(`#${id}`), `#${id} still lives inside the modal`);
+  }
+
+  btn.dispatchEvent(new window.Event("click"));
+  assert.strictEqual(modal.style.display, "block", "clicking the icon opens the modal");
+
+  doc.getElementById("closeWeekRangeModal").dispatchEvent(new window.Event("click"));
+  assert.strictEqual(modal.style.display, "none", "the close button closes it");
+});
+
+test("the week-range modal follows the same shape as the other modals", async () => {
+  const { window } = await boot();
+  const modal = window.document.getElementById("weekRangeModal");
+  assert.ok(modal.querySelector(".modal-header .close-btn"));
+  assert.ok(modal.querySelector(".modal-body"));
+  assert.strictEqual(modal.getAttribute("role"), "dialog");
 });
