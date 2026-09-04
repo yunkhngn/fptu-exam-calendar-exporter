@@ -1,0 +1,12 @@
+{
+  "name": "fptu-schedule",
+  "version": "3.2.1",
+  "private": true,
+  "description": "Tests for the FPTU Schedule Chrome extension. The extension itself ships as plain files; npm is only used to run these.",
+  "scripts": {
+    "test": "node --test tests/*.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}
