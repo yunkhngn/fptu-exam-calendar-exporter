@@ -1,32 +1,11 @@
-/* Dedupe/merge helpers are inlined here on purpose: importScripts failing would leave the service worker
-   without a listener → "Receiving end does not exist". popup.js keeps its own copy for the same reason. */
-function classScheduleDedupeKey(event) {
-  if (event.rawDate) {
-    return `${event.title}-${event.rawDate.day}/${event.rawDate.month}-${event.rawDate.startHour}:${event.rawDate.startMinute}`;
-  }
-  if (event.start) {
-    const start = typeof event.start === "string" ? new Date(event.start) : event.start;
-    if (!isNaN(start.getTime())) {
-      return `${event.title}-${start.getDate()}/${start.getMonth() + 1}-${start.getHours()}:${start.getMinutes()}`;
-    }
-  }
-  return null;
+/* importScripts is wrapped so a load failure cannot abort evaluation of this file: the
+   onMessage listener at the bottom must register no matter what, otherwise the popup only
+   ever sees "Receiving end does not exist" with no clue why. */
+try {
+  importScripts("lib/schedule.js");
+} catch (e) {
+  console.error("background: could not load lib/schedule.js", e);
 }
-
-function mergeNewClassEventsInto(allSchedule, newEvents) {
-  const existingKeys = new Set();
-  allSchedule.forEach((event) => {
-    const k = classScheduleDedupeKey(event);
-    if (k) existingKeys.add(k);
-  });
-  const uniqueNewEvents = newEvents.filter((event) => {
-    const k = classScheduleDedupeKey(event);
-    if (k) return !existingKeys.has(k);
-    return true;
-  });
-  return { uniqueNewEvents, merged: allSchedule.concat(uniqueNewEvents) };
-}
-
 function armWaitForTabComplete(tabId, timeoutMs, onDone) {
   let settled = false;
   let timer;

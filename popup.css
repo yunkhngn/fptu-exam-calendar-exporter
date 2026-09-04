@@ -887,6 +887,10 @@ html, body {
   text-align: center;
 }
 
+#popupToast.popup-toast--error {
+  background: #991b1b;
+}
+
 /* ---- Multi-week class schedule sync (compact: collapsible + toolbar) ---- */
 .week-range-block {
   width: 100%;

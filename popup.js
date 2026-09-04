@@ -1,70 +1,3 @@
-/**
- * RFC 5545 §3.3.11 — escape a TEXT value so a comma, semicolon, backslash or newline
- * in a course name / room / method cannot terminate the property early.
- */
-/**
- * RFC 5545 UTC DATE-TIME, e.g. 20260920T030000Z. toISOString() already ends in "Z" —
- * appending another produced the invalid "…ZZ" stamps in the class-schedule export.
- */
-function icsUtcStamp(date) {
-  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
-}
-
-function icsEscapeText(value) {
-  return String(value == null ? "" : value)
-    .replace(/\\/g, "\\\\")
-    .replace(/;/g, "\\;")
-    .replace(/,/g, "\\,")
-    .replace(/\r\n|\r|\n/g, "\\n");
-}
-
-/**
- * RFC 5545 §3.1 — fold a content line at 75 octets; continuations start with one space.
- * Counts bytes, not characters, and never splits a multi-byte UTF-8 sequence.
- */
-function icsFoldLine(line) {
-  const bytes = new TextEncoder().encode(line);
-  if (bytes.length <= 75) return line;
-  const decoder = new TextDecoder();
-  const parts = [];
-  let pos = 0;
-  while (pos < bytes.length) {
-    const limit = parts.length === 0 ? 75 : 74; // continuations spend one octet on the leading space
-    let end = Math.min(pos + limit, bytes.length);
-    while (end > pos && end < bytes.length && (bytes[end] & 0xc0) === 0x80) end -= 1;
-    parts.push(decoder.decode(bytes.subarray(pos, end)));
-    pos = end;
-  }
-  return parts.join("\r\n ");
-}
-
-function classScheduleDedupeKey(event) {
-  if (event.rawDate) {
-    return `${event.title}-${event.rawDate.day}/${event.rawDate.month}-${event.rawDate.startHour}:${event.rawDate.startMinute}`;
-  }
-  if (event.start) {
-    const start = typeof event.start === "string" ? new Date(event.start) : event.start;
-    if (!isNaN(start.getTime())) {
-      return `${event.title}-${start.getDate()}/${start.getMonth() + 1}-${start.getHours()}:${start.getMinutes()}`;
-    }
-  }
-  return null;
-}
-
-function mergeNewClassEventsInto(allSchedule, newEvents) {
-  const existingKeys = new Set();
-  allSchedule.forEach((event) => {
-    const k = classScheduleDedupeKey(event);
-    if (k) existingKeys.add(k);
-  });
-  const uniqueNewEvents = newEvents.filter((event) => {
-    const k = classScheduleDedupeKey(event);
-    if (k) return !existingKeys.has(k);
-    return true;
-  });
-  return { uniqueNewEvents, merged: allSchedule.concat(uniqueNewEvents) };
-}
-
 /** Tránh TypeError "reading 'local'" khi chrome.storage chưa có trong context. */
 function getChromeStorageLocal() {
   try {
@@ -94,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
       weekRangeSyncInProgress = false;
       setWeekRangeControlsDisabled(false);
       setWeekRangeStatus("", false);
-      alert("Phiên đăng nhập hết hạn. Đăng nhập lại FAP rồi thử sync khoảng.");
+      showError("Phiên đăng nhập hết hạn. Đăng nhập lại FAP rồi thử đồng bộ khoảng tuần.");
     }
   });
 
@@ -337,7 +270,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const storedData = localStorage.getItem("examSchedule");
       
       if (!storedData) {
-        alert("Chưa có dữ liệu lịch thi. Vui lòng truy cập trang FAP và nhấn Sync để tải dữ liệu.");
+        showError("Chưa có dữ liệu lịch thi. Mở trang lịch thi FAP rồi nhấn «Đồng bộ lịch thi».");
         return;
       }
 
@@ -346,62 +279,16 @@ document.addEventListener("DOMContentLoaded", () => {
         events = JSON.parse(storedData);
       } catch (e) {
         console.error("Parse stored data failed:", e);
-        alert("Dữ liệu lịch thi bị lỗi. Vui lòng sync lại từ trang FAP.");
+        showError("Dữ liệu lịch thi bị lỗi. Đồng bộ lại từ trang FAP.");
         return;
       }
 
       if (!events || !events.length) {
-        alert("Không có lịch thi nào để xuất.");
+        showError("Không có lịch thi nào để xuất.");
         return;
       }
 
-      const ICS = function (uid = "fptu", prod = "examination") {
-        const SEPARATOR = '\r\n';
-        let eventsData = [];
-        const calendarStart = [
-          'BEGIN:VCALENDAR',
-          'VERSION:2.0',
-          'PRODID:' + prod,
-          'CALSCALE:GREGORIAN'
-        ].join(SEPARATOR);
-        const calendarEnd = 'END:VCALENDAR';
-
-        return {
-          addEvent: function (title, desc, loc, start, end) {
-            const now = new Date();
-            const fmt = icsUtcStamp;
-            const stamp = icsUtcStamp(now);
-            const uidStr = fmt(now) + '-' + Math.random().toString(36).substring(2, 8) + '@' + prod;
-            eventsData.push([
-              'BEGIN:VEVENT',
-              'UID:' + uidStr,
-              'DTSTAMP:' + stamp,
-              'DTSTART:' + fmt(start),
-              'DTEND:' + fmt(end),
-              'SUMMARY:' + icsEscapeText(title),
-              'DESCRIPTION:' + icsEscapeText(desc),
-              'LOCATION:' + icsEscapeText(loc),
-              'BEGIN:VALARM',
-              'TRIGGER:-P1D',
-              'ACTION:DISPLAY',
-              'DESCRIPTION:Nhắc nhở: Thi vào ngày mai',
-              'END:VALARM',
-              'BEGIN:VALARM',
-              'TRIGGER:-PT1H',
-              'ACTION:DISPLAY',
-              'DESCRIPTION:Nhắc nhở: Thi trong 1 giờ nữa',
-              'END:VALARM',
-              'END:VEVENT'
-            ].join(SEPARATOR));
-          },
-          build: function () {
-            const raw = calendarStart + SEPARATOR + eventsData.join(SEPARATOR) + SEPARATOR + calendarEnd;
-            return raw.split(SEPARATOR).map(icsFoldLine).join(SEPARATOR) + SEPARATOR;
-          }
-        };
-      };
-
-      const cal = new ICS();
+      const cal = createExamCalendar();
       let validEventsCount = 0;
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -443,7 +330,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       if (validEventsCount === 0) {
-        alert("Không có kỳ thi nào sắp tới và có phòng để xuất ra file .ics");
+        showError("Không có kỳ thi sắp tới đã có phòng để xuất ra .ics.");
         return;
       }
 
@@ -860,28 +747,28 @@ function handleLoadWeekScheduleOptions() {
     chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] }, () => {
       if (chrome.runtime.lastError) {
         setWeekRangeStatus("", false);
-        alert("Không đọc được trang. Thử refresh FAP rồi mở lại popup.");
+        showError("Không đọc được trang. Tải lại FAP rồi mở lại popup.");
         return;
       }
       chrome.tabs.sendMessage(tab.id, { action: "getWeekScheduleControls" }, (res) => {
         if (chrome.runtime.lastError) {
           setWeekRangeStatus("", false);
-          alert("Không gửi được yêu cầu tới trang. Thử refresh FAP.");
+          showError("Không gửi được yêu cầu tới trang. Tải lại FAP.");
           return;
         }
         if (!res || !res.ok) {
           setWeekRangeStatus("", false);
           if (res && res.loginRequired) {
             chrome.tabs.create({ url: "https://fap.fpt.edu.vn/Default.aspx", active: true });
-            alert("Bạn cần đăng nhập FAP. Đã mở trang đăng nhập.");
+            showError("Bạn cần đăng nhập FAP. Đã mở trang đăng nhập.");
           } else {
-            alert("Không tìm thấy dropdown tuần trên trang. Đảm bảo bạn đang ở lịch tuần.");
+            showError("Không thấy danh sách tuần. Đảm bảo bạn đang ở trang Lịch tuần FAP.");
           }
           return;
         }
         if (!res.weeks || !res.weeks.length) {
           setWeekRangeStatus("", false);
-          alert("Danh sách tuần trống.");
+          showError("Danh sách tuần trống.");
           return;
         }
         fillWeekRangeSelectOptions(res.weeks);
@@ -896,13 +783,13 @@ function handleSyncClassScheduleWeekRange() {
   const startSel = document.getElementById("weekRangeStart");
   const endSel = document.getElementById("weekRangeEnd");
   if (!startSel || !endSel || startSel.disabled) {
-    alert("Nhấn «Tải tuần» trước khi đồng bộ khoảng.");
+    showError("Nhấn «Tải tuần» trước khi đồng bộ khoảng.");
     return;
   }
   let startIdx = parseInt(startSel.value, 10);
   let endIdx = parseInt(endSel.value, 10);
   if (Number.isNaN(startIdx) || Number.isNaN(endIdx)) {
-    alert("Tuần không hợp lệ.");
+    showError("Tuần không hợp lệ.");
     return;
   }
   if (startIdx > endIdx) {
@@ -955,10 +842,10 @@ function handleSyncClassScheduleWeekRange() {
           weekRangeSyncInProgress = false;
           setWeekRangeControlsDisabled(false);
           setWeekRangeStatus("", false);
-          alert(
-            "Không khởi chạy đồng bộ nền: " +
+          showError(
+            "Không khởi chạy được đồng bộ nền: " +
               (err && err.message ? err.message : "unknown") +
-              "\nMở chrome://extensions → Service worker → Inspect để xem lỗi (nếu SW không load, thường do lỗi JS khi khởi động)."
+              ". Xem chi tiết ở chrome://extensions → Service worker → Inspect."
           );
         }
       });
@@ -1054,14 +941,14 @@ function handleSyncClassSchedule() {
     }, (results) => {
       if (chrome.runtime.lastError) {
         console.error("Script injection failed:", chrome.runtime.lastError);
-        alert("Không thể truy cập trang để sync lịch học. Vui lòng refresh trang và thử lại.");
+        showError("Không truy cập được trang để đồng bộ lịch học. Tải lại trang rồi thử lại.");
         return;
       }
 
       chrome.tabs.sendMessage(tab.id, { action: "extractWeeklySchedule" }, function (response) {
         if (chrome.runtime.lastError) {
           console.error("extractWeeklySchedule message failed:", chrome.runtime.lastError);
-          alert("Có lỗi xảy ra khi sync lịch học. Vui lòng thử lại.");
+          showError("Có lỗi khi đồng bộ lịch học. Thử lại.");
           return;
         }
         
@@ -1069,18 +956,18 @@ function handleSyncClassSchedule() {
           if (response && response.loginRequired) {
             // Open login page and focus it so user can sign in
             chrome.tabs.create({ url: 'https://fap.fpt.edu.vn/Default.aspx', active: true });
-            alert('Bạn cần đăng nhập FAP để sync lịch học. Vui lòng đăng nhập rồi quay lại popup.');
+            showError("Bạn cần đăng nhập FAP. Đăng nhập rồi mở lại popup.");
             return;
           }
           console.error("Weekly schedule extraction failed");
-          alert("Không thể trích xuất lịch học. Vui lòng:\n1. Đảm bảo bạn đang ở trang có bảng lịch học\n2. Trang đã load hoàn toàn\n3. Bạn đã đăng nhập");
+          showError("Không đọc được bảng lịch học. Kiểm tra: đang ở trang Lịch tuần, trang đã tải xong, và đã đăng nhập.");
           return;
         }
         
         const newEvents = response.schedule || [];
         
         if (newEvents.length === 0) {
-          alert("Không tìm thấy lịch học nào. Vui lòng kiểm tra:\n1. Tuần hiện tại có lịch học không\n2. Trang đã load đầy đủ chưa");
+          showError("Tuần này không có lịch học nào, hoặc trang chưa tải xong.");
           return;
         }
         
@@ -1120,7 +1007,7 @@ function handleDownloadClassSchedule() {
   const storedData = localStorage.getItem("classSchedule");
   
   if (!storedData) {
-    alert("Chưa có dữ liệu lịch học. Vui lòng sync lịch học trước.");
+    showError("Chưa có dữ liệu lịch học. Đồng bộ lịch học trước đã.");
     return;
   }
 
@@ -1129,93 +1016,17 @@ function handleDownloadClassSchedule() {
     schedule = JSON.parse(storedData);
   } catch (e) {
     console.error("Parse stored schedule failed:", e);
-    alert("Dữ liệu lịch học bị lỗi. Vui lòng sync lại.");
+    showError("Dữ liệu lịch học bị lỗi. Đồng bộ lại.");
     return;
   }
 
   if (!schedule || !schedule.length) {
-    alert("Không có lịch học nào để tải.");
+    showError("Không có lịch học nào để tải.");
     return;
   }
 
   // Create ICS content for class schedule
-  const ICS = function (uid = "fptu", prod = "class-schedule") {
-    const SEPARATOR = '\r\n';
-    let eventsData = [];
-    const calendarStart = [
-      'BEGIN:VCALENDAR',
-      'VERSION:2.0',
-      'PRODID:' + prod,
-      'CALSCALE:GREGORIAN'
-    ].join(SEPARATOR);
-    const calendarEnd = 'END:VCALENDAR';
-
-    return {
-      addEvent: function (title, desc, loc, event, isFirstSlot = false) {
-        const now = new Date();
-        
-        // Format date for ICS file - without timezone adjustment
-        const formatDate = (year, month, day, hour, minute) => {
-          // Format as YYYYMMDDTHHMMSS (local time, not UTC)
-          return `${year}${String(month).padStart(2, '0')}${String(day).padStart(2, '0')}T${String(hour).padStart(2, '0')}${String(minute).padStart(2, '0')}00`;
-        };
-        
-        const timestamp = icsUtcStamp(now);
-        const uidStr = `${timestamp}-${Math.random().toString(36).substring(2, 8)}@${prod}`;
-        
-        // Generate start and end times directly from raw values
-        let startDate, endDate;
-        
-        if (event.rawDate) {
-          const rd = event.rawDate;
-          startDate = formatDate(rd.year, rd.month, rd.day, rd.startHour, rd.startMinute);
-          endDate = formatDate(rd.year, rd.month, rd.day, rd.endHour, rd.endMinute);
-        } else {
-          // Fallback (should not happen with new data)
-          const start = new Date();
-          const end = new Date();
-          end.setHours(end.getHours() + 1);
-          
-          startDate = icsUtcStamp(start);
-          endDate = icsUtcStamp(end);
-        }
-        
-        // Build the event with potential alarms
-        let eventArray = [
-          'BEGIN:VEVENT',
-          'UID:' + uidStr,
-          'DTSTAMP:' + timestamp,
-          'DTSTART;VALUE=DATE-TIME:' + startDate,  // Specify as DATE-TIME with no Z for local time
-          'DTEND;VALUE=DATE-TIME:' + endDate,      // Specify as DATE-TIME with no Z for local time
-          'SUMMARY:' + icsEscapeText(title),
-          'DESCRIPTION:' + icsEscapeText(desc),
-          'LOCATION:' + icsEscapeText(loc)
-        ];
-        
-        if (isFirstSlot || event.slot === "Slot 1") {
-          eventArray = eventArray.concat([
-            'BEGIN:VALARM',
-            'ACTION:DISPLAY',
-            'DESCRIPTION:Sắp đến giờ học! (Nhắc nhở 30 phút)',
-            'TRIGGER:-PT30M',
-            'END:VALARM'
-          ]);
-        }
-        
-        // End the event
-        eventArray.push('END:VEVENT');
-        
-        // Join all lines with separator and add to events data
-        eventsData.push(eventArray.join(SEPARATOR));
-      },
-      build: function () {
-        const raw = calendarStart + SEPARATOR + eventsData.join(SEPARATOR) + SEPARATOR + calendarEnd;
-        return raw.split(SEPARATOR).map(icsFoldLine).join(SEPARATOR) + SEPARATOR;
-      }
-    };
-  };
-
-  const cal = new ICS();
+  const cal = createClassCalendar();
   
   // Group events by date to identify first slots
   const eventsByDate = {};
@@ -1271,7 +1082,7 @@ function handleDownloadClassSchedule() {
     URL.revokeObjectURL(url);
   }, 100);
 
-  alert(`Đã tải xuống ${schedule.length} lịch học. Chúc bạn học tập vui vẻ.`);
+  showToast(`Đã tải ${schedule.length} tiết học. Chúc bạn học tốt!`, 2600);
 }
 
 function handleClearClassSchedule() {
@@ -1293,7 +1104,7 @@ function handleClearClassSchedule() {
     showToast('Đã xoá toàn bộ lịch học');
   } catch (e) {
     console.error("Error clearing class schedule:", e);
-    alert('Có lỗi xảy ra khi xoá lịch học.');
+    showError("Có lỗi khi xoá lịch học.");
   }
 }
 
@@ -1684,7 +1495,8 @@ function createExamItem(e) {
   return row;
 }
 
-function showToast(message, duration = 1800) {
+/** kind: "info" (default) | "error" — errors are tinted red and linger longer. */
+function showToast(message, duration = 1800, kind = "info") {
   let toast = document.getElementById('popupToast');
   if (!toast) {
     toast = document.createElement('div');
@@ -1692,6 +1504,7 @@ function showToast(message, duration = 1800) {
     toast.className = 'popup-toast';
     document.body.appendChild(toast);
   }
+  toast.classList.toggle('popup-toast--error', kind === 'error');
   toast.textContent = message;
   requestAnimationFrame(() => {
     toast.style.opacity = '1';
@@ -1700,4 +1513,8 @@ function showToast(message, duration = 1800) {
   window.__toastTimer = setTimeout(() => {
     toast.style.opacity = '0';
   }, duration);
+}
+
+function showError(message) {
+  showToast(message, 4200, "error");
 }
