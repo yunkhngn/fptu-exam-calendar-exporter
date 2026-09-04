@@ -176,21 +176,21 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 function extractWeeklyScheduleFromTable() {
   console.log("Starting extraction with simplified code...");
   
-  // Simple working version - use exact code that works in console
-  const dayHeaders = Array.from(
-    document.querySelectorAll("thead tr:nth-child(2) th")
-  )
-    .slice(1) // bỏ cột đầu "Slot"
-    .map((th) => th.textContent.trim());
-
-  const dayNames = Array.from(
-    document.querySelectorAll("thead tr:nth-child(1) th")
-  )
-    .slice(1)
-    .map((th) => th.textContent.trim());
-
   const rows = Array.from(document.querySelectorAll("tbody tr"))
     .filter((row) => row.querySelector("td")?.textContent?.startsWith("Slot"));
+
+  // FAP renders the "Slot" corner cell with rowspan=2, so the date row holds one <th> fewer than
+  // the day-name row. Dropping the first cell of both rows shifted every date one column left —
+  // which is what the old "subtract a day" patch was compensating for, at the cost of silently
+  // dropping the last day of the week. Align to the body's day columns from the right instead,
+  // which is correct whether or not the date row carries its own corner cell.
+  const dayColumnCount = rows.length ? rows[0].querySelectorAll("td").length - 1 : 0;
+  const headerTexts = (selector) => {
+    const all = Array.from(document.querySelectorAll(selector)).map((th) => th.textContent.trim());
+    return dayColumnCount > 0 ? all.slice(-dayColumnCount) : all.slice(1);
+  };
+  const dayHeaders = headerTexts("thead tr:nth-child(2) th");
+  const dayNames = headerTexts("thead tr:nth-child(1) th");
 
   const schedule = [];
   
@@ -265,24 +265,7 @@ function extractWeeklyScheduleFromTable() {
           if (!dateStr) continue;
 
           const [day, month] = dateStr.split('/').map(Number);
-          
-          // FIX: Subtract one day from the extracted date to match the correct calendar date
-          let adjustedDay = day - 1;
-          let adjustedMonth = month;
-          let adjustedYear = year;
-          
-          // Handle month/year boundaries when day becomes 0
-          if (adjustedDay <= 0) {
-            adjustedMonth -= 1;
-            // If month becomes 0 (January), go to previous year December
-            if (adjustedMonth <= 0) {
-              adjustedMonth = 12;
-              adjustedYear -= 1;
-            }
-            // Get last day of the previous month
-            const lastDayOfPrevMonth = new Date(adjustedYear, adjustedMonth, 0).getDate();
-            adjustedDay = lastDayOfPrevMonth;
-          }
+          if (!Number.isFinite(day) || !Number.isFinite(month)) continue;
           
           let startHour = 0, startMinute = 0, endHour = 0, endMinute = 0;
           
@@ -293,7 +276,6 @@ function extractWeeklyScheduleFromTable() {
             [endHour, endMinute] = endTime.split(':').map(Number);
           }
 
-          // Store the correct adjusted date
           schedule.push({
             title: subject,
             detailUrl,
@@ -302,9 +284,9 @@ function extractWeeklyScheduleFromTable() {
             location: room,
             description: `${subject} - ${slotName} (${timeRange})`,
             rawDate: {
-              year: adjustedYear,
-              month: adjustedMonth,
-              day: adjustedDay, // Adjusted day
+              year,
+              month,
+              day,
               startHour,
               startMinute,
               endHour,
@@ -313,10 +295,10 @@ function extractWeeklyScheduleFromTable() {
             },
             slot: slotName,
             day: dayNames[i - 1],
-            date: `${adjustedDay}/${adjustedMonth}/${adjustedYear}` // Adjusted date string
+            date: `${day}/${month}/${year}`
           });
-          
-          console.log(`Added: ${subject} on ${adjustedDay}/${adjustedMonth}/${adjustedYear} (adjusted from ${day}/${month}/${year}) ${timeRange}`);
+
+          console.log(`Added: ${subject} on ${day}/${month}/${year} ${timeRange}`);
         }
       }
     }
