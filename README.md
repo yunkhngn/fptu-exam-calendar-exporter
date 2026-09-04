@@ -112,7 +112,15 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.3.1 (current)
+### v3.3.2 (current)
+- **Short labels are back** on the sync / multi-week / filter / delete buttons — icon-only
+  turned out to read as unlabeled icons rather than buttons. They now size to icon + a short
+  word ("Đồng bộ", "Nhiều tuần", "Lọc", "Xoá") instead of stretching, so **Tải lịch** still
+  reads as the one primary action per row.
+- **Đồng bộ nhiều tuần modal rebalanced:** the toolbar was a wrapping flex row that staggered
+  Từ/Đến against each other and let long week labels overflow their select. It's now a
+  predictable stacked form — Tải tuần, then Từ/Đến side by side, then Đồng bộ — matching the
+  order of the task itself.
 - **Compact action row:** the sync / range-sync / filter / delete buttons are now icon-only
   (tooltip + accessible label kept), leaving one labeled primary action — **Tải lịch** — per row.
   **Đồng bộ nhiều tuần** moved out of its own footer row into an icon button that opens a modal,
@@ -139,7 +147,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.3.1**; release zip `fptu-schedule.zip`
+- Manifest **3.3.2**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
