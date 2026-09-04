@@ -17,6 +17,7 @@ Chrome extension (Manifest V3) for **FPT University** students: read **exam** an
 - Weekly view from FAP schedule pages (`https://fap.fpt.edu.vn/Schedule/*`)
 - **Tải lịch** / export class timetable to `.ics`
 - **Multi-week sync**: Background merge across a range of weeks (service worker + `chrome.storage.local` for progress and merged data)
+- **Filter**: Show only today, this week, two weeks or this month — display only, the export is unaffected
 
 ### Study suggestions (exam cards)
 - **Ôn tập** strip under each exam card: links by **course code** (from `study-sources.json`)
@@ -111,7 +112,12 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.2.1 (current)
+### v3.3.0 (current)
+- **Lịch học filter:** the Xoá slot now holds **Lọc** and **Xoá** side by side. Lọc narrows the
+  timetable to today, this week (to Sunday), two weeks, or this month. Ranges follow the calendar
+  the way FAP does but always start at today, so classes that already happened stay hidden; the
+  button is tinted while a range is active and the choice is remembered. It changes what the tab
+  shows, not what is stored — **Tải lịch still exports the whole timetable**.
 - **Fix:** the weekly scraper dropped every class in the last day column. FAP renders
   the `Slot` corner cell with `rowspan="2"`, so the date header row has one cell fewer;
   the old code sliced both header rows alike and compensated with a "subtract one day"
@@ -127,7 +133,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.2.1**; release zip `fptu-schedule.zip`
+- Manifest **3.3.0**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
