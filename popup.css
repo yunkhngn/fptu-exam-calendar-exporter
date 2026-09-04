@@ -931,18 +931,29 @@ html, body {
   text-decoration: underline;
 }
 
+/*
+ * A predictable vertical form instead of a wrapping flex row: the old layout let
+ * "Tải tuần" and the Từ field share a line while Đến and Đồng bộ wrapped onto the
+ * next, staggering the two fields against each other. Order now matches the task
+ * itself — load weeks, pick a range, sync — one thing per row.
+ */
 .week-range-toolbar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 6px 8px;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.week-range-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .week-range-field {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 2px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -955,30 +966,28 @@ html, body {
 }
 
 .week-range-select {
-  min-width: 0;
   width: 100%;
-  max-width: 200px;
-  padding: 4px 6px;
-  font-size: 11px;
-  line-height: 1.2;
+  min-width: 0;
+  padding: 7px 8px;
+  font-size: 12px;
+  line-height: 1.3;
   border: 1px solid var(--border-strong);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--bg-elevated);
   color: var(--text);
 }
 
 .week-range-btn {
-  padding: 5px 10px;
-  font-size: 11px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-strong);
   background: var(--bg-subtle);
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s ease;
-  white-space: nowrap;
-  align-self: flex-end;
 }
 
 .week-range-btn:hover:not(:disabled) {
@@ -1001,8 +1010,9 @@ html, body {
 }
 
 .week-range-status {
-  font-size: 10px;
-  line-height: 1.35;
+  margin-top: 10px;
+  font-size: 12px;
+  line-height: 1.4;
   color: var(--text-muted);
   margin: 4px 0 0;
   padding: 0;

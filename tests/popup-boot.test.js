@@ -255,3 +255,16 @@ test("the week-range modal follows the same shape as the other modals", async ()
   assert.ok(modal.querySelector(".modal-body"));
   assert.strictEqual(modal.getAttribute("role"), "dialog");
 });
+
+test("the week-range fields sit in their own row, not the wrapping toolbar", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  const fields = doc.querySelector(".week-range-fields");
+  assert.ok(fields, "Từ/Đến are wrapped so they lay out as a pair, independent of Tải tuần/Đồng bộ");
+  assert.strictEqual(fields.querySelector("#weekRangeStart").closest(".week-range-fields"), fields);
+  assert.strictEqual(fields.querySelector("#weekRangeEnd").closest(".week-range-fields"), fields);
+  // load/sync stay direct children of the toolbar, one per row, not squeezed beside the fields
+  const toolbar = doc.querySelector(".week-range-toolbar");
+  assert.strictEqual(doc.getElementById("loadWeekOptionsBtn").parentElement, toolbar);
+  assert.strictEqual(doc.getElementById("syncWeekRangeBtn").parentElement, toolbar);
+});
