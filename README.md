@@ -112,7 +112,12 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.3.0 (current)
+### v3.3.1 (current)
+- **Compact action row:** the sync / range-sync / filter / delete buttons are now icon-only
+  (tooltip + accessible label kept), leaving one labeled primary action — **Tải lịch** — per row.
+  **Đồng bộ nhiều tuần** moved out of its own footer row into an icon button that opens a modal,
+  matching how **Lọc** already works. The action area went from 102px to 57px of the 480px popup
+  (about 21% down to 12%), all reclaimed by the card list.
 - **Lịch học filter:** the Xoá slot now holds **Lọc** and **Xoá** side by side. Lọc narrows the
   timetable to today, this week (to Sunday), two weeks, or this month. Ranges follow the calendar
   the way FAP does but always start at today, so classes that already happened stay hidden; the
@@ -134,7 +139,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.3.0**; release zip `fptu-schedule.zip`
+- Manifest **3.3.1**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
