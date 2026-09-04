@@ -676,22 +676,32 @@ window.renderClassSchedule = renderClassSchedule;
       scheduleFilterModal.style.display = "block";
     });
 
-    // Picking a range applies it straight away — one choice, no Apply button needed.
-    rangeInputs().forEach((input) => {
-      input.addEventListener("change", () => {
-        if (!input.checked) return;
-        setClassRangeFilter(input.value);
-        closeScheduleFilterModal();
-        let saved = [];
-        try {
-          saved = JSON.parse(localStorage.getItem("classSchedule") || "[]");
-        } catch (_) {}
-        renderClassSchedule(saved);
-      });
-    });
-
     scheduleFilterModal.addEventListener("click", (e) => {
       if (e.target === scheduleFilterModal) closeScheduleFilterModal();
+    });
+  }
+
+  const resetClassFilter = document.getElementById("resetClassFilter");
+  if (resetClassFilter) {
+    // Same role as «Chọn tất cả» on the exam filter: back to showing everything.
+    resetClassFilter.addEventListener("click", () => {
+      rangeInputs().forEach((input) => {
+        input.checked = input.value === "all";
+      });
+    });
+  }
+
+  const applyClassFilter = document.getElementById("applyClassFilter");
+  if (applyClassFilter) {
+    applyClassFilter.addEventListener("click", () => {
+      const picked = [...rangeInputs()].find((input) => input.checked);
+      setClassRangeFilter(picked ? picked.value : "all");
+      closeScheduleFilterModal();
+      let saved = [];
+      try {
+        saved = JSON.parse(localStorage.getItem("classSchedule") || "[]");
+      } catch (_) {}
+      renderClassSchedule(saved);
     });
   }
 

@@ -130,13 +130,63 @@ test("the class filter button opens its modal and applies a range", async () => 
   btn.dispatchEvent(new window.Event("click"));
   assert.strictEqual(modal.style.display, "block", "clicking Lọc opens the modal");
 
-  const week = doc.querySelector('input[name="classRange"][value="week"]');
-  week.checked = true;
-  week.dispatchEvent(new window.Event("change"));
+  // Same interaction as the exam filter: pick, then Áp dụng.
+  doc.querySelector('input[name="classRange"][value="week"]').checked = true;
+  assert.strictEqual(window.localStorage.getItem("classRangeFilter"), null,
+    "nothing is applied until the button is pressed");
 
+  doc.getElementById("applyClassFilter").dispatchEvent(new window.Event("click"));
   assert.strictEqual(window.localStorage.getItem("classRangeFilter"), "week", "choice is remembered");
-  assert.strictEqual(modal.style.display, "none", "picking a range closes the modal");
+  assert.strictEqual(modal.style.display, "none", "applying closes the modal");
   assert.strictEqual(btn.classList.contains("action-btn--filtering"), true, "button shows a range is active");
+});
+
+test("Đặt lại puts the range back to Tất cả", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  const btn = doc.getElementById("scheduleFilterBtn");
+
+  doc.querySelector('input[name="classRange"][value="month"]').checked = true;
+  doc.getElementById("applyClassFilter").dispatchEvent(new window.Event("click"));
+  assert.strictEqual(window.localStorage.getItem("classRangeFilter"), "month");
+  assert.strictEqual(btn.classList.contains("action-btn--filtering"), true);
+
+  btn.dispatchEvent(new window.Event("click"));
+  doc.getElementById("resetClassFilter").dispatchEvent(new window.Event("click"));
+  assert.strictEqual(doc.querySelector('input[name="classRange"][value="all"]').checked, true,
+    "reset only moves the selection");
+  assert.strictEqual(window.localStorage.getItem("classRangeFilter"), "month",
+    "and still waits for Áp dụng");
+
+  doc.getElementById("applyClassFilter").dispatchEvent(new window.Event("click"));
+  assert.strictEqual(window.localStorage.getItem("classRangeFilter"), "all");
+  assert.strictEqual(btn.classList.contains("action-btn--filtering"), false, "tint clears");
+});
+
+test("reopening the modal shows the range currently in force", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+
+  doc.querySelector('input[name="classRange"][value="2weeks"]').checked = true;
+  doc.getElementById("applyClassFilter").dispatchEvent(new window.Event("click"));
+
+  // leave a stale selection behind, as a user abandoning the modal would
+  doc.querySelector('input[name="classRange"][value="today"]').checked = true;
+  doc.getElementById("scheduleFilterBtn").dispatchEvent(new window.Event("click"));
+
+  assert.strictEqual(doc.querySelector('input[name="classRange"][value="2weeks"]').checked, true);
+  assert.strictEqual(doc.querySelector('input[name="classRange"][value="today"]').checked, false);
+});
+
+test("both filter modals offer the same controls", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  for (const id of ["filterModal", "scheduleFilterModal"]) {
+    const modal = doc.getElementById(id);
+    assert.ok(modal.querySelector(".modal-header .close-btn"), `${id}: close button`);
+    assert.ok(modal.querySelector(".filter-group"), `${id}: option list`);
+    assert.ok(modal.querySelector(".filter-actions .filter-btn.apply-btn"), `${id}: Áp dụng`);
+  }
 });
 
 test("every range in the modal is one the filter understands", async () => {

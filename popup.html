@@ -157,11 +157,10 @@
           </button>
         </div>
         <div class="modal-body">
-          <p class="filter-hint">Khoảng tính từ hôm nay; tiết đã qua được ẩn.</p>
           <div class="filter-group" role="radiogroup" aria-labelledby="scheduleFilterTitle">
             <label class="filter-item">
               <input type="radio" name="classRange" value="all" checked>
-              <span>Tất cả<span class="filter-item__note">kể cả tiết đã học</span></span>
+              <span>Tất cả (kể cả tiết đã học)</span>
             </label>
             <label class="filter-item">
               <input type="radio" name="classRange" value="today">
@@ -169,16 +168,20 @@
             </label>
             <label class="filter-item">
               <input type="radio" name="classRange" value="week">
-              <span>Tuần này<span class="filter-item__note">đến hết Chủ nhật</span></span>
+              <span>Tuần này (đến hết Chủ nhật)</span>
             </label>
             <label class="filter-item">
               <input type="radio" name="classRange" value="2weeks">
-              <span>2 tuần<span class="filter-item__note">hết tuần sau</span></span>
+              <span>2 tuần (đến hết tuần sau)</span>
             </label>
             <label class="filter-item">
               <input type="radio" name="classRange" value="month">
-              <span>Tháng này<span class="filter-item__note">đến hết tháng</span></span>
+              <span>Tháng này (đến hết tháng)</span>
             </label>
+          </div>
+          <div class="filter-actions">
+            <button type="button" id="resetClassFilter" class="filter-btn">Đặt lại</button>
+            <button type="button" id="applyClassFilter" class="filter-btn apply-btn">Áp dụng</button>
           </div>
         </div>
       </div>

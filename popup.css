@@ -629,19 +629,6 @@ html, body {
   color: var(--text);
 }
 
-.filter-hint {
-  margin: 0 0 12px;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-.filter-item__note {
-  display: block;
-  font-size: 11px;
-  color: var(--text-muted);
-  font-weight: 400;
-}
-
 /* Marks the Lọc button while a range is hiding part of the timetable. */
 .action-btn--filtering {
   border-color: var(--accent);

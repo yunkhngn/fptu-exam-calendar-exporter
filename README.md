@@ -116,8 +116,9 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 - **Lịch học filter:** the Xoá slot now holds **Lọc** and **Xoá** side by side. Lọc narrows the
   timetable to today, this week (to Sunday), two weeks, or this month. Ranges follow the calendar
   the way FAP does but always start at today, so classes that already happened stay hidden; the
-  button is tinted while a range is active and the choice is remembered. It changes what the tab
-  shows, not what is stored — **Tải lịch still exports the whole timetable**.
+  button is tinted while a range is active and the choice is remembered. Same modal shape as the
+  exam filter: pick an option, press **Áp dụng**. It changes what the tab shows, not what is
+  stored — **Tải lịch still exports the whole timetable**.
 - **Fix:** the weekly scraper dropped every class in the last day column. FAP renders
   the `Slot` corner cell with `rowspan="2"`, so the date header row has one cell fewer;
   the old code sliced both header rows alike and compensated with a "subtract one day"
