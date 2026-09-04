@@ -84,7 +84,6 @@ document.addEventListener("DOMContentLoaded", () => {
   
   // Tab switching functionality - add this right after the other element declarations
   const upcomingTab = document.getElementById("upcomingTab");
-  const completedTab = document.getElementById("completedTab");
   const upcomingContent = document.getElementById("upcomingExams");
   const completedContent = document.getElementById("completedExams");
   const scheduleTabBtn = document.getElementById("scheduleTabBtn");
@@ -97,7 +96,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (upcomingContent && completedContent) {
     const activateTab = (name) => {
-      [upcomingTab, completedTab, scheduleTabBtn].forEach(btn => btn && btn.classList.remove("active"));
+      [upcomingTab, scheduleTabBtn].forEach(btn => btn && btn.classList.remove("active"));
       [upcomingContent, completedContent, scheduleContent].forEach(c => c && c.classList.remove("active"));
 
       const examAct = document.getElementById("examActions");
@@ -1443,22 +1442,6 @@ function renderExamList(events) {
       const examItem = createExamItem(e);
       completedContainer.appendChild(examItem);
     });
-  }
-
-  const upcomingTabBtn = document.getElementById("upcomingTab");
-  const completedTabBtn = document.getElementById("completedTab");
-  const completedLabel = completedTabBtn?.querySelector(".tab-btn__text");
-  if (completedLabel) {
-    completedLabel.textContent = `Đã thi (${completedExams.length})`;
-  }
-  const upcomingLabel = upcomingTabBtn?.querySelector(".tab-btn__text");
-  if (upcomingLabel) {
-    const firstTabId = document.querySelector(".tab-navigation .tab-btn")?.id;
-    if (!completedTabBtn && firstTabId !== "completedTab") {
-      upcomingLabel.textContent = "Kỳ thi";
-    } else {
-      upcomingLabel.textContent = `Chưa thi (${upcomingExams.length})`;
-    }
   }
 
   // Apply filters after rendering

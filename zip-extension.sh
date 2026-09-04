@@ -5,4 +5,4 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-zip -r fptu-schedule.zip manifest.json background.js popup.html popup.js popup.css content.js sanitize-utils.js study-sources.json study-suggestions.js icon-16.png icon-48.png icon-128.png -x "*.DS_Store" "*.git*"
+zip -r fptu-schedule.zip manifest.json background.js popup.html popup.js popup.css content.js study-sources.json study-suggestions.js icon-16.png icon-48.png icon-128.png -x "*.DS_Store" "*.git*"

@@ -1,6 +1,3 @@
-/** Hook for clear-and-sync; DOM is re-scraped each time so no page-side state to clear. */
-function clearExistingExamEvents() {}
-
 function findScheduleOfWeekYearSelect() {
   return (
     document.getElementById("ctl00_mainContent_drpYear") ||
@@ -148,95 +145,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ events: [] });
     }
     return true;
-  } else if (msg.action === "clearAndSync") {
-    try {
-      // First clear existing exam events
-      clearExistingExamEvents();
-      
-      // Then extract and return new schedule
-      const fmtTime = t => {
-        if (!t || typeof t !== "string") return { hour: 0, minute: 0 };
-        
-        // Clean up the string - remove extra spaces and normalize
-        const cleaned = t.trim().replace(/\s+/g, "");
-        
-        // Handle Vietnamese format (10h00, 10h, 10H00)
-        if (cleaned.match(/\d+h\d*/i)) {
-          const [h, m = "0"] = cleaned.replace(/h/i, ":").split(":").map(Number);
-          return { hour: h, minute: m };
-        }
-        
-        // Handle colon format (10:00, 10:30)
-        if (cleaned.includes(":")) {
-          const [h, m = "0"] = cleaned.split(":").map(Number);
-          return { hour: h, minute: m };
-        }
-        
-        // Handle hour only format (10, 14) - assume no minutes
-        if (/^\d{1,2}$/.test(cleaned)) {
-          const h = Number(cleaned);
-          return { hour: h, minute: 0 };
-        }
-        
-        // Handle dot format (10.00, 10.30)
-        if (cleaned.includes(".")) {
-          const [h, m = "0"] = cleaned.split(".").map(Number);
-          return { hour: h, minute: m };
-        }
-        
-        return { hour: 0, minute: 0 };
-      };
-
-      const rows = Array.from(document.querySelectorAll("#ctl00_mainContent_divContent table tr"))
-        .slice(1)
-        .map(tr => Array.from(tr.cells).map(td => td.textContent.trim()));
-
-      const events = rows
-        .filter(row => row.length >= 8 && row[3] && row[5] !== undefined)
-        .map(row => {
-          const [no, code, name, date, room, time, form, exam, ...rest] = row;
-          
-          const [day, month, year] = date.split("/").map(Number);
-          const [startStr, endStr] = time.split("-");
-          const start = new Date(year, month - 1, day, fmtTime(startStr).hour, fmtTime(startStr).minute);
-          const end = new Date(year, month - 1, day, fmtTime(endStr).hour, fmtTime(endStr).minute);
-          
-          let rawTag = "";
-          if (exam && exam.trim()) {
-            rawTag = exam.trim().toUpperCase();
-          } else if (rest.length > 0 && rest[0] && rest[0].trim()) {
-            rawTag = rest[0].trim().toUpperCase();
-          }
-          
-          const formLower = (form || "").toLowerCase();
-          
-          let tag = null;
-          if (rawTag === "2NDFE") tag = "2NDFE";
-          else if (rawTag === "2NDPE") tag = "2NDPE";
-          else if (rawTag === "PE") tag = "PE";
-          else if (rawTag === "FE") tag = "FE";
-          else if (!rawTag || rawTag === "") {
-            if (formLower.includes("2nd") && formLower.includes("fe")) tag = "2NDFE";
-            else if (formLower.includes("2nd") && formLower.includes("pe")) tag = "2NDPE";
-            else if (formLower.includes("practical_exam") || formLower.includes("project presentation")) tag = "PE";
-            else if (formLower.includes("multiple_choices") || formLower.includes("speaking")) tag = "FE";
-          }
-
-          return {
-            title: code || "Unknown",
-            location: room || "",
-            description: form || "",
-            start,
-            end,
-            tag
-          };
-        });
-
-      sendResponse({ events, cleared: true });
-    } catch (e) {
-      sendResponse({ events: [], cleared: false });
-    }
-    return true;
   } else if (msg.action === "getWeekScheduleControls") {
     try {
       sendResponse(getScheduleOfWeekControls());
@@ -260,14 +168,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     } catch (e) {
       console.error("Error extracting weekly schedule:", e);
       sendResponse({ schedule: [], success: false });
-    }
-    return true;
-  } else if (msg.action === "clearClassSchedule") {
-    try {
-      // Clear class schedule from localStorage via content script
-      sendResponse({ success: true });
-    } catch (e) {
-      sendResponse({ success: false });
     }
     return true;
   }
@@ -424,82 +324,4 @@ function extractWeeklyScheduleFromTable() {
 
   console.log(`Found ${schedule.length} classes`);
   return schedule;
-}
-
-function parseClassCell(cellHTML) {
-  try {
-    console.log("PARSE: Analyzing cell HTML...");
-    
-    // Extract subject code - look for pattern like "PRJ301-"
-    const subjectMatch = cellHTML.match(/([A-Z]{3}\d{3})-/);
-    if (!subjectMatch) {
-      console.log("PARSE: ❌ No subject code found");
-      console.log("PARSE: Cell HTML:", cellHTML);
-      return null;
-    }
-    
-    const subject = subjectMatch[1];
-    console.log("PARSE: ✓ Subject:", subject);
-    
-    // Extract room - look for pattern like "at DE-226"
-    const roomMatch = cellHTML.match(/at\s+([A-Z]{2,3}-?\d{3})/);
-    const room = roomMatch ? roomMatch[1] : '';
-    console.log("PARSE: ✓ Room:", room || 'N/A');
-    
-    // Extract status from red font
-    const statusMatch = cellHTML.match(/<font color="red">([^<]+)<\/font>/);
-    const status = statusMatch ? statusMatch[1] : 'Scheduled';
-    console.log("PARSE: ✓ Status:", status);
-    
-    // Extract time range from label-success span
-    const timeMatch = cellHTML.match(/<span class="label label-success">\(([^)]+)\)<\/span>/);
-    const timeRange = timeMatch ? timeMatch[1] : '';
-    console.log("PARSE: ✓ Time range:", timeRange || 'N/A');
-    
-    if (!timeRange) {
-      console.log("PARSE: ❌ No time range found");
-      return null;
-    }
-    
-    // Parse start and end time
-    let startHour = 0, startMinute = 0, endHour = 0, endMinute = 0;
-    
-    const timeParts = timeRange.split('-');
-    if (timeParts.length === 2) {
-      const [startTime, endTime] = timeParts;
-      
-      // Parse start time
-      const startParts = startTime.trim().split(':');
-      if (startParts.length === 2) {
-        startHour = parseInt(startParts[0], 10);
-        startMinute = parseInt(startParts[1], 10);
-      }
-      
-      // Parse end time
-      const endParts = endTime.trim().split(':');
-      if (endParts.length === 2) {
-        endHour = parseInt(endParts[0], 10);
-        endMinute = parseInt(endParts[1], 10);
-      }
-      
-      console.log("PARSE: ✓ Parsed time:", `${startHour}:${startMinute.toString().padStart(2, '0')} - ${endHour}:${endMinute.toString().padStart(2, '0')}`);
-    } else {
-      console.log("PARSE: ❌ Could not split time range");
-      return null;
-    }
-    
-    return {
-      subject,
-      room,
-      status,
-      timeRange,
-      startHour,
-      startMinute,
-      endHour,
-      endMinute
-    };
-  } catch (e) {
-    console.error("PARSE: Error:", e);
-    return null;
-  }
 }

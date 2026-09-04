@@ -1,4 +1,5 @@
-/* Inlined from shared-schedule.js so the service worker does not depend on importScripts (if that fails, no listener runs → "Receiving end does not exist"). */
+/* Dedupe/merge helpers are inlined here on purpose: importScripts failing would leave the service worker
+   without a listener → "Receiving end does not exist". popup.js keeps its own copy for the same reason. */
 function classScheduleDedupeKey(event) {
   if (event.rawDate) {
     return `${event.title}-${event.rawDate.day}/${event.rawDate.month}-${event.rawDate.startHour}:${event.rawDate.startMinute}`;

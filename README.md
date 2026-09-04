@@ -77,7 +77,6 @@ fptu-schedule/
 ├── popup.css
 ├── popup.js
 ├── content.js
-├── sanitize-utils.js
 ├── study-sources.json          # Optional per-course study links
 ├── study-suggestions.js          # Resolve suggestions + fallbacks
 ├── icon-16.png / icon-48.png / icon-128.png
