@@ -127,6 +127,7 @@ function runWeekRangeSync(tabId, startIdx, endIdx, weekLabels, seedJson, onCompl
   let stepIndex = 0;
   const collected = [];
   const failedWeeks = [];
+  let skippedCells = 0;
 
   const labelForWeek = (i) =>
     (weekLabels && weekLabels[i]) || `Tuần #${i}`;
@@ -144,7 +145,8 @@ function runWeekRangeSync(tabId, startIdx, endIdx, weekLabels, seedJson, onCompl
       failedWeeks.length > 0
         ? ` • Tuần lỗi: ${failedWeeks.map((f) => f.label).join("; ")}`
         : "";
-    const toastText = `Đồng bộ xong ${total - failedWeeks.length}/${total} tuần. Mới: ${uniqueNewEvents.length} • Tổng: ${merged.length}${failMsg}`;
+    const skipMsg = skippedCells > 0 ? ` • Bỏ qua ${skippedCells} ô không đọc được` : "";
+    const toastText = `Đồng bộ xong ${total - failedWeeks.length}/${total} tuần. Mới: ${uniqueNewEvents.length} • Tổng: ${merged.length}${failMsg}${skipMsg}`;
     const statusText = `Xong: ${total - failedWeeks.length}/${total} tuần. Tiết mới: ${uniqueNewEvents.length}.${failedWeeks.length ? " Có tuần lỗi (xem toast)." : ""}`;
 
     chrome.storage.local.set(
@@ -200,6 +202,7 @@ function runWeekRangeSync(tabId, startIdx, endIdx, weekLabels, seedJson, onCompl
           failedWeeks.push({ index: idx, label: labelForWeek(idx), reason: err || "extract" });
         } else {
           collected.push.apply(collected, response.schedule || []);
+          skippedCells += response.skipped || 0;
         }
         stepIndex += 1;
         current += 1;
@@ -223,6 +226,7 @@ function runWeekRangeSync(tabId, startIdx, endIdx, weekLabels, seedJson, onCompl
             failedWeeks.push({ index: idx, label: labelForWeek(idx), reason: e2 || "extract" });
           } else {
             collected.push.apply(collected, response.schedule || []);
+          skippedCells += response.skipped || 0;
           }
           stepIndex += 1;
           current += 1;

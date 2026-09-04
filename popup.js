@@ -1105,7 +1105,12 @@ function handleSyncClassSchedule() {
         try {
           document.getElementById('scheduleTabBtn')?.click();
         } catch (e) { /* no-op */ }
-        showToast(`Đã sync lịch học! Mới: ${uniqueNewEvents.length} • Tổng: ${allSchedule.length}`, 2600);
+        const skipped = response.skipped || 0;
+        if (skipped > 0) {
+          showError(`Đồng bộ xong nhưng bỏ qua ${skipped} ô không đọc được — FAP có thể đã đổi giao diện.`);
+        } else {
+          showToast(`Đã đồng bộ lịch học! Mới: ${uniqueNewEvents.length} • Tổng: ${allSchedule.length}`, 2600);
+        }
       });
     });
   });

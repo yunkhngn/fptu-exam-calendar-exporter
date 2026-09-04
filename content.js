@@ -59,6 +59,8 @@ function getScheduleOfWeekControls() {
   };
 }
 
+/* Guarded so the scraper can be required from tests/, where there is no chrome runtime. */
+if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   if (msg.action === "extractSchedule") {
     try {
@@ -163,8 +165,8 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         });
         return true;
       }
-      const weeklySchedule = extractWeeklyScheduleFromTable();
-      sendResponse({ schedule: weeklySchedule, success: true });
+      const { schedule, skipped } = extractWeeklyScheduleFromTable();
+      sendResponse({ schedule, skipped, success: true });
     } catch (e) {
       console.error("Error extracting weekly schedule:", e);
       sendResponse({ schedule: [], success: false });
@@ -172,10 +174,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
 });
+}
 
 function extractWeeklyScheduleFromTable() {
-  console.log("Starting extraction with simplified code...");
-  
   const rows = Array.from(document.querySelectorAll("tbody tr"))
     .filter((row) => row.querySelector("td")?.textContent?.startsWith("Slot"));
 
@@ -193,15 +194,14 @@ function extractWeeklyScheduleFromTable() {
   const dayNames = headerTexts("thead tr:nth-child(1) th");
 
   const schedule = [];
+  // A cell holding a link is a class cell. If one produces no event the page markup has
+  // moved on from what these patterns expect — report it rather than dropping it silently.
+  let skipped = 0;
   
   // Get correct year for date calculation
   const yearSelect = findScheduleOfWeekYearSelect();
   const year = yearSelect ? parseInt(yearSelect.value) : new Date().getFullYear();
   
-  console.log("Headers found:", dayHeaders.length);
-  console.log("Rows found:", rows.length);
-  console.log("Using year:", year);
-
   rows.forEach((row) => {
     const cells = row.querySelectorAll("td");
     const slotName = cells[0].textContent.trim();
@@ -255,17 +255,27 @@ function extractWeeklyScheduleFromTable() {
         }
         
         // Even if we can't find all parts, at least capture what we can
-        if (subjectMatch) {
+        if (!subjectMatch) {
+          skipped += 1;
+          continue;
+        }
+        {
           const subject = subjectMatch[1];
           const room = roomMatch ? roomMatch[1] : "";
           const timeRange = timeMatch ? timeMatch[1] : "7:30-9:00"; // Default time if not found
           
           // Create formatted event 
           const dateStr = dayHeaders[i - 1];
-          if (!dateStr) continue;
+          if (!dateStr) {
+            skipped += 1;
+            continue;
+          }
 
           const [day, month] = dateStr.split('/').map(Number);
-          if (!Number.isFinite(day) || !Number.isFinite(month)) continue;
+          if (!Number.isFinite(day) || !Number.isFinite(month)) {
+            skipped += 1;
+            continue;
+          }
           
           let startHour = 0, startMinute = 0, endHour = 0, endMinute = 0;
           
@@ -297,13 +307,17 @@ function extractWeeklyScheduleFromTable() {
             day: dayNames[i - 1],
             date: `${day}/${month}/${year}`
           });
-
-          console.log(`Added: ${subject} on ${day}/${month}/${year} ${timeRange}`);
         }
       }
     }
   });
 
-  console.log(`Found ${schedule.length} classes`);
-  return schedule;
+  if (skipped > 0) {
+    console.warn(`FPTU Schedule: ${skipped} ô lịch không đọc được (FAP có thể đã đổi giao diện).`);
+  }
+  return { schedule, skipped };
+}
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { extractWeeklyScheduleFromTable, getScheduleOfWeekControls };
 }
