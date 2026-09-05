@@ -500,17 +500,6 @@ function renderClassSchedule(schedule) {
     chipType.appendChild(document.createTextNode(` ${(ev.slot || ev.type || "Slot ?").toString()}`));
     tags.appendChild(chipType);
 
-    // Online chip — a class kept its assigned room but was moved to run online
-    // (FAP marks this with its own blinking "Online" indicator on the cell).
-    if (ev.isOnline) {
-      const chipOnline = document.createElement("span");
-      chipOnline.className = "chip online";
-      const dotOnline = document.createElement("span"); dotOnline.className = "dot";
-      chipOnline.appendChild(dotOnline);
-      chipOnline.appendChild(document.createTextNode(" Online"));
-      tags.appendChild(chipOnline);
-    }
-
     // Room chip
     if (ev.location) {
       const chipRoom = document.createElement("span");
@@ -862,9 +851,13 @@ function setWeekRangeControlsDisabled(disabled) {
 }
 
 function handleLoadWeekScheduleOptions() {
-  findScheduleOfWeekTab((err, tab) => {
+  findScheduleOfWeekTab(async (err, tab) => {
     if (err || !tab || !tab.id) {
-      if (confirm("Chưa có tab Lịch tuần FAP. Mở https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx ?")) {
+      const open = await showConfirm(
+        "Chưa có tab Lịch tuần FAP. Mở https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx ?",
+        { okLabel: "Mở FAP" }
+      );
+      if (open) {
         chrome.tabs.create({ url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx", active: true });
       }
       return;
@@ -929,9 +922,13 @@ function handleSyncClassScheduleWeekRange() {
     weekLabels.push((startSel.options[i].textContent || "").trim());
   }
 
-  findScheduleOfWeekTab((err, tab) => {
+  findScheduleOfWeekTab(async (err, tab) => {
     if (err || !tab || !tab.id) {
-      if (confirm("Cần tab Lịch tuần FAP để đồng bộ. Mở ScheduleOfWeek.aspx?")) {
+      const open = await showConfirm(
+        "Cần tab Lịch tuần FAP để đồng bộ. Mở ScheduleOfWeek.aspx?",
+        { okLabel: "Mở FAP" }
+      );
+      if (open) {
         chrome.tabs.create({ url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx", active: true });
       }
       return;
@@ -1051,9 +1048,10 @@ function pollWeekRangeSyncUntilIdle() {
 function handleSyncClassSchedule() {
   showToast("Đang sync lịch học...", 1500);
 
-  findScheduleOfWeekTab((err, tab) => {
+  findScheduleOfWeekTab(async (err, tab) => {
     if (err || !tab || !tab.id) {
-      if (confirm("Cần trang Lịch tuần (ScheduleOfWeek). Mở FAP?")) {
+      const open = await showConfirm("Cần trang Lịch tuần (ScheduleOfWeek). Mở FAP?", { okLabel: "Mở FAP" });
+      if (open) {
         chrome.tabs.create({ url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx", active: true });
       }
       return;
@@ -1209,10 +1207,12 @@ function handleDownloadClassSchedule() {
   showToast(`Đã tải ${schedule.length} tiết học. Chúc bạn học tốt!`, 2600);
 }
 
-function handleClearClassSchedule() {
-  if (!confirm('Bạn có chắc chắn muốn xoá toàn bộ lịch học đã lưu?')) {
-    return;
-  }
+async function handleClearClassSchedule() {
+  const proceed = await showConfirm(
+    "Bạn có chắc chắn muốn xoá toàn bộ lịch học đã lưu?",
+    { title: "Xoá lịch học", okLabel: "Xoá", danger: true }
+  );
+  if (!proceed) return;
   try {
     localStorage.removeItem("classSchedule");
     try {
@@ -1641,4 +1641,43 @@ function showToast(message, duration = 1800, kind = "info") {
 
 function showError(message) {
   showToast(message, 4200, "error");
+}
+
+/**
+ * Promise-based stand-in for window.confirm(), styled like the rest of the popup instead of
+ * a native browser dialog. Resolves true/false; never rejects.
+ */
+function showConfirm(message, opts = {}) {
+  const { title = "Xác nhận", okLabel = "Đồng ý", danger = false } = opts;
+  const modal = document.getElementById("confirmModal");
+  const titleEl = document.getElementById("confirmModalTitle");
+  const msgEl = document.getElementById("confirmModalMessage");
+  const okBtn = document.getElementById("confirmModalOk");
+  const cancelBtn = document.getElementById("confirmModalCancel");
+  const closeBtn = document.getElementById("closeConfirmModal");
+
+  titleEl.textContent = title;
+  msgEl.textContent = message;
+  okBtn.textContent = okLabel;
+  okBtn.classList.toggle("danger-btn", danger);
+  modal.style.display = "block";
+
+  return new Promise((resolve) => {
+    const settle = (result) => {
+      modal.style.display = "none";
+      okBtn.removeEventListener("click", onOk);
+      cancelBtn.removeEventListener("click", onCancel);
+      closeBtn.removeEventListener("click", onCancel);
+      modal.removeEventListener("click", onBackdrop);
+      resolve(result);
+    };
+    const onOk = () => settle(true);
+    const onCancel = () => settle(false);
+    const onBackdrop = (e) => { if (e.target === modal) settle(false); };
+
+    okBtn.addEventListener("click", onOk);
+    cancelBtn.addEventListener("click", onCancel);
+    closeBtn.addEventListener("click", onCancel);
+    modal.addEventListener("click", onBackdrop);
+  });
 }

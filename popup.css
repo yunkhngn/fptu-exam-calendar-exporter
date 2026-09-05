@@ -677,6 +677,24 @@ html, body {
   border-color: var(--accent-hover);
 }
 
+/* Confirm modal: message text + the destructive variant of Áp dụng, for actions like Xoá. */
+.confirm-modal__message {
+  margin: 0 0 18px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+
+.filter-btn.apply-btn.danger-btn {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.filter-btn.apply-btn.danger-btn:hover {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
 /* ---- Schedule tab ---- */
 #scheduleTab {
   padding: 0 2px 8px;

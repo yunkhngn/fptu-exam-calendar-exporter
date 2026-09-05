@@ -165,6 +165,24 @@
       </div>
     </div>
 
+    <div id="confirmModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="confirmModalTitle">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="confirmModalTitle">Xác nhận</h3>
+          <button type="button" id="closeConfirmModal" class="close-btn" aria-label="Đóng">
+            <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p id="confirmModalMessage" class="confirm-modal__message"></p>
+          <div class="filter-actions">
+            <button type="button" id="confirmModalCancel" class="filter-btn">Huỷ</button>
+            <button type="button" id="confirmModalOk" class="filter-btn apply-btn">Đồng ý</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="weekRangeModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="weekRangeModalTitle">
       <div class="modal-content">
         <div class="modal-header">

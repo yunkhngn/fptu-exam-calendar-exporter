@@ -110,9 +110,42 @@ test("the tab bar only takes its shadow once the list scrolls", async () => {
   assert.strictEqual(bar.classList.contains("is-stuck"), false, "flat again at the top");
 });
 
-test("no blocking alert() survives in the popup", () => {
+test("no blocking alert() or confirm() survives in the popup", () => {
   const src = fs.readFileSync(path.join(root, "popup.js"), "utf8");
   assert.strictEqual(/\balert\s*\(/.test(src), false, "errors go through showError/showToast");
+  // the definition/JSDoc mentioning window.confirm() is fine; a call to the bare global is not
+  assert.strictEqual(/[^.]\bconfirm\s*\(/.test(src.replace(/window\.confirm/g, "")), false,
+    "yes/no prompts go through showConfirm(), not the native dialog");
+});
+
+test("showConfirm resolves true/false instead of blocking, and reflects title/label/danger", async () => {
+  const { window } = await boot();
+  const doc = window.document;
+  const modal = doc.getElementById("confirmModal");
+  assert.strictEqual(modal.style.display, "none");
+
+  const pending = window.showConfirm("Xoá hết?", { title: "Xoá lịch học", okLabel: "Xoá", danger: true });
+  assert.strictEqual(modal.style.display, "block", "showConfirm opens the modal itself");
+  assert.strictEqual(doc.getElementById("confirmModalTitle").textContent, "Xoá lịch học");
+  assert.strictEqual(doc.getElementById("confirmModalMessage").textContent, "Xoá hết?");
+  const okBtn = doc.getElementById("confirmModalOk");
+  assert.strictEqual(okBtn.textContent, "Xoá");
+  assert.strictEqual(okBtn.classList.contains("danger-btn"), true);
+
+  okBtn.dispatchEvent(new window.Event("click"));
+  assert.strictEqual(await pending, true, "OK resolves true");
+  assert.strictEqual(modal.style.display, "none", "and closes the modal");
+
+  const pending2 = window.showConfirm("Chắc không?");
+  doc.getElementById("confirmModalCancel").dispatchEvent(new window.Event("click"));
+  assert.strictEqual(await pending2, false, "Huỷ resolves false");
+
+  const pending3 = window.showConfirm("Chắc không?");
+  // a click whose target is the backdrop itself, not a descendant, must also cancel
+  const backdropClick = new window.Event("click");
+  Object.defineProperty(backdropClick, "target", { value: modal });
+  modal.dispatchEvent(backdropClick);
+  assert.strictEqual(await pending3, false, "clicking the backdrop resolves false");
 });
 
 test("the class filter button opens its modal and applies a range", async () => {
