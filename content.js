@@ -172,7 +172,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ schedule: [], success: false });
     }
     return true;
-  } else if (msg.action === "extractStudentGrade") {
+  } else if (msg.action === "extractStudentGrade" || msg.type === "EXTRACT_GRADE_REPORT" || msg.action === "EXTRACT_GRADE_REPORT") {
     try {
       const grade = extractStudentGradeFromPage();
       if (!grade) {
@@ -184,7 +184,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ ok: false, error: String(e.message || e) });
     }
     return true;
-  } else if (msg.action === "getGradePageControls") {
+  } else if (msg.action === "getGradePageControls" || msg.type === "GET_GRADE_PAGE_CONTROLS" || msg.action === "GET_GRADE_PAGE_CONTROLS") {
     try {
       sendResponse(getGradePageControls());
     } catch (e) {
@@ -353,57 +353,193 @@ function extractWeeklyScheduleFromTable() {
   return { schedule, skipped };
 }
 
-function findFapGradeTable() {
-  return document.querySelector('table[summary="Report"]');
+function findFapGradeTable(doc) {
+  if (!doc) doc = typeof document !== "undefined" ? document : null;
+  if (!doc) return null;
+  const bySummary = doc.querySelector('table[summary="Report"]');
+  if (bySummary) return bySummary;
+
+  const tables = Array.from(doc.querySelectorAll("table"));
+  for (const tbl of tables) {
+    const text = tbl.textContent || "";
+    if (/Grade category/i.test(text) && (/Weight/i.test(text) || /Value/i.test(text))) {
+      return tbl;
+    }
+  }
+  return null;
 }
 
-function findGradeCourseSelect() {
-  return (
-    document.getElementById("ctl00_mainContent_drpCourse") ||
-    document.getElementById("ctl00_mainContent_ddlCourse") ||
-    document.querySelector('select[name*="Course"]')
-  );
+function extractCourseCodeAndName(rawText, courseId = "") {
+  let text = (rawText || "").trim();
+  text = text.replace(/\(?from\s+[\d/]+\s*-\s*[\d/]+\)?/gi, "").trim();
+
+  // 1. Parenthesized code like "Project management (PMG202c)" -> PMG202c
+  const codeInParen = text.match(/\(([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\)/i);
+  if (codeInParen) {
+    const code = codeInParen[1].toUpperCase();
+    const name = text.replace(codeInParen[0], "").replace(/\s{2,}/g, " ").trim();
+    return { courseCode: code, courseName: name || code };
+  }
+
+  // 2. Prefix code like "PRN211 - Multiplatform Mobile App"
+  const prefixMatch = text.match(/^([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\s*[-–:]\s*(.*)$/i);
+  if (prefixMatch) {
+    return {
+      courseCode: prefixMatch[1].toUpperCase(),
+      courseName: prefixMatch[2].trim() || prefixMatch[1].toUpperCase()
+    };
+  }
+
+  // 3. Word with digits anywhere e.g. "ENT301"
+  const wordWithDigit = text.match(/\b([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\b/i);
+  if (wordWithDigit) {
+    return {
+      courseCode: wordWithDigit[1].toUpperCase(),
+      courseName: text
+    };
+  }
+
+  // 4. Fallback: initials from words
+  const words = text.split(/\s+/).filter(Boolean);
+  let acronym = words.map((w) => w[0]).join("").toUpperCase();
+  if (acronym.length < 2) acronym = "COURSE";
+  const code = courseId ? `${acronym}_${courseId}` : acronym;
+  return {
+    courseCode: code,
+    courseName: text || code
+  };
 }
 
-function extractStudentGradeFromPage() {
-  const table = findFapGradeTable();
+function getGradePageCourses(doc) {
+  if (!doc) doc = typeof document !== "undefined" ? document : null;
+  if (!doc) return [];
+  const courses = [];
+  const seen = new Set();
+
+  // FAP lists courses as <a> links with course=ID
+  const links = Array.from(doc.querySelectorAll('a[href*="course="]'));
+  links.forEach((a) => {
+    try {
+      const href = a.getAttribute("href") || "";
+      const m = href.match(/course=([^&]+)/i);
+      if (m) {
+        const courseId = m[1];
+        if (!seen.has(courseId)) {
+          seen.add(courseId);
+          const fullText = (a.textContent || "").trim();
+          const { courseCode, courseName } = extractCourseCodeAndName(fullText, courseId);
+          const fullHref = a.href || href;
+          courses.push({
+            id: courseId,
+            href: fullHref,
+            courseCode,
+            courseName,
+            fullText
+          });
+        }
+      }
+    } catch (_) {}
+  });
+
+  return courses;
+}
+
+function getActiveCourseInfo(doc) {
+  if (!doc) doc = typeof document !== "undefined" ? document : null;
+  const win = (doc && doc.defaultView) || (typeof window !== "undefined" ? window : null);
+  let currentCourseId = "";
+  let currentTerm = "";
+
+  try {
+    const search = (win && win.location ? win.location.search : "") || "";
+    const params = new URLSearchParams(search);
+    currentCourseId = params.get("course") || "";
+    currentTerm = params.get("term") || "";
+  } catch (_) {}
+
+  // If term not in URL, find term from active term element or links
+  if (!currentTerm && doc) {
+    const termLink = doc.querySelector('a[href*="term="]');
+    if (termLink) {
+      const tm = (termLink.getAttribute("href") || "").match(/term=([^&]+)/i);
+      if (tm) currentTerm = tm[1];
+    }
+    if (!currentTerm) {
+      const termEl = doc.querySelector('a[href*="term="].selected, b, strong');
+      if (termEl) {
+        const tm = (termEl.textContent || "").match(/(Spring|Summer|Fall|Winter)\d{4}/i);
+        if (tm) currentTerm = tm[0];
+      }
+    }
+  }
+
+  const courses = getGradePageCourses(doc);
+  let activeCourse = null;
+
+  if (currentCourseId) {
+    activeCourse = courses.find((c) => c.id === currentCourseId);
+  }
+
+  // Check table with TERM and COURSE headers for selected/bold element
+  if (!activeCourse && doc) {
+    const courseHeaders = Array.from(doc.querySelectorAll("th")).filter((th) => /COURSE/i.test(th.textContent));
+    if (courseHeaders.length > 0) {
+      const table = courseHeaders[0].closest("table");
+      if (table) {
+        const activeEls = Array.from(table.querySelectorAll("b, strong, .selected, span[style*='bold']"));
+        for (const el of activeEls) {
+          const text = (el.textContent || "").trim();
+          if (text && !/^(TERM|COURSE)$/i.test(text) && !/^(Spring|Summer|Fall|Winter)\d{4}$/i.test(text)) {
+            const { courseCode, courseName } = extractCourseCodeAndName(text, currentCourseId);
+            activeCourse = {
+              id: currentCourseId || courseCode,
+              courseCode,
+              courseName,
+              fullText: text
+            };
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback if still not matched
+  if (!activeCourse && courses.length > 0) {
+    activeCourse = courses[0];
+  } else if (!activeCourse && currentCourseId) {
+    activeCourse = {
+      id: currentCourseId,
+      courseCode: `COURSE_${currentCourseId}`,
+      courseName: `Môn học (${currentCourseId})`
+    };
+  }
+
+  return {
+    course: activeCourse,
+    term: currentTerm,
+    courses
+  };
+}
+
+function extractStudentGradeFromPage(doc) {
+  if (!doc) doc = typeof document !== "undefined" ? document : null;
+  if (!doc) return null;
+
+  const table = findFapGradeTable(doc);
   if (!table) return null;
 
-  const courseSelect = findGradeCourseSelect();
-  let courseCode = "";
-  let courseName = "";
-  let term = "";
-
-  if (courseSelect && courseSelect.selectedIndex >= 0) {
-    const opt = courseSelect.options[courseSelect.selectedIndex];
-    const text = (opt.textContent || "").trim();
-    const m = text.match(/^([A-Za-z0-9_]{3,8})\s*[-–:]\s*(.*)$/);
-    if (m) {
-      courseCode = m[1].toUpperCase();
-      courseName = m[2].trim();
-    } else {
-      courseCode = text.split(/[\s-]/)[0].toUpperCase();
-      courseName = text;
-    }
-  }
-
-  if (!courseCode) {
-    const heading = document.querySelector("#ctl00_mainContent_divContent h2, #ctl00_mainContent_divContent h3, h2, h3");
-    if (heading) {
-      const ht = heading.textContent.trim();
-      const m = ht.match(/([A-Za-z0-9_]{3,8})/);
-      if (m) courseCode = m[1].toUpperCase();
-    }
-  }
-
-  const termSelect = document.getElementById("ctl00_mainContent_drpTerm") || document.querySelector('select[name*="Term"]');
-  if (termSelect && termSelect.selectedIndex >= 0) {
-    term = (termSelect.options[termSelect.selectedIndex].textContent || "").trim();
-  }
+  const { course, term } = getActiveCourseInfo(doc);
+  const courseCode = course ? course.courseCode : "UNKNOWN";
+  const courseName = course ? course.courseName : courseCode;
 
   let parsed = null;
-  if (typeof parseFapGradeTable === "function") {
-    parsed = parseFapGradeTable(table);
+  const parseFn = typeof parseFapGradeTable === "function"
+    ? parseFapGradeTable
+    : (typeof window !== "undefined" && typeof window.parseFapGradeTable === "function" ? window.parseFapGradeTable : null);
+
+  if (parseFn) {
+    parsed = parseFn(table);
   } else {
     const rows = Array.from(table.querySelectorAll("tbody tr"));
     const categories = [];
@@ -424,25 +560,18 @@ function extractStudentGradeFromPage() {
   return {
     courseCode: courseCode || "UNKNOWN",
     courseName: courseName || courseCode || "Môn học",
-    term,
+    term: term || "",
     ...parsed,
     lastUpdated: Date.now()
   };
 }
 
-function getGradePageControls() {
-  const courseSelect = findGradeCourseSelect();
-  if (!courseSelect) {
-    return { ok: false, courses: [] };
-  }
-  const courses = Array.from(courseSelect.options).map((opt, idx) => ({
-    index: idx,
-    value: opt.value,
-    label: (opt.textContent || "").trim()
-  }));
+function getGradePageControls(doc) {
+  if (!doc) doc = typeof document !== "undefined" ? document : null;
+  const { courses, term } = getActiveCourseInfo(doc);
   return {
-    ok: true,
-    selectedIndex: courseSelect.selectedIndex,
+    ok: courses.length > 0,
+    term,
     courses
   };
 }
@@ -453,7 +582,7 @@ if (typeof window !== "undefined" && /StudentGrade\.aspx/i.test(window.location.
       const grade = extractStudentGradeFromPage();
       if (grade && grade.courseCode && grade.courseCode !== "UNKNOWN") {
         if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-          chrome.runtime.sendMessage({ type: "SAVE_STUDENT_GRADE", grade }).catch(() => {});
+          chrome.runtime.sendMessage({ action: "SAVE_STUDENT_GRADE", type: "SAVE_STUDENT_GRADE", grade }).catch(() => {});
         }
       }
     } catch (_) {}
@@ -465,6 +594,10 @@ if (typeof module !== "undefined" && module.exports) {
     extractWeeklyScheduleFromTable,
     getScheduleOfWeekControls,
     extractStudentGradeFromPage,
-    getGradePageControls
+    getGradePageControls,
+    findFapGradeTable,
+    extractCourseCodeAndName,
+    getGradePageCourses,
+    getActiveCourseInfo
   };
 }

@@ -2,10 +2,17 @@ const test = require("node:test");
 const assert = require("node:assert");
 const { JSDOM } = require("jsdom");
 const {
+  findFapGradeTable,
   parseFapGradeTable,
   calculateCurrentScore,
   calculateRequiredExamScore
 } = require("../lib/grades.js");
+const {
+  extractCourseCodeAndName,
+  getGradePageCourses,
+  extractStudentGradeFromPage,
+  getGradePageControls
+} = require("../content.js");
 
 const REAL_FAP_HTML = `
 <table summary="Report">
@@ -125,3 +132,102 @@ test("calculateRequiredExamScore detects pass_guaranteed and impossible cases", 
   assert.strictEqual(impossible.status, "impossible");
   assert.ok(impossible.requiredScore > 10.0);
 });
+
+test("findFapGradeTable finds summary=Report and fallback tables", () => {
+  const dom1 = new JSDOM(REAL_FAP_HTML);
+  assert.ok(findFapGradeTable(dom1.window.document));
+
+  const dom2 = new JSDOM(`
+    <table>
+      <thead><tr><th>Grade category</th><th>Weight</th><th>Value</th></tr></thead>
+      <tbody><tr><td>Quiz</td><td>10%</td><td>8</td></tr></tbody>
+    </table>
+  `);
+  assert.ok(findFapGradeTable(dom2.window.document));
+});
+
+test("extractCourseCodeAndName extracts code and clean name correctly", () => {
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("Experiential Entrepreneurship (ENT301m) (from 13/05/2026 - 22/07/2026)", "100609"),
+    { courseCode: "ENT301M", courseName: "Experiential Entrepreneurship" }
+  );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("Multiplatform Mobile App (PRN211)", "100610"),
+    { courseCode: "PRN211", courseName: "Multiplatform Mobile App" }
+  );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("Project management (PMG202c)", "100611"),
+    { courseCode: "PMG202C", courseName: "Project management" }
+  );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("PRJ301 - Server-Side development", "100612"),
+    { courseCode: "PRJ301", courseName: "Server-Side development" }
+  );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("Experiential Entrepreneurship", "100609"),
+    { courseCode: "EE_100609", courseName: "Experiential Entrepreneurship" }
+  );
+});
+
+test("getGradePageCourses and extractStudentGradeFromPage parse real FAP page layout", () => {
+  const REAL_PAGE_HTML = `
+    <html>
+      <body>
+        <table>
+          <thead><tr><th>TERM</th><th>COURSE</th></tr></thead>
+          <tbody>
+            <tr>
+              <td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026">Summer2026</a></td>
+              <td>
+                <a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100609">Experiential Entrepreneurship (ENT301m) (from 13/05/2026 - 22/07/2026)</a><br/>
+                <a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100610">Multiplatform Mobile App (PRN211) (from 13/05/2026 - 22/07/2026)</a><br/>
+                <a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100611">Project management (PMG202c)</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <table summary="Report">
+          <thead>
+            <tr><th>Grade category</th><th>Grade item</th><th>Weight</th><th>Value</th><th>Comment</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="2">Group Assignment 1</td><td>Group Assignment 1</td><td>10.0 %</td><td>8</td><td></td></tr>
+            <tr><td>Total</td><td>10.0 %</td><td>8</td><td></td></tr>
+            <tr><td rowspan="2">Constructivism Presentations</td><td>Constructivism Presentations</td><td>15.0 %</td><td>8.5</td><td></td></tr>
+            <tr><td>Total</td><td>15.0 %</td><td>8.5</td><td></td></tr>
+            <tr><td rowspan="2">Presentation</td><td>Presentation</td><td>40.0 %</td><td>7.6</td><td></td></tr>
+            <tr><td>Total</td><td>40.0 %</td><td>7.6</td><td></td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td rowspan="2">COURSE TOTAL</td><td>AVERAGE</td><td colspan="3">7.8</td></tr>
+            <tr><td>STATUS</td><td colspan="3"><font color="Green">PASSED</font></td></tr>
+          </tfoot>
+        </table>
+      </body>
+    </html>
+  `;
+
+  const dom = new JSDOM(REAL_PAGE_HTML, {
+    url: "https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100609"
+  });
+
+  const controls = getGradePageControls(dom.window.document);
+  assert.strictEqual(controls.ok, true);
+  assert.strictEqual(controls.courses.length, 3);
+  assert.strictEqual(controls.courses[0].courseCode, "ENT301M");
+  assert.strictEqual(controls.courses[1].courseCode, "PRN211");
+  assert.strictEqual(controls.courses[2].courseCode, "PMG202C");
+
+  // Extract the current course grade
+  const grade = extractStudentGradeFromPage(dom.window.document);
+  assert.ok(grade, "extracted grade");
+  assert.strictEqual(grade.courseCode, "ENT301M");
+  assert.strictEqual(grade.average, 7.8);
+  assert.strictEqual(grade.status, "Passed");
+  assert.strictEqual(grade.term, "Summer2026");
+});
+

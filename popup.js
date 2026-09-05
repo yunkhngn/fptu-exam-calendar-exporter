@@ -1107,7 +1107,7 @@ window.renderClassSchedule = renderClassSchedule;
           showError("Hãy mở tab FAP (StudentGrade.aspx) để đồng bộ điểm.");
           return;
         }
-        chrome.tabs.sendMessage(activeTab.id, { type: "EXTRACT_GRADE_REPORT" }, (resp) => {
+        chrome.tabs.sendMessage(activeTab.id, { action: "extractStudentGrade", type: "EXTRACT_GRADE_REPORT" }, (resp) => {
           if (chrome.runtime.lastError || !resp || !resp.ok || !resp.grade) {
             showError("Không tìm thấy bảng điểm trên trang hiện tại. Hãy chọn môn trên FAP.");
             return;
@@ -1138,18 +1138,63 @@ window.renderClassSchedule = renderClassSchedule;
           showError("Mở trang FAP 'Grade report' (StudentGrade.aspx) để quét tất cả môn.");
           return;
         }
-        chrome.tabs.sendMessage(activeTab.id, { type: "GET_GRADE_PAGE_CONTROLS" }, (resp) => {
+        chrome.tabs.sendMessage(activeTab.id, { action: "getGradePageControls", type: "GET_GRADE_PAGE_CONTROLS" }, async (resp) => {
           if (chrome.runtime.lastError || !resp || !resp.ok || !resp.courses || resp.courses.length === 0) {
             showError("Không lấy được danh sách môn học từ FAP.");
             return;
           }
-          showToast(`Đang quét ${resp.courses.length} môn học... Vui lòng không đóng tab FAP!`, 3000);
-          if (chrome.runtime && chrome.runtime.sendMessage) {
-            chrome.runtime.sendMessage({
-              type: "START_ALL_GRADES_SYNC",
-              tabId: activeTab.id,
-              totalCourses: resp.courses.length
+          const courses = resp.courses;
+          showToast(`Bắt đầu quét ${courses.length} môn học...`, 1500);
+
+          const loc = getChromeStorageLocal();
+          let grades = {};
+          if (loc) {
+            try {
+              const r = await new Promise((res) => loc.get(["studentGrades"], res));
+              grades = (r && r.studentGrades) || {};
+            } catch (_) {}
+          }
+
+          let savedCount = 0;
+          for (let i = 0; i < courses.length; i++) {
+            const c = courses[i];
+            showToast(`Đang quét [${i + 1}/${courses.length}]: ${c.courseCode}...`, 1200);
+            try {
+              const fetchUrl = c.href || `https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?course=${c.id}`;
+              const res = await fetch(fetchUrl, { credentials: "include" });
+              if (!res.ok) continue;
+              const html = await res.text();
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(html, "text/html");
+              const table = (typeof findFapGradeTable === "function")
+                ? findFapGradeTable(doc)
+                : doc.querySelector('table[summary="Report"]');
+              if (!table) continue;
+
+              const parsed = (typeof parseFapGradeTable === "function") ? parseFapGradeTable(table) : null;
+              if (!parsed) continue;
+
+              grades[c.courseCode] = {
+                courseCode: c.courseCode,
+                courseName: c.courseName || c.courseCode,
+                term: resp.term || "",
+                ...parsed,
+                lastUpdated: Date.now()
+              };
+              savedCount++;
+            } catch (err) {
+              console.warn("Lỗi khi tải điểm môn:", c.courseCode, err);
+            }
+          }
+
+          if (loc) {
+            loc.set({ studentGrades: grades }, () => {
+              showToast(`Đã quét xong ${savedCount}/${courses.length} môn!`, 3000);
+              loadAndRenderStudentGrades();
             });
+          } else {
+            showToast(`Đã quét xong ${savedCount}/${courses.length} môn!`, 3000);
+            renderStudentGrades(grades);
           }
         });
       });
