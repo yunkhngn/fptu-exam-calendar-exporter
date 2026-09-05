@@ -47,6 +47,17 @@
       <circle cx="12" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
       <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
     </symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+    </symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+    </symbol>
+    <symbol id="icon-theme-auto" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
+      <path fill="currentColor" d="M12 3a9 9 0 000 18V3z"/>
+    </symbol>
   </svg>
 
   <div class="popup-wrapper">
@@ -67,9 +78,14 @@
           <p class="popup-header__subtitle">Đồng bộ lịch học &amp; lịch thi từ FAP</p>
         </div>
       </div>
-      <button type="button" id="notificationBtn" class="header-icon-btn" title="Cài đặt thông báo" aria-label="Cài đặt thông báo">
-        <svg class="icon" aria-hidden="true"><use href="#icon-bell"/></svg>
-      </button>
+      <div class="popup-header__actions">
+        <button type="button" id="themeToggleBtn" class="header-icon-btn" title="Chế độ giao diện: Tự động" aria-label="Chế độ giao diện">
+          <svg class="icon" aria-hidden="true"><use href="#icon-theme-auto"/></svg>
+        </button>
+        <button type="button" id="notificationBtn" class="header-icon-btn" title="Cài đặt thông báo" aria-label="Cài đặt thông báo">
+          <svg class="icon" aria-hidden="true"><use href="#icon-bell"/></svg>
+        </button>
+      </div>
     </header>
 
     <section id="examList" class="popup-list">
@@ -346,6 +362,7 @@
     <script src="lib/ics.js"></script>
     <script src="lib/notifications.js"></script>
     <script src="lib/grades.js"></script>
+    <script src="lib/theme.js"></script>
     <script src="study-suggestions.js"></script>
     <script src="popup.js"></script>
   </div>
