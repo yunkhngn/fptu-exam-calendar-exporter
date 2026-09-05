@@ -29,13 +29,18 @@ Việc thiếu công cụ tính toán tự động khiến sinh viên phải dù
 - **`manifest.json`**:
   - Bổ sung match URL `https://fap.fpt.edu.vn/Grade/*` vào `content_scripts`.
 - **`lib/grades.js` (Mới - UMD module)**:
+  - Parser DOM bảng điểm `parseFapGradeTable(tableElement)`:
+    - Xử lý bảng `table[summary="Report"]`.
+    - Xử lý `rowspan` ở cột `Grade category` (khi `tr` có 5 ô vs 4 ô do bị rowspan gộp).
+    - Phân biệt các thành phần thông thường, hàng `Total` của từng category, hàng `Bonus`, và các hàng thi lại (`Resit`).
+    - Bóc tách `<tfoot>`: `Average` (điểm tổng kết hiện tại) và `Status` (`Passed` / `Not passed`).
   - Hàm tính toán điểm tích lũy hiện tại (`calculateCurrentScore`).
   - Hàm tính điểm thi cuối kỳ cần đạt (`calculateRequiredExamScore`).
   - Phân loại trạng thái dự báo (`pass_guaranteed`, `achievable`, `impossible`, `completed`).
   - Xử lý điều kiện điểm liệt tối thiểu 4.0.
-  - Thuần JS, không phụ thuộc DOM để chạy unit test 100% bằng `node --test`.
+  - Thuần JS, không phụ thuộc Chrome API hay môi trường browser để chạy unit test 100% bằng `node --test`.
 - **`content.js`**:
-  - Thêm action `extractStudentGrade`: bóc tách bảng điểm của môn hiện tại trên FAP.
+  - Thêm action `extractStudentGrade`: bóc tách bảng điểm `table[summary="Report"]` của môn hiện tại trên FAP.
   - Thêm action `getGradePageControls`: lấy danh sách các môn học trong kỳ từ dropdown `<select id="ctl00_mainContent_drpCourse">` (hoặc `ddlCourse`).
 - **`background.js`**:
   - Hỗ trợ action `START_ALL_GRADES_SYNC`: tuần tự chuyển dropdown từng môn học trên tab FAP, chờ trang tải xong và bóc tách dữ liệu gộp vào `chrome.storage.local.studentGrades`.
@@ -45,20 +50,47 @@ Việc thiếu công cụ tính toán tự động khiến sinh viên phải dù
   - Hàng action buttons cho tab Điểm số: *Đồng bộ*, *Quét tất cả môn*, *Xoá điểm*.
   - Render danh sách thẻ môn học, progress bar, và interactive target score slider.
 
-### 2. Mô hình dữ liệu (`CourseGrade`)
+### 2. Mô hình dữ liệu & Cấu trúc bảng điểm FAP
 
+Dựa trên cấu trúc thực tế của FAP:
+```html
+<table summary="Report">
+  <thead>
+    <tr><th>Grade category</th><th>Grade item</th><th>Weight</th><th>Value</th><th>Comment</th></tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="2">Final exam PE</td><td>Final exam PE</td><td>100.0 %</td><td>7</td><td></td></tr>
+    <tr><td>Total</td><td>100.0 %</td><td>7</td><td></td></tr>
+    ...
+    <tr><td></td><td>Bonus</td><td></td><td>1</td><td></td></tr>
+  </tbody>
+  <tfoot>
+    <tr><td rowspan="2">Course total</td><td>Average</td><td colspan="3">8.0</td></tr>
+    <tr><td>Status</td><td colspan="3"><font color="Green">Passed</font></td></tr>
+  </tfoot>
+</table>
+```
+
+Dữ liệu chuẩn hóa trong extension:
 ```json
 {
   "courseCode": "PRJ301",
   "courseName": "Java Web Applications",
   "term": "Summer2026",
-  "components": [
-    { "name": "Quiz 1", "weight": 5, "value": 8.5, "isFinal": false },
-    { "name": "Lab 1", "weight": 10, "value": 9.0, "isFinal": false },
-    { "name": "Progress Test", "weight": 15, "value": 7.0, "isFinal": false },
-    { "name": "Practical Exam", "weight": 30, "value": null, "isFinal": true },
-    { "name": "Final Exam", "weight": 40, "value": null, "isFinal": true }
+  "average": 8.0,
+  "status": "Passed",
+  "categories": [
+    {
+      "category": "Final exam PE",
+      "weight": 100.0,
+      "value": 7.0,
+      "isFinal": true,
+      "items": [
+        { "name": "Final exam PE", "weight": 100.0, "value": 7.0 }
+      ]
+    }
   ],
+  "bonus": 1.0,
   "lastUpdated": 1725530000000
 }
 ```
