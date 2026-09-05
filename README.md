@@ -112,7 +112,12 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.4.0 (current)
+### v3.4.1 (current)
+- **Online chip** moved to the card header, next to the attendance status, and recolored
+  green (was indigo, in its own row under Slot/Room).
+- **`window.confirm()` replaced with a themed modal** for all four remaining yes/no prompts
+  (open FAP for week options / week-range sync / current-week sync; confirm clearing the whole
+  saved class schedule) — the native dialog broke out of the popup's own styling entirely.
 - **Online classes parsed correctly.** FAP marks a session moved online with its own
   `online-indicator` block, a "View Materials" link, and — when the move just happened — an
   "Update Online" note plus a second time badge next to the Meet URL. The scraper now always
@@ -158,7 +163,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.4.0**; release zip `fptu-schedule.zip`
+- Manifest **3.4.1**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
