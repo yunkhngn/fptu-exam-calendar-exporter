@@ -172,6 +172,21 @@ test("extractCourseCodeAndName extracts code and clean name correctly", () => {
     extractCourseCodeAndName("Experiential Entrepreneurship", "100609"),
     { courseCode: "EE_100609", courseName: "Experiential Entrepreneurship" }
   );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("Experiential Entrepreneurship 1 (IS1905-EIS, EXE101) (from 13/05/2026 - 22/07/2026)", "100609"),
+    { courseCode: "EXE101", courseName: "Experiential Entrepreneurship 1" }
+  );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("Experiential Entrepreneurship 1 (IS1905-EIS, (EXE101)", "100609"),
+    { courseCode: "EXE101", courseName: "Experiential Entrepreneurship 1" }
+  );
+
+  assert.deepStrictEqual(
+    extractCourseCodeAndName("SW Architecture and Design (SE1801, SWD392)", "100613"),
+    { courseCode: "SWD392", courseName: "SW Architecture and Design" }
+  );
 });
 
 test("getGradePageCourses and extractStudentGradeFromPage parse real FAP page layout", () => {

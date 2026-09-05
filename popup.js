@@ -619,9 +619,16 @@ function renderStudentGrades(gradesMap) {
     titleGroup.appendChild(codeEl);
 
     if (course.courseName && course.courseName !== course.courseCode) {
+      let cleanCourseName = course.courseName
+        .replace(/\s*\([^)]*,?\s*$/g, "")
+        .replace(/[()]/g, " ")
+        .replace(/^[-–:,/.\s]+|[-–:,/.\s]+$/g, "")
+        .replace(/\s{2,}/g, " ")
+        .trim();
+      if (!cleanCourseName) cleanCourseName = course.courseName;
       const nameEl = document.createElement("div");
       nameEl.className = "grade-card__name";
-      nameEl.textContent = course.courseName;
+      nameEl.textContent = cleanCourseName;
       titleGroup.appendChild(nameEl);
     }
 

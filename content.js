@@ -390,43 +390,78 @@ function findFapGradeTable(doc) {
 
 function extractCourseCodeAndName(rawText, courseId = "") {
   let text = (rawText || "").trim();
-  text = text.replace(/\(?from\s+[\d/]+\s*-\s*[\d/]+\)?/gi, "").trim();
+  // Strip date ranges: (from 13/05/2026 - 22/07/2026) or from 13/05/2026 to 22/07/2026
+  text = text.replace(/\(?from\s+[\d/.-]+\s*(-|to|–)\s*[\d/.-]+\)?/gi, "").trim();
 
-  // 1. Parenthesized code like "Project management (PMG202c)" -> PMG202c
-  const codeInParen = text.match(/\(([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\)/i);
-  if (codeInParen) {
-    const code = codeInParen[1].toUpperCase();
-    const name = text.replace(codeInParen[0], "").replace(/\s{2,}/g, " ").trim();
-    return { courseCode: code, courseName: name || code };
+  let code = "";
+  let name = text;
+
+  // 1. Check parenthesized groups: e.g. "(IS1905-EIS, EXE101)", "(PMG202c)", "(IS1905-EIS, (EXE101))"
+  const parenMatches = Array.from(text.matchAll(/\(([^)]+)\)?/g));
+  for (const m of parenMatches) {
+    const inside = m[1];
+    // Find all potential codes inside: e.g. "IS1905-EIS", "EXE101"
+    const tokens = inside.split(/[,;\s]+/).map((t) => t.replace(/[()]/g, "").trim()).filter(Boolean);
+    // Prioritize standard 3-digit course code (e.g. EXE101, PRN211, PMG202c, ENT301m)
+    let found = tokens.find((t) => /^[A-Za-z]{2,5}\d{3}[A-Za-z]?$/i.test(t));
+    if (!found) {
+      // Fallback: any code with 2-4 digits, avoiding class codes with hyphen like IS1905-EIS if possible
+      found = tokens.find((t) => /^[A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*$/i.test(t) && !t.includes("-"));
+    }
+    if (found) {
+      code = found.toUpperCase();
+      // Remove this entire parenthesized section from name
+      name = name.replace(m[0], " ");
+      break;
+    }
   }
 
   // 2. Prefix code like "PRN211 - Multiplatform Mobile App"
-  const prefixMatch = text.match(/^([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\s*[-–:]\s*(.*)$/i);
-  if (prefixMatch) {
-    return {
-      courseCode: prefixMatch[1].toUpperCase(),
-      courseName: prefixMatch[2].trim() || prefixMatch[1].toUpperCase()
-    };
+  if (!code) {
+    const prefixMatch = text.match(/^([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\s*[-–:]\s*(.*)$/i);
+    if (prefixMatch) {
+      code = prefixMatch[1].toUpperCase();
+      name = prefixMatch[2];
+    }
   }
 
-  // 3. Word with digits anywhere e.g. "ENT301"
-  const wordWithDigit = text.match(/\b([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\b/i);
-  if (wordWithDigit) {
-    return {
-      courseCode: wordWithDigit[1].toUpperCase(),
-      courseName: text
-    };
+  // 3. Any word with digits e.g. "ENT301"
+  if (!code) {
+    // Prefer 3-digit course code first
+    const match3 = text.match(/\b([A-Za-z]{2,5}\d{3}[A-Za-z]?)\b/i);
+    if (match3) {
+      code = match3[1].toUpperCase();
+    } else {
+      const matchAny = text.match(/\b([A-Za-z]{2,5}\d{2,4}[A-Za-z0-9_]*)\b/i);
+      if (matchAny) code = matchAny[1].toUpperCase();
+    }
   }
 
-  // 4. Fallback: initials from words
-  const words = text.split(/\s+/).filter(Boolean);
-  let acronym = words.map((w) => w[0]).join("").toUpperCase();
-  if (acronym.length < 2) acronym = "COURSE";
-  const code = courseId ? `${acronym}_${courseId}` : acronym;
-  return {
-    courseCode: code,
-    courseName: text || code
-  };
+  // 4. Fallback code from initials
+  if (!code) {
+    const words = text.split(/\s+/).filter(Boolean);
+    let acronym = words.map((w) => w[0]).join("").toUpperCase();
+    if (acronym.length < 2) acronym = "COURSE";
+    code = courseId ? `${acronym}_${courseId}` : acronym;
+  }
+
+  // Clean name:
+  // Remove any remaining parenthesized class info e.g. "(IS1905-EIS)" or "(IS1905-EIS," or unclosed "("
+  name = name.replace(/\([^)]*\)?/g, " ");
+  // Remove unclosed open parenthesis and anything after it
+  name = name.replace(/\([^(]*$/, " ");
+  // Remove any stray parentheses
+  name = name.replace(/[()]/g, " ");
+  // Clean trailing/leading punctuation: commas, colons, dashes, slashes
+  name = name.replace(/^[-–:,/.\s]+|[-–:,/.\s]+$/g, "");
+  // Collapse spaces
+  name = name.replace(/\s{2,}/g, " ").trim();
+
+  if (!name || name === code) {
+    name = text.replace(/\s{2,}/g, " ").trim() || code;
+  }
+
+  return { courseCode: code, courseName: name };
 }
 
 function isGradeReportTable(tbl) {
