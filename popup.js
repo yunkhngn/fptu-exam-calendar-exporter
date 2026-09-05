@@ -1072,9 +1072,15 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
     const ev = agenda.currentEvent;
     badgeHtml = `<span class="agenda-dot agenda-dot--pulse"></span><span>Đang diễn ra • Còn ${formatMinutesCountdown(agenda.remainingMinutes)}</span>`;
     titleHtml = `${escapeHtml(ev.title || "Buổi học")}`;
-    metaHtml = `<span>${escapeHtml(ev.slot || "")}</span><span>·</span><strong>${ev.isOnline ? "Học Online" : escapeHtml(ev.location || "Chưa rõ phòng")}</strong>`;
+    const loc = ev.isOnline ? "Học Online" : (ev.location || "Chưa rõ phòng");
+    metaHtml = `
+      <div class="agenda-next-row">
+        ${ev.slot ? `<span class="agenda-chip-meta">${escapeHtml(ev.slot)}</span>` : ""}
+        <span class="agenda-chip-code">${escapeHtml(loc)}</span>
+      </div>
+    `;
     if (agenda.totalRemainingToday > 0) {
-      counterHtml = `Hôm nay còn ${agenda.totalRemainingToday} ca`;
+      counterHtml = `Còn ${agenda.totalRemainingToday} ca hôm nay`;
     }
     if (ev.detailUrl) {
       clickableClass = "agenda-card--clickable";
@@ -1082,31 +1088,57 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
     }
   } else if (agenda.status === AGENDA_STATUS.UPCOMING && agenda.nextEvent) {
     const ev = agenda.nextEvent;
-    badgeHtml = `<span class="agenda-dot"></span><span>Ca tiếp theo • Bắt đầu sau ${formatMinutesCountdown(agenda.minutesUntilStart)}</span>`;
+    badgeHtml = `<span class="agenda-dot"></span><span>Ca tiếp theo • Sau ${formatMinutesCountdown(agenda.minutesUntilStart)}</span>`;
     titleHtml = `${escapeHtml(ev.title || "Buổi học")}`;
-    metaHtml = `<span>${escapeHtml(ev.slot || "")}</span><span>·</span><strong>${ev.isOnline ? "Học Online" : escapeHtml(ev.location || "Chưa rõ phòng")}</strong>`;
-    counterHtml = `Hôm nay còn ${agenda.totalRemainingToday} ca`;
+    const loc = ev.isOnline ? "Học Online" : (ev.location || "Chưa rõ phòng");
+    metaHtml = `
+      <div class="agenda-next-row">
+        ${ev.slot ? `<span class="agenda-chip-meta">${escapeHtml(ev.slot)}</span>` : ""}
+        <span class="agenda-chip-code">${escapeHtml(loc)}</span>
+      </div>
+    `;
+    counterHtml = `Còn ${agenda.totalRemainingToday} ca hôm nay`;
     if (ev.detailUrl) {
       clickableClass = "agenda-card--clickable";
       targetUrl = ev.detailUrl;
     }
   } else if (agenda.status === AGENDA_STATUS.COMPLETED_TODAY) {
-    badgeHtml = `<span>✅ Đã xong lịch học hôm nay</span>`;
-    titleHtml = "Nghỉ ngơi thôi!";
+    badgeHtml = `<span class="agenda-dot agenda-dot--done"></span><span>Hoàn thành lịch học</span>`;
+    titleHtml = "Đã xong các ca học hôm nay";
     if (agenda.nextEvent) {
       const rd = agenda.nextEvent.rawDate;
       const dateStr = rd ? `${rd.day}/${rd.month}` : "ngày tiếp theo";
-      metaHtml = `<span>Ca tiếp theo: <strong>${escapeHtml(agenda.nextEvent.title || "")}</strong> (${dateStr} • ${escapeHtml(agenda.nextEvent.slot || "")})</span>`;
+      const slotStr = agenda.nextEvent.slot || "";
+      const locStr = agenda.nextEvent.isOnline ? "Online" : (agenda.nextEvent.location || "");
+      metaHtml = `
+        <div class="agenda-next-row">
+          <span class="agenda-next-label">Ca tiếp theo:</span>
+          <span class="agenda-chip-code">${escapeHtml(agenda.nextEvent.title || "")}</span>
+          <span class="agenda-chip-meta">${dateStr}</span>
+          ${slotStr ? `<span class="agenda-chip-meta">${escapeHtml(slotStr)}</span>` : ""}
+          ${locStr ? `<span class="agenda-chip-meta">${escapeHtml(locStr)}</span>` : ""}
+        </div>
+      `;
     } else {
       metaHtml = `<span>Bạn không còn ca học nào trong tuần này.</span>`;
     }
   } else if (agenda.status === AGENDA_STATUS.FREE_TODAY) {
-    badgeHtml = `<span>🎉 Hôm nay được nghỉ!</span>`;
+    badgeHtml = `<span class="agenda-dot agenda-dot--free"></span><span>Lịch trống hôm nay</span>`;
     titleHtml = "Không có ca học nào hôm nay";
     if (agenda.nextEvent) {
       const rd = agenda.nextEvent.rawDate;
       const dateStr = rd ? `${rd.day}/${rd.month}` : "sắp tới";
-      metaHtml = `<span>Ca học gần nhất: <strong>${escapeHtml(agenda.nextEvent.title || "")}</strong> (${dateStr} • ${escapeHtml(agenda.nextEvent.slot || "")})</span>`;
+      const slotStr = agenda.nextEvent.slot || "";
+      const locStr = agenda.nextEvent.isOnline ? "Online" : (agenda.nextEvent.location || "");
+      metaHtml = `
+        <div class="agenda-next-row">
+          <span class="agenda-next-label">Ca học gần nhất:</span>
+          <span class="agenda-chip-code">${escapeHtml(agenda.nextEvent.title || "")}</span>
+          <span class="agenda-chip-meta">${dateStr}</span>
+          ${slotStr ? `<span class="agenda-chip-meta">${escapeHtml(slotStr)}</span>` : ""}
+          ${locStr ? `<span class="agenda-chip-meta">${escapeHtml(locStr)}</span>` : ""}
+        </div>
+      `;
     } else {
       metaHtml = `<span>Tận hưởng ngày nghỉ của bạn nhé!</span>`;
     }
@@ -1117,7 +1149,7 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
     const exam = agenda.todayExams[0];
     examAlertHtml = `
       <div class="agenda-exam-alert">
-        <svg class="icon" aria-hidden="true" style="width:14px;height:14px;flex-shrink:0;"><use href="#icon-clipboard"/></svg>
+        <svg class="icon" aria-hidden="true" style="width:14px;height:14px;flex-shrink:0;"><use href="#icon-calendar"/></svg>
         <span>Lịch thi hôm nay: <strong>${escapeHtml(exam.title || "")}</strong> (${escapeHtml(exam.time || "")} • ${escapeHtml(exam.room || "")})</span>
       </div>
     `;
