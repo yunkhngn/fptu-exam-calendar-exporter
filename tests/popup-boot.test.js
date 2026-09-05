@@ -268,3 +268,28 @@ test("the week-range fields sit in their own row, not the wrapping toolbar", asy
   assert.strictEqual(doc.getElementById("loadWeekOptionsBtn").parentElement, toolbar);
   assert.strictEqual(doc.getElementById("syncWeekRangeBtn").parentElement, toolbar);
 });
+
+test("an online class gets an Online chip; an offline one does not", async () => {
+  const { window } = await boot();
+  const schedule = [
+    {
+      title: "EXE201", isOnline: true, location: "BE-410", slot: "Slot 2",
+      rawDate: { year: 2026, month: 9, day: 21, startHour: 10, startMinute: 0, endHour: 12, endMinute: 20 },
+    },
+    {
+      title: "PRJ301", isOnline: false, location: "DE-226", slot: "Slot 1",
+      rawDate: { year: 2026, month: 9, day: 21, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 },
+    },
+  ];
+  window.renderClassSchedule(schedule);
+  const cards = window.document.querySelectorAll("#scheduleTab .class-card");
+  assert.strictEqual(cards.length, 2);
+
+  const [online, offline] = [...cards].sort((a, b) =>
+    a.querySelector(".class-code").textContent === "EXE201" ? -1 : 1
+  );
+  assert.ok(online.querySelector(".chip.online"), "EXE201 shows the Online chip");
+  assert.strictEqual(online.querySelector(".chip.online").textContent.trim(), "Online");
+  assert.ok(online.querySelector(".chip.room"), "the room chip stays even though the class is online");
+  assert.strictEqual(offline.querySelector(".chip.online"), null, "PRJ301 gets no Online chip");
+});

@@ -219,8 +219,21 @@ function extractWeeklyScheduleFromTable() {
                            
         const roomMatch = content.match(/at\s+(.*?)\s*</) || 
                          content.match(/at\s+([A-Z]{1,3}-\d{3})/);
-                         
-        const timeMatch = content.match(/\((\d{1,2}:\d{2}-\d{1,2}:\d{2})\)/);
+
+        // A cell switched to online (see isOnline below) carries a second, earlier time
+        // badge (label-primary) next to its Meet URL, alongside the usual one (label-success)
+        // that always sits next to the attendance status. In every sample seen the two agree,
+        // but pick the label-success one deliberately — it's the one present on every cell,
+        // online or not — rather than "whichever comes first" in the raw HTML.
+        const successTimeMatch = content.match(/label-success">\s*\((\d{1,2}:\d{2}-\d{1,2}:\d{2})\)/);
+        const allTimeMatches = [...content.matchAll(/\((\d{1,2}:\d{2}-\d{1,2}:\d{2})\)/g)];
+        const timeRangeFound = successTimeMatch
+          ? successTimeMatch[1]
+          : (allTimeMatches.length ? allTimeMatches[allTimeMatches.length - 1][1] : null);
+
+        // FAP marks a session moved online with a <div class="online-indicator"> + an
+        // "Online" <h3>, alongside the room it was originally assigned (kept for reference).
+        const isOnline = /online-indicator/i.test(content);
         
         // Extract detail link (anchor href)
         const hrefMatch = content.match(/href="([^"]+)"/i);
@@ -261,8 +274,10 @@ function extractWeeklyScheduleFromTable() {
         }
         {
           const subject = subjectMatch[1];
-          const room = roomMatch ? roomMatch[1] : "";
-          const timeRange = timeMatch ? timeMatch[1] : "7:30-9:00"; // Default time if not found
+          // Trim a trailing " -" left over when the room and the next badge (e.g. "Meet URL")
+          // share a line with no <br> between them — "AL-L302 -" rather than "AL-L302".
+          const room = (roomMatch ? roomMatch[1] : "").replace(/[\s-]+$/, "");
+          const timeRange = timeRangeFound || "7:30-9:00"; // Default time if not found
           
           // Create formatted event 
           const dateStr = dayHeaders[i - 1];
@@ -280,7 +295,7 @@ function extractWeeklyScheduleFromTable() {
           let startHour = 0, startMinute = 0, endHour = 0, endMinute = 0;
           
           // Parse time if available
-          if (timeMatch) {
+          if (timeRangeFound) {
             const [startTime, endTime] = timeRange.split('-');
             [startHour, startMinute] = startTime.split(':').map(Number);
             [endHour, endMinute] = endTime.split(':').map(Number);
@@ -291,6 +306,7 @@ function extractWeeklyScheduleFromTable() {
             detailUrl,
             attendanceStatus,
             attendanceColor,
+            isOnline,
             location: room,
             description: `${subject} - ${slotName} (${timeRange})`,
             rawDate: {

@@ -84,6 +84,97 @@ test("carries slot, room, time and attendance through", () => {
   assert.deepStrictEqual(out.map((e) => e.location), rooms);
 });
 
+test("a class moved online is detected, and its duplicate time badges resolve to one value", () => {
+  // Real markup pasted from FAP: the corner-cell subject anchor, a "View Materials" link
+  // whose href carries a bearer token, an "Update Online" note, a label-primary time badge
+  // next to the Meet URL, then the usual label-success time + attendance wrapper, then the
+  // online-indicator block FAP renders as a sibling of the <p>, not inside it.
+  const EXE201_TD = `<p><a href="../Schedule/ActivityDetail.aspx?id=2647413">EXE201-</a>` +
+    `<a class="label label-warning" href="http://flm.fpt.edu.vn/gui/role/guest/ListScheduleSyllabus?subjectCode=x&SessionNo=y&token=eyJhbGciOiJSUzI1NiJ9.abc.def" target="_blank">View Materials</a>` +
+    `<br> at BE-410<br>(hadtt39 Update Online: True at 11/08/2026 16:31)<br>` +
+    `<span class="label label-primary">(10:00-12:20)</span> - ` +
+    `<a class="label label-default" href="https://meet.google.com/aaz-nwiq-tbo" target="_blank">Meet URL</a>` +
+    `<a> <br>(<font color="red">Not yet</font>)<br><span class="label label-success">(10:00-12:20)</span><br></a></p>` +
+    `<div class="online-indicator"><a><span class="blink"></span></a></div>` +
+    `<h3 class="online-text"><a>Online</a></h3><p></p>`;
+
+  const dom = new JSDOM(
+    `<select id="ctl00_mainContent_drpYear"><option value="2026" selected>2026</option></select>` +
+    `<table><thead><tr><th rowspan="2">Slot</th><th>MON</th></tr><tr><th>21/09</th></tr></thead>` +
+    `<tbody><tr><td>Slot 2</td><td>${EXE201_TD}</td></tr></tbody></table>`,
+    { url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx" }
+  );
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.URL = dom.window.URL;
+  delete require.cache[require.resolve("../content.js")];
+
+  const { schedule, skipped } = require("../content.js").extractWeeklyScheduleFromTable();
+  assert.strictEqual(skipped, 0, "an online cell must not be counted as unparseable");
+  const ev = schedule[0];
+  assert.strictEqual(ev.title, "EXE201");
+  assert.strictEqual(ev.isOnline, true);
+  assert.strictEqual(ev.location, "BE-410");
+  assert.deepStrictEqual(
+    { h1: ev.rawDate.startHour, m1: ev.rawDate.startMinute, h2: ev.rawDate.endHour, m2: ev.rawDate.endMinute },
+    { h1: 10, m1: 0, h2: 12, m2: 20 }
+  );
+  assert.strictEqual(
+    ev.detailUrl.includes("token="), false,
+    "the View Materials link's bearer token must never end up in stored schedule data"
+  );
+  assert.match(ev.detailUrl, /ActivityDetail\.aspx\?id=2647413/);
+});
+
+test("a room sharing a line with the next badge does not keep a trailing dash", () => {
+  // "at AL-L302 - <a ...>Meet URL</a>" — no <br> between the room and the badge that
+  // follows it on the same line, which used to leave "AL-L302 -" as the stored room.
+  const MLN111_TD = `<p><a href="../Schedule/ActivityDetail.aspx?id=2647500">MLN111-</a>` +
+    `<a href="" target="_blank">View Materials</a><br> at AL-L302 - ` +
+    `<a class="label label-default" href="https://meet.google.com/ges-powo-ise" target="_blank">Meet URL</a>` +
+    `<a> <br>(<font color="red">Not yet</font>)<br><span class="label label-success">(10:00-12:20)</span><br></a></p>` +
+    `<div class="online-indicator"><a><span class="blink"></span></a></div>` +
+    `<h3 class="online-text"><a>Online</a></h3><p></p>`;
+
+  const dom = new JSDOM(
+    `<select id="ctl00_mainContent_drpYear"><option value="2026" selected>2026</option></select>` +
+    `<table><thead><tr><th rowspan="2">Slot</th><th>MON</th></tr><tr><th>21/09</th></tr></thead>` +
+    `<tbody><tr><td>Slot 2</td><td>${MLN111_TD}</td></tr></tbody></table>`,
+    { url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx" }
+  );
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.URL = dom.window.URL;
+  delete require.cache[require.resolve("../content.js")];
+
+  const { schedule } = require("../content.js").extractWeeklyScheduleFromTable();
+  assert.strictEqual(schedule[0].location, "AL-L302");
+  assert.strictEqual(schedule[0].isOnline, true);
+});
+
+test("an ordinary offline cell is unaffected by the online-detection change", () => {
+  const OFFLINE_TD =
+    `<a href="../Schedule/ActivityDetail.aspx?id=1">PRJ301-Lab</a> at DE-226<br>` +
+    `<span class="label label-success">(9:10-11:30)</span><br><font color="green">attended</font>`;
+
+  const dom = new JSDOM(
+    `<select id="ctl00_mainContent_drpYear"><option value="2026" selected>2026</option></select>` +
+    `<table><thead><tr><th rowspan="2">Slot</th><th>MON</th></tr><tr><th>21/09</th></tr></thead>` +
+    `<tbody><tr><td>Slot 2</td><td>${OFFLINE_TD}</td></tr></tbody></table>`,
+    { url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx" }
+  );
+  global.window = dom.window;
+  global.document = dom.window.document;
+  global.URL = dom.window.URL;
+  delete require.cache[require.resolve("../content.js")];
+
+  const { schedule } = require("../content.js").extractWeeklyScheduleFromTable();
+  const ev = schedule[0];
+  assert.strictEqual(ev.isOnline, false);
+  assert.strictEqual(ev.location, "DE-226");
+  assert.strictEqual(ev.rawDate.startHour, 9);
+});
+
 test("a table with no slot rows yields nothing instead of throwing", () => {
   const dom = new JSDOM("<table><thead></thead><tbody></tbody></table>",
     { url: "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx" });

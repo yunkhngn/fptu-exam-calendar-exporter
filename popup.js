@@ -485,7 +485,18 @@ function renderClassSchedule(schedule) {
     chipType.appendChild(document.createTextNode(` ${(ev.slot || ev.type || "Slot ?").toString()}`));
     tags.appendChild(chipType);
 
-    // Room chip (second)
+    // Online chip — a class kept its assigned room but was moved to run online
+    // (FAP marks this with its own blinking "Online" indicator on the cell).
+    if (ev.isOnline) {
+      const chipOnline = document.createElement("span");
+      chipOnline.className = "chip online";
+      const dotOnline = document.createElement("span"); dotOnline.className = "dot";
+      chipOnline.appendChild(dotOnline);
+      chipOnline.appendChild(document.createTextNode(" Online"));
+      tags.appendChild(chipOnline);
+    }
+
+    // Room chip
     if (ev.location) {
       const chipRoom = document.createElement("span");
       chipRoom.className = "chip room";
