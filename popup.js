@@ -892,6 +892,101 @@ function loadAndRenderStudentGrades() {
 window.renderStudentGrades = renderStudentGrades;
 window.loadAndRenderStudentGrades = loadAndRenderStudentGrades;
 
+function escapeHtml(str) {
+  if (!str) return "";
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function renderTodayAgendaBanner(schedule, examEvents = []) {
+  if (typeof computeTodayAgenda !== "function") return "";
+  const agenda = computeTodayAgenda({ classEvents: schedule, examEvents, now: new Date() });
+  if (!agenda || agenda.status === AGENDA_STATUS.NO_DATA) return "";
+
+  let badgeHtml = "";
+  let titleHtml = "";
+  let metaHtml = "";
+  let counterHtml = "";
+  let clickableClass = "";
+  let targetUrl = "";
+
+  if (agenda.status === AGENDA_STATUS.IN_PROGRESS && agenda.currentEvent) {
+    const ev = agenda.currentEvent;
+    badgeHtml = `<span class="agenda-dot agenda-dot--pulse"></span><span>Đang diễn ra • Còn ${formatMinutesCountdown(agenda.remainingMinutes)}</span>`;
+    titleHtml = `${escapeHtml(ev.title || "Buổi học")}`;
+    metaHtml = `<span>${escapeHtml(ev.slot || "")}</span><span>·</span><strong>${ev.isOnline ? "Học Online" : escapeHtml(ev.location || "Chưa rõ phòng")}</strong>`;
+    if (agenda.totalRemainingToday > 0) {
+      counterHtml = `Hôm nay còn ${agenda.totalRemainingToday} ca`;
+    }
+    if (ev.detailUrl) {
+      clickableClass = "agenda-card--clickable";
+      targetUrl = ev.detailUrl;
+    }
+  } else if (agenda.status === AGENDA_STATUS.UPCOMING && agenda.nextEvent) {
+    const ev = agenda.nextEvent;
+    badgeHtml = `<span class="agenda-dot"></span><span>Ca tiếp theo • Bắt đầu sau ${formatMinutesCountdown(agenda.minutesUntilStart)}</span>`;
+    titleHtml = `${escapeHtml(ev.title || "Buổi học")}`;
+    metaHtml = `<span>${escapeHtml(ev.slot || "")}</span><span>·</span><strong>${ev.isOnline ? "Học Online" : escapeHtml(ev.location || "Chưa rõ phòng")}</strong>`;
+    counterHtml = `Hôm nay còn ${agenda.totalRemainingToday} ca`;
+    if (ev.detailUrl) {
+      clickableClass = "agenda-card--clickable";
+      targetUrl = ev.detailUrl;
+    }
+  } else if (agenda.status === AGENDA_STATUS.COMPLETED_TODAY) {
+    badgeHtml = `<span>✅ Đã xong lịch học hôm nay</span>`;
+    titleHtml = "Nghỉ ngơi thôi!";
+    if (agenda.nextEvent) {
+      const rd = agenda.nextEvent.rawDate;
+      const dateStr = rd ? `${rd.day}/${rd.month}` : "ngày tiếp theo";
+      metaHtml = `<span>Ca tiếp theo: <strong>${escapeHtml(agenda.nextEvent.title || "")}</strong> (${dateStr} • ${escapeHtml(agenda.nextEvent.slot || "")})</span>`;
+    } else {
+      metaHtml = `<span>Bạn không còn ca học nào trong tuần này.</span>`;
+    }
+  } else if (agenda.status === AGENDA_STATUS.FREE_TODAY) {
+    badgeHtml = `<span>🎉 Hôm nay được nghỉ!</span>`;
+    titleHtml = "Không có ca học nào hôm nay";
+    if (agenda.nextEvent) {
+      const rd = agenda.nextEvent.rawDate;
+      const dateStr = rd ? `${rd.day}/${rd.month}` : "sắp tới";
+      metaHtml = `<span>Ca học gần nhất: <strong>${escapeHtml(agenda.nextEvent.title || "")}</strong> (${dateStr} • ${escapeHtml(agenda.nextEvent.slot || "")})</span>`;
+    } else {
+      metaHtml = `<span>Tận hưởng ngày nghỉ của bạn nhé!</span>`;
+    }
+  }
+
+  let examAlertHtml = "";
+  if (agenda.todayExams && agenda.todayExams.length > 0) {
+    const exam = agenda.todayExams[0];
+    examAlertHtml = `
+      <div class="agenda-exam-alert">
+        <svg class="icon" aria-hidden="true" style="width:14px;height:14px;flex-shrink:0;"><use href="#icon-clipboard"/></svg>
+        <span>Lịch thi hôm nay: <strong>${escapeHtml(exam.title || "")}</strong> (${escapeHtml(exam.time || "")} • ${escapeHtml(exam.room || "")})</span>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="agenda-banner">
+      <div class="agenda-card agenda-card--${agenda.status.toLowerCase()} ${clickableClass}" ${targetUrl ? `data-url="${escapeHtml(targetUrl)}"` : ""}>
+        <div class="agenda-card__header">
+          <div class="agenda-badge">${badgeHtml}</div>
+          ${counterHtml ? `<span class="agenda-counter">${escapeHtml(counterHtml)}</span>` : ""}
+        </div>
+        <div class="agenda-card__body">
+          <div class="agenda-title">${titleHtml}</div>
+          <div class="agenda-meta">${metaHtml}</div>
+        </div>
+        ${examAlertHtml}
+      </div>
+    </div>
+  `;
+}
+window.renderTodayAgendaBanner = renderTodayAgendaBanner;
+
 function renderClassSchedule(schedule) {
   const container = document.getElementById("scheduleTab");
   if (!container) return;
@@ -914,6 +1009,40 @@ function renderClassSchedule(schedule) {
   const tabText = btn?.querySelector(".tab-btn__text");
   if (tabText) {
     tabText.textContent = visible.length ? `Lịch học (${visible.length})` : "Lịch học";
+  }
+
+  // Render Today's Agenda banner at top of schedule tab
+  let examEvents = [];
+  try {
+    const rawExams = localStorage.getItem("examSchedule");
+    if (rawExams) examEvents = JSON.parse(rawExams);
+  } catch (_) {}
+
+  const bannerHtml = renderTodayAgendaBanner(stored, examEvents);
+  if (bannerHtml) {
+    const bannerWrapper = document.createElement("div");
+    bannerWrapper.innerHTML = bannerHtml.trim();
+    const bannerEl = bannerWrapper.firstElementChild;
+    if (bannerEl) {
+      const card = bannerEl.querySelector(".agenda-card--clickable");
+      if (card && card.dataset.url) {
+        const url = card.dataset.url;
+        const openUrl = () => {
+          try { chrome.tabs.create({ url }); } catch (_) { window.open(url, '_blank'); }
+        };
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `Xem chi tiết buổi học`);
+        card.addEventListener("click", openUrl);
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openUrl();
+          }
+        });
+      }
+      container.appendChild(bannerEl);
+    }
   }
 
   // Normalize and sort schedule by date/time ascending
