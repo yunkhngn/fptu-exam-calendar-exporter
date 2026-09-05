@@ -273,22 +273,105 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // QR Sync Modal elements & event handlers
+  // QR / Export Modal elements & event handlers
   const qrExamBtn = document.getElementById("qrExamBtn");
   const qrScheduleBtn = document.getElementById("qrScheduleBtn");
   const qrSyncModal = document.getElementById("qrSyncModal");
+  const qrSyncTitle = document.getElementById("qrSyncTitle");
   const closeQrSyncModal = document.getElementById("closeQrSyncModal");
   const qrScopeContainer = document.getElementById("qrScopeContainer");
   const qrMetaInfo = document.getElementById("qrMetaInfo");
   const qrDisplayCard = document.getElementById("qrDisplayCard");
   const copyIcalPayloadBtn = document.getElementById("copyIcalPayloadBtn");
+  const modalDownloadIcsBtn = document.getElementById("modalDownloadIcsBtn");
 
   let currentQrMode = "schedule";
   let currentQrScope = "week";
   let currentQrPayload = "";
 
+  function handleDownloadExamSchedule() {
+    const storedData = localStorage.getItem("examSchedule");
+    if (!storedData) {
+      showError("Chưa có dữ liệu lịch thi. Mở trang lịch thi FAP rồi nhấn «Đồng bộ lịch thi».");
+      return;
+    }
+
+    let events;
+    try {
+      events = JSON.parse(storedData);
+    } catch (e) {
+      console.error("Parse stored data failed:", e);
+      showError("Dữ liệu lịch thi bị lỗi. Đồng bộ lại từ trang FAP.");
+      return;
+    }
+
+    if (!events || !events.length) {
+      showError("Không có lịch thi nào để xuất.");
+      return;
+    }
+
+    const cal = createExamCalendar();
+    let validEventsCount = 0;
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    events.forEach((e) => {
+      const start = new Date(e.start);
+      const examDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+      const diffTime = examDate.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays < 0) return;
+
+      if (
+        !e.location ||
+        e.location.trim() === "" ||
+        e.location.toLowerCase().includes("chưa có") ||
+        e.location.toLowerCase().includes("chưa rõ") ||
+        e.location.toLowerCase() === "tba" ||
+        e.location.toLowerCase() === "to be announced"
+      ) {
+        return;
+      }
+
+      let title = e.title;
+      if (e.tag) {
+        title += " - " + e.tag;
+      } else {
+        if (/2nd_fe/i.test(e.description)) title += " - 2NDFE";
+        else if (/practical_exam/i.test(e.description)) title += " - PE";
+        else if (/multiple_choices|final|fe/i.test(e.description)) title += " - FE";
+      }
+
+      cal.addEvent(title, e.description, e.location, new Date(e.start), new Date(e.end));
+      validEventsCount++;
+    });
+
+    if (validEventsCount === 0) {
+      showError("Không có kỳ thi sắp tới đã có phòng để xuất ra .ics.");
+      return;
+    }
+
+    const blob = new Blob([cal.build()], { type: "text/calendar" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", "lich-thi.ics");
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+  }
+
   function updateQrSyncModal() {
     if (!qrDisplayCard) return;
+
+    if (qrSyncTitle) {
+      qrSyncTitle.textContent = currentQrMode === "exam" ? "Xuất lịch thi" : "Xuất lịch học";
+    }
 
     if (currentQrMode === "exam") {
       if (qrScopeContainer) qrScopeContainer.style.display = "none";
@@ -308,13 +391,15 @@ document.addEventListener("DOMContentLoaded", () => {
         if (qrMetaInfo) qrMetaInfo.textContent = "Không có kỳ thi sắp tới có phòng";
         qrDisplayCard.innerHTML = '<div class="qr-empty-msg">Chưa có lịch thi sắp tới đã có phòng để tạo mã QR. Hãy đồng bộ từ FAP trước.</div>';
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = true;
+        if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = true;
       } else {
         const count = (currentQrPayload.match(/BEGIN:VEVENT/g) || []).length;
         if (qrMetaInfo) qrMetaInfo.textContent = `Tất cả môn thi sắp tới (${count} môn)`;
         if (typeof QRCode !== "undefined" && QRCode.toSvgString) {
-          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 190, margin: 4, ecLevel: "M" });
+          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 156, margin: 4, ecLevel: "M" });
         }
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = false;
+        if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = false;
       }
     } else {
       // schedule mode
@@ -349,15 +434,17 @@ document.addEventListener("DOMContentLoaded", () => {
         if (qrMetaInfo) qrMetaInfo.textContent = `Không có tiết học ${label}`;
         qrDisplayCard.innerHTML = `<div class="qr-empty-msg">Không có tiết học nào trong <strong>${label}</strong> để tạo mã QR.</div>`;
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = true;
+        if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = true;
       } else {
         const count = (currentQrPayload.match(/BEGIN:VEVENT/g) || []).length;
         const scopeLabels = { today: "Hôm nay", week: "Tuần này", next_week: "Tuần tới" };
         const label = scopeLabels[currentQrScope] || currentQrScope;
         if (qrMetaInfo) qrMetaInfo.textContent = `Lịch học ${label}: ${count} tiết`;
         if (typeof QRCode !== "undefined" && QRCode.toSvgString) {
-          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 190, margin: 4, ecLevel: "M" });
+          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 156, margin: 4, ecLevel: "M" });
         }
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = false;
+        if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = false;
       }
     }
   }
@@ -410,6 +497,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (modalDownloadIcsBtn) {
+    modalDownloadIcsBtn.addEventListener("click", () => {
+      if (currentQrMode === "exam") {
+        handleDownloadExamSchedule();
+      } else {
+        handleDownloadClassSchedule();
+      }
+    });
+  }
+
   window.addEventListener("click", (e) => {
     if (e.target === qrSyncModal) {
       closeQrSyncModalFunc();
@@ -425,6 +522,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.openQrSyncModal = openQrSyncModal;
   window.updateQrSyncModal = updateQrSyncModal;
   window.closeQrSyncModal = closeQrSyncModalFunc;
+  window.handleDownloadClassSchedule = handleDownloadClassSchedule;
+  window.handleDownloadExamSchedule = handleDownloadExamSchedule;
 
   
   // Tab switching functionality - add this right after the other element declarations
@@ -649,86 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (exportBtn) {
     exportBtn.addEventListener("click", () => {
-      // Get stored exam data instead of requiring FAP page
-      const storedData = localStorage.getItem("examSchedule");
-      
-      if (!storedData) {
-        showError("Chưa có dữ liệu lịch thi. Mở trang lịch thi FAP rồi nhấn «Đồng bộ lịch thi».");
-        return;
-      }
-
-      let events;
-      try {
-        events = JSON.parse(storedData);
-      } catch (e) {
-        console.error("Parse stored data failed:", e);
-        showError("Dữ liệu lịch thi bị lỗi. Đồng bộ lại từ trang FAP.");
-        return;
-      }
-
-      if (!events || !events.length) {
-        showError("Không có lịch thi nào để xuất.");
-        return;
-      }
-
-      const cal = createExamCalendar();
-      let validEventsCount = 0;
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      events.forEach(e => {
-        // Check if exam is upcoming (not completed)
-        const start = new Date(e.start);
-        const examDate = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-        const diffTime = examDate.getTime() - today.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        
-        // Skip completed exams
-        if (diffDays < 0) {
-          return; // Skip past exams
-        }
-
-        // Skip exams without room number (not scheduled for retake)
-        if (!e.location || 
-            e.location.trim() === "" || 
-            e.location.toLowerCase().includes("chưa có") ||
-            e.location.toLowerCase().includes("chưa rõ") ||
-            e.location.toLowerCase() === "tba" ||
-            e.location.toLowerCase() === "to be announced") {
-          return; // Skip this exam
-        }
-
-        let title = e.title;
-     
-        if (e.tag) {
-          title += ' - ' + e.tag;
-        } else {
-          if (/2nd_fe/i.test(e.description)) title += ' - 2NDFE';
-          else if (/practical_exam/i.test(e.description)) title += ' - PE';
-          else if (/multiple_choices|final|fe/i.test(e.description)) title += ' - FE';
-        }
-
-        cal.addEvent(title, e.description, e.location, new Date(e.start), new Date(e.end));
-        validEventsCount++;
-      });
-
-      if (validEventsCount === 0) {
-        showError("Không có kỳ thi sắp tới đã có phòng để xuất ra .ics.");
-        return;
-      }
-
-      const blob = new Blob([cal.build()], { type: 'text/calendar' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.setAttribute('href', url);
-      a.setAttribute('download', 'lich-thi.ics');
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      }, 100);
+      openQrSyncModal("exam");
     });
   }
 
@@ -1494,7 +1514,9 @@ window.renderClassSchedule = renderClassSchedule;
   }
 
   if (downloadBtn) {
-    downloadBtn.addEventListener("click", handleDownloadClassSchedule);
+    downloadBtn.addEventListener("click", () => {
+      openQrSyncModal("schedule");
+    });
   }
 
   if (clearBtn) {

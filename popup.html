@@ -131,13 +131,9 @@
           <svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
           <span class="action-btn__label">Đồng bộ</span>
         </button>
-        <button type="button" id="exportBtn" class="action-btn action-btn--primary" title="Tải lịch thi (file .ics)">
+        <button type="button" id="exportBtn" class="action-btn action-btn--primary" title="Xuất lịch thi (tải file .ics hoặc quét mã QR)">
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
-          <span class="action-btn__label">Tải lịch</span>
-        </button>
-        <button type="button" id="qrExamBtn" class="action-btn action-btn--secondary action-btn--compact" title="Quét mã QR đồng bộ sang điện thoại">
-          <svg class="icon" aria-hidden="true"><use href="#icon-qrcode"/></svg>
-          <span class="action-btn__label">Quét QR</span>
+          <span class="action-btn__label">Xuất lịch</span>
         </button>
         <button type="button" id="settingsButton" class="action-btn action-btn--ghost action-btn--compact" title="Lọc loại kỳ thi">
           <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
@@ -154,13 +150,9 @@
           <svg class="icon" aria-hidden="true"><use href="#icon-calendar"/></svg>
           <span class="action-btn__label">Nhiều tuần</span>
         </button>
-        <button type="button" id="downloadBtn" class="action-btn action-btn--primary" title="Tải lịch học (file .ics)">
+        <button type="button" id="downloadBtn" class="action-btn action-btn--primary" title="Xuất lịch học (tải file .ics hoặc quét mã QR)">
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
-          <span class="action-btn__label">Tải lịch</span>
-        </button>
-        <button type="button" id="qrScheduleBtn" class="action-btn action-btn--secondary action-btn--compact" title="Quét mã QR đồng bộ sang điện thoại">
-          <svg class="icon" aria-hidden="true"><use href="#icon-qrcode"/></svg>
-          <span class="action-btn__label">Quét QR</span>
+          <span class="action-btn__label">Xuất lịch</span>
         </button>
         <button type="button" id="scheduleFilterBtn" class="action-btn action-btn--ghost action-btn--compact" title="Lọc lịch học theo khoảng thời gian">
           <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
@@ -363,7 +355,7 @@
     <div id="qrSyncModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="qrSyncTitle">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 id="qrSyncTitle">Đồng bộ điện thoại qua QR</h3>
+          <h3 id="qrSyncTitle">Xuất lịch &amp; Đồng bộ</h3>
           <button type="button" id="closeQrSyncModal" class="close-btn" aria-label="Đóng">
             <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
           </button>
@@ -376,8 +368,17 @@
           </div>
           <div id="qrMetaInfo" class="qr-meta-count"></div>
           <div id="qrDisplayCard" class="qr-display-card"></div>
-          <p class="qr-instructions">Mở Camera điện thoại (iOS / Android) để quét mã và thêm sự kiện vào Lịch máy.</p>
-          <button type="button" id="copyIcalPayloadBtn" class="filter-btn" style="width:100%;max-width:240px;margin-top:2px;">Sao chép nội dung iCal</button>
+          <p class="qr-instructions">Quét bằng Camera điện thoại hoặc tải file .ics về máy tính.</p>
+          <div class="qr-modal-actions">
+            <button type="button" id="modalDownloadIcsBtn" class="action-btn action-btn--primary" title="Tải file .ics về máy">
+              <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
+              <span class="action-btn__label">Tải file .ics</span>
+            </button>
+            <button type="button" id="copyIcalPayloadBtn" class="action-btn action-btn--secondary" title="Sao chép nội dung iCal">
+              <svg class="icon" aria-hidden="true"><use href="#icon-clipboard"/></svg>
+              <span class="action-btn__label">Sao chép iCal</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

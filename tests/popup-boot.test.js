@@ -642,21 +642,26 @@ test("Today's agenda widget renders hero card at top of schedule tab and reflect
   assert.ok(alertEl.textContent.includes("SWP391 - Final Exam"));
 });
 
-test("QR sync modal opens from action buttons, renders SVG QR code and handles scope switching", async () => {
+test("Export & QR sync modal opens from downloadBtn and exportBtn, renders SVG QR code and provides .ics download button", async () => {
   const { dom } = await boot();
   const doc = dom.window.document;
   const win = dom.window;
 
-  const qrExamBtn = doc.getElementById("qrExamBtn");
-  const qrScheduleBtn = doc.getElementById("qrScheduleBtn");
+  const exportBtn = doc.getElementById("exportBtn");
+  const downloadBtn = doc.getElementById("downloadBtn");
   const qrSyncModal = doc.getElementById("qrSyncModal");
+  const qrSyncTitle = doc.getElementById("qrSyncTitle");
   const closeQrSyncModal = doc.getElementById("closeQrSyncModal");
   const qrDisplayCard = doc.getElementById("qrDisplayCard");
   const qrScopeContainer = doc.getElementById("qrScopeContainer");
+  const modalDownloadIcsBtn = doc.getElementById("modalDownloadIcsBtn");
+  const copyIcalPayloadBtn = doc.getElementById("copyIcalPayloadBtn");
 
-  assert.ok(qrExamBtn, "qrExamBtn exists");
-  assert.ok(qrScheduleBtn, "qrScheduleBtn exists");
+  assert.ok(exportBtn, "exportBtn exists");
+  assert.ok(downloadBtn, "downloadBtn exists");
   assert.ok(qrSyncModal, "qrSyncModal exists");
+  assert.ok(modalDownloadIcsBtn, "modalDownloadIcsBtn exists in export modal");
+  assert.ok(copyIcalPayloadBtn, "copyIcalPayloadBtn exists in export modal");
   assert.strictEqual(qrSyncModal.style.display, "none", "modal initially hidden");
 
   // 1. Open QR in schedule mode with sample classes
@@ -671,10 +676,12 @@ test("QR sync modal opens from action buttons, renders SVG QR code and handles s
   ];
   win.localStorage.setItem("classSchedule", JSON.stringify(sampleClass));
 
-  qrScheduleBtn.click();
-  assert.strictEqual(qrSyncModal.style.display, "block", "modal opens on schedule button click");
+  downloadBtn.click();
+  assert.strictEqual(qrSyncModal.style.display, "block", "modal opens on download button click");
+  assert.strictEqual(qrSyncTitle.textContent, "Xuất lịch học");
   assert.strictEqual(qrScopeContainer.style.display, "flex", "scope selector visible for schedule");
   assert.ok(qrDisplayCard.querySelector("svg"), "SVG QR code rendered in display card");
+  assert.strictEqual(modalDownloadIcsBtn.disabled, false, "download ics button is enabled when payload exists");
 
   // Switch scope to "today"
   const todayBtn = doc.querySelector('.qr-scope-btn[data-scope="today"]');
@@ -695,9 +702,11 @@ test("QR sync modal opens from action buttons, renders SVG QR code and handles s
   ];
   win.localStorage.setItem("examSchedule", JSON.stringify(sampleExam));
 
-  qrExamBtn.click();
+  exportBtn.click();
+  assert.strictEqual(qrSyncTitle.textContent, "Xuất lịch thi");
   assert.strictEqual(qrScopeContainer.style.display, "none", "scope selector hidden for exam mode");
   assert.ok(qrDisplayCard.querySelector("svg"), "SVG QR code rendered for exam mode");
+  assert.strictEqual(modalDownloadIcsBtn.disabled, false, "download ics button is enabled for exam mode");
 
   // 3. Close modal
   closeQrSyncModal.click();

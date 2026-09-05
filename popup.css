@@ -45,7 +45,9 @@ html, body {
   margin: 0;
   padding: 0;
   width: 600px;
-  height: 480px;
+  height: 580px;
+  min-height: 580px;
+  max-height: 600px;
   overflow: hidden;
   font-family: var(--font);
   font-size: 14px;
@@ -600,7 +602,9 @@ html, body {
   transform: translate(-50%, -50%);
   background: var(--bg-elevated);
   border-radius: var(--radius-md);
-  width: min(320px, calc(100% - 32px));
+  width: min(340px, calc(100% - 32px));
+  max-height: calc(100% - 32px);
+  overflow-y: auto;
   box-shadow: 0 20px 50px rgba(15, 23, 42, 0.18);
   border: 1px solid var(--border);
 }
@@ -1862,9 +1866,9 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-align: center;
-  padding: 16px;
+  padding: 14px 18px;
 }
 
 .qr-scope-selector {
@@ -1907,29 +1911,31 @@ html, body {
 .qr-display-card {
   position: relative;
   background: #ffffff;
-  padding: 10px;
+  padding: 8px;
   border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 210px;
-  height: 210px;
-  margin: 4px 0;
+  width: 176px;
+  height: 176px;
+  margin: 2px 0;
+  box-sizing: border-box;
 }
 
 .qr-display-card svg {
   display: block;
-  width: 190px;
-  height: 190px;
+  width: 156px;
+  height: 156px;
 }
 
 .qr-instructions {
-  font-size: 12px;
+  font-size: 11.5px;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.35;
   max-width: 280px;
+  margin: 0;
 }
 
 .qr-meta-count {
@@ -1939,11 +1945,28 @@ html, body {
 }
 
 .qr-empty-msg {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-muted);
-  padding: 24px 12px;
+  padding: 20px 12px;
   text-align: center;
   line-height: 1.4;
+}
+
+.qr-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 290px;
+  margin-top: 2px;
+}
+
+.qr-modal-actions .action-btn {
+  flex: 1;
+  min-height: 36px;
+  font-size: 12.5px;
+  padding: 7px 10px;
 }
 
 /* Dark mode overrides for QR Modal */
