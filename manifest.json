@@ -34,7 +34,8 @@
       "matches": [
         "https://fap.fpt.edu.vn/Exam/ScheduleExams.aspx",
         "https://fap.fpt.edu.vn/Schedule/*",
-        "https://fap.fpt.edu.vn/Report/*"
+        "https://fap.fpt.edu.vn/Report/*",
+        "https://fap.fpt.edu.vn/Grade/*"
       ],
       "js": [
         "content.js"

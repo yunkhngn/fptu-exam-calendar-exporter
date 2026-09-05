@@ -172,6 +172,25 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ schedule: [], success: false });
     }
     return true;
+  } else if (msg.action === "extractStudentGrade") {
+    try {
+      const grade = extractStudentGradeFromPage();
+      if (!grade) {
+        sendResponse({ ok: false, error: "table-not-found" });
+      } else {
+        sendResponse({ ok: true, grade });
+      }
+    } catch (e) {
+      sendResponse({ ok: false, error: String(e.message || e) });
+    }
+    return true;
+  } else if (msg.action === "getGradePageControls") {
+    try {
+      sendResponse(getGradePageControls());
+    } catch (e) {
+      sendResponse({ ok: false, error: String(e.message || e) });
+    }
+    return true;
   }
 });
 }
@@ -334,6 +353,118 @@ function extractWeeklyScheduleFromTable() {
   return { schedule, skipped };
 }
 
+function findFapGradeTable() {
+  return document.querySelector('table[summary="Report"]');
+}
+
+function findGradeCourseSelect() {
+  return (
+    document.getElementById("ctl00_mainContent_drpCourse") ||
+    document.getElementById("ctl00_mainContent_ddlCourse") ||
+    document.querySelector('select[name*="Course"]')
+  );
+}
+
+function extractStudentGradeFromPage() {
+  const table = findFapGradeTable();
+  if (!table) return null;
+
+  const courseSelect = findGradeCourseSelect();
+  let courseCode = "";
+  let courseName = "";
+  let term = "";
+
+  if (courseSelect && courseSelect.selectedIndex >= 0) {
+    const opt = courseSelect.options[courseSelect.selectedIndex];
+    const text = (opt.textContent || "").trim();
+    const m = text.match(/^([A-Za-z0-9_]{3,8})\s*[-–:]\s*(.*)$/);
+    if (m) {
+      courseCode = m[1].toUpperCase();
+      courseName = m[2].trim();
+    } else {
+      courseCode = text.split(/[\s-]/)[0].toUpperCase();
+      courseName = text;
+    }
+  }
+
+  if (!courseCode) {
+    const heading = document.querySelector("#ctl00_mainContent_divContent h2, #ctl00_mainContent_divContent h3, h2, h3");
+    if (heading) {
+      const ht = heading.textContent.trim();
+      const m = ht.match(/([A-Za-z0-9_]{3,8})/);
+      if (m) courseCode = m[1].toUpperCase();
+    }
+  }
+
+  const termSelect = document.getElementById("ctl00_mainContent_drpTerm") || document.querySelector('select[name*="Term"]');
+  if (termSelect && termSelect.selectedIndex >= 0) {
+    term = (termSelect.options[termSelect.selectedIndex].textContent || "").trim();
+  }
+
+  let parsed = null;
+  if (typeof parseFapGradeTable === "function") {
+    parsed = parseFapGradeTable(table);
+  } else {
+    const rows = Array.from(table.querySelectorAll("tbody tr"));
+    const categories = [];
+    rows.forEach((r) => {
+      const cells = Array.from(r.cells).map((c) => c.textContent.trim());
+      if (cells.length >= 4) {
+        categories.push({
+          category: cells[0],
+          item: cells[1],
+          weight: parseFloat(cells[2]) || 0,
+          value: parseFloat(cells[3]) || null
+        });
+      }
+    });
+    parsed = { categories, bonus: 0, average: null, status: null };
+  }
+
+  return {
+    courseCode: courseCode || "UNKNOWN",
+    courseName: courseName || courseCode || "Môn học",
+    term,
+    ...parsed,
+    lastUpdated: Date.now()
+  };
+}
+
+function getGradePageControls() {
+  const courseSelect = findGradeCourseSelect();
+  if (!courseSelect) {
+    return { ok: false, courses: [] };
+  }
+  const courses = Array.from(courseSelect.options).map((opt, idx) => ({
+    index: idx,
+    value: opt.value,
+    label: (opt.textContent || "").trim()
+  }));
+  return {
+    ok: true,
+    selectedIndex: courseSelect.selectedIndex,
+    courses
+  };
+}
+
+if (typeof window !== "undefined" && /StudentGrade\.aspx/i.test(window.location.pathname || "")) {
+  setTimeout(() => {
+    try {
+      const grade = extractStudentGradeFromPage();
+      if (grade && grade.courseCode && grade.courseCode !== "UNKNOWN") {
+        if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+          chrome.runtime.sendMessage({ type: "SAVE_STUDENT_GRADE", grade }).catch(() => {});
+        }
+      }
+    } catch (_) {}
+  }, 500);
+}
+
 if (typeof module !== "undefined" && module.exports) {
-  module.exports = { extractWeeklyScheduleFromTable, getScheduleOfWeekControls };
+  module.exports = {
+    extractWeeklyScheduleFromTable,
+    getScheduleOfWeekControls,
+    extractStudentGradeFromPage,
+    getGradePageControls
+  };
 }

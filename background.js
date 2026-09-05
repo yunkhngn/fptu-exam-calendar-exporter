@@ -11,6 +11,11 @@ try {
 } catch (e) {
   console.error("background: could not load lib/notifications.js", e);
 }
+try {
+  importScripts("lib/grades.js");
+} catch (e) {
+  console.error("background: could not load lib/grades.js", e);
+}
 function armWaitForTabComplete(tabId, timeoutMs, onDone) {
   let settled = false;
   let timer;
@@ -352,6 +357,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return false;
   }
 
+  if (msg.type === "SAVE_STUDENT_GRADE" && msg.grade && msg.grade.courseCode) {
+    chrome.storage.local.get(["studentGrades"], (res) => {
+      const map = (res && res.studentGrades) || {};
+      map[msg.grade.courseCode] = msg.grade;
+      chrome.storage.local.set({ studentGrades: map }, () => {
+        sendResponse && sendResponse({ ok: true, count: Object.keys(map).length });
+      });
+    });
+    return true;
+  }
+
+  if (msg.type === "START_ALL_GRADES_SYNC") {
+    const { tabId, totalCourses } = msg;
+    if (tabId == null || !totalCourses) {
+      sendResponse && sendResponse({ ok: false, error: "bad-payload" });
+      return false;
+    }
+    runAllGradesSync(tabId, totalCourses, (err, map) => {
+      /* done handled by runner */
+    });
+    sendResponse && sendResponse({ ok: true });
+    return false;
+  }
+
   if (msg.type !== "START_WEEK_RANGE_SYNC") {
     return false;
   }
@@ -378,3 +407,138 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   sendResponse({ ok: true });
   return false;
 });
+
+function executeFapCourseIndexMain(tabId, courseIndex, callback) {
+  chrome.scripting.executeScript(
+    {
+      target: { tabId },
+      world: "MAIN",
+      func: (idx) => {
+        const sel =
+          document.getElementById("ctl00_mainContent_drpCourse") ||
+          document.getElementById("ctl00_mainContent_ddlCourse") ||
+          document.querySelector('select[id*="mainContent"][id*="Course"]') ||
+          document.querySelector('select[name*="Course"]');
+        if (!sel) return { ok: false, error: "course-select-not-found" };
+        if (idx < 0 || idx >= sel.options.length) return { ok: false, error: "bad-index" };
+        if (sel.selectedIndex === idx) {
+          return { ok: true, skippedPostback: true };
+        }
+        sel.selectedIndex = idx;
+        const oc = sel.getAttribute("onchange") || "";
+        const m = oc.match(/__doPostBack\s*\(\s*'([^']*)'\s*,\s*'([^']*)'\s*\)/);
+        if (typeof __doPostBack === "function") {
+          if (m) __doPostBack(m[1], m[2] !== undefined && m[2] !== null ? m[2] : "");
+          else __doPostBack(sel.name, "");
+          return { ok: true, skippedPostback: false };
+        }
+        sel.dispatchEvent(new Event("change", { bubbles: true }));
+        return { ok: true, skippedPostback: false, weak: true };
+      },
+      args: [courseIndex]
+    },
+    (results) => {
+      if (chrome.runtime.lastError) {
+        callback(chrome.runtime.lastError.message, null);
+        return;
+      }
+      const r = results && results[0] && results[0].result;
+      if (!r || !r.ok) {
+        callback((r && r.error) || "unknown", null);
+        return;
+      }
+      callback(null, r);
+    }
+  );
+}
+
+function extractGradeFromTab(tabId, callback) {
+  chrome.scripting.executeScript({ target: { tabId }, files: ["lib/grades.js", "content.js"] }, () => {
+    if (chrome.runtime.lastError) {
+      callback(chrome.runtime.lastError.message, null);
+      return;
+    }
+    chrome.tabs.sendMessage(tabId, { action: "extractStudentGrade" }, (response) => {
+      if (chrome.runtime.lastError) {
+        callback(chrome.runtime.lastError.message, null);
+        return;
+      }
+      callback(null, response);
+    });
+  });
+}
+
+function runAllGradesSync(tabId, totalCourses, onComplete) {
+  let current = 0;
+  let savedCount = 0;
+
+  function step() {
+    if (current >= totalCourses) {
+      chrome.storage.local.get(["studentGrades"], (res) => {
+        const map = (res && res.studentGrades) || {};
+        chrome.runtime.sendMessage({
+          type: "ALL_GRADES_SYNC_DONE",
+          total: totalCourses,
+          savedCount
+        }).catch(() => {});
+        onComplete && onComplete(null, map);
+      });
+      return;
+    }
+
+    const idx = current;
+    const cancelWait = armWaitForTabComplete(tabId, 25000, (loadOk) => {
+      if (!loadOk) {
+        current += 1;
+        step();
+        return;
+      }
+      extractGradeFromTab(tabId, (err, resp) => {
+        if (!err && resp && resp.ok && resp.grade) {
+          chrome.storage.local.get(["studentGrades"], (res) => {
+            const map = (res && res.studentGrades) || {};
+            map[resp.grade.courseCode] = resp.grade;
+            savedCount += 1;
+            chrome.storage.local.set({ studentGrades: map }, () => {
+              current += 1;
+              step();
+            });
+          });
+        } else {
+          current += 1;
+          step();
+        }
+      });
+    });
+
+    executeFapCourseIndexMain(tabId, idx, (err, result) => {
+      if (err) {
+        cancelWait();
+        current += 1;
+        step();
+        return;
+      }
+      if (result && result.skippedPostback) {
+        cancelWait();
+        extractGradeFromTab(tabId, (err2, resp) => {
+          if (!err2 && resp && resp.ok && resp.grade) {
+            chrome.storage.local.get(["studentGrades"], (res) => {
+              const map = (res && res.studentGrades) || {};
+              map[resp.grade.courseCode] = resp.grade;
+              savedCount += 1;
+              chrome.storage.local.set({ studentGrades: map }, () => {
+                current += 1;
+                step();
+              });
+            });
+          } else {
+            current += 1;
+            step();
+          }
+        });
+      }
+    });
+  }
+
+  step();
+}
