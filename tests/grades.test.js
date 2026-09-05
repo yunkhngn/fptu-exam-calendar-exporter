@@ -349,4 +349,126 @@ test("fetchCourseGradeFromPage fetches and parses course HTML in tab context", a
   }
 });
 
+test("active course code extraction works and never picks up grade table items (reproduction)", () => {
+  const NESTED_FAP_HTML = `
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <table>
+          <tr>
+            <td>
+              <table>
+                <tr><td>TERM</td></tr>
+                <tr><td><a href="?term=Fall2023">Fall2023</a></td></tr>
+                <tr><td><b>Summer2026</b></td></tr>
+              </table>
+            </td>
+            <td>
+              <table>
+                <tr><td>COURSE</td></tr>
+                <tr><td><b>Experiential Entrepreneurship (from 13/05/2026 - 22/07/2026)</b></td></tr>
+                <tr><td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100610">Multiplatform Mobile App (PRN211)</a></td></tr>
+                <tr><td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100611">Project management (PMG201c)</a></td></tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+        <table summary="Report">
+          <thead>
+            <tr><th>Grade category</th><th>Grade item</th><th>Weight</th><th>Value</th><th>Comment</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="2">Group Assignment 1 (Checkpoint 1)</td><td>Group Assignment 1 (Checkpoint 1)</td><td>10.0 %</td><td>8</td><td></td></tr>
+            <tr><td>Total</td><td>10.0 %</td><td>8</td><td></td></tr>
+            <tr><td rowspan="2">Constructivism Presentations</td><td>Constructivism Presentations</td><td>15.0 %</td><td>8.5</td><td></td></tr>
+            <tr><td>Total</td><td>15.0 %</td><td>8.5</td><td></td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td rowspan="2">COURSE TOTAL</td><td>AVERAGE</td><td colspan="3">7.8</td></tr>
+            <tr><td>STATUS</td><td colspan="3"><font color="Green">PASSED</font></td></tr>
+          </tfoot>
+        </table>
+      </body>
+    </html>
+  `;
+
+  const dom = new JSDOM(NESTED_FAP_HTML, {
+    url: "https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100609"
+  });
+
+  const controls = getGradePageControls(dom.window.document);
+  assert.strictEqual(controls.ok, true);
+  assert.strictEqual(controls.courses.length, 3);
+  // The active course MUST be Experiential Entrepreneurship (EE_100609), NEVER GA1(1_100609)
+  assert.strictEqual(controls.courses[0].id, "100609");
+  assert.strictEqual(controls.courses[0].courseCode, "EE_100609");
+  assert.strictEqual(controls.courses[0].courseName, "Experiential Entrepreneurship");
+  assert.strictEqual(controls.courses[0].isActive, true);
+
+  const grade = extractStudentGradeFromPage(dom.window.document);
+  assert.ok(grade, "grade extracted");
+  assert.strictEqual(grade.courseCode, "EE_100609");
+  assert.strictEqual(grade.courseName, "Experiential Entrepreneurship");
+  assert.notStrictEqual(grade.courseCode, "GA1(1_100609");
+  assert.notStrictEqual(grade.courseName, "Group Assignment 1 (Checkpoint 1)");
+});
+
+test("active course code extraction works on single-row 2-column FAP layout", () => {
+  const SINGLE_ROW_FAP_HTML = `
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <table>
+          <thead><tr><th>TERM</th><th>COURSE</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>
+                <a href="?term=Fall2023">Fall2023</a><br/>
+                <b>Summer2026</b>
+              </td>
+              <td>
+                <b>Experiential Entrepreneurship (from 13/05/2026 - 22/07/2026)</b><br/>
+                <a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100610">Multiplatform Mobile App (PRN211)</a><br/>
+                <a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100611">Project management (PMG201c)</a>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <table summary="Report">
+          <thead>
+            <tr><th>Grade category</th><th>Grade item</th><th>Weight</th><th>Value</th><th>Comment</th></tr>
+          </thead>
+          <tbody>
+            <tr><td rowspan="2">Group Assignment 1 (Checkpoint 1)</td><td>Group Assignment 1 (Checkpoint 1)</td><td>10.0 %</td><td>8</td><td></td></tr>
+            <tr><td>Total</td><td>10.0 %</td><td>8</td><td></td></tr>
+          </tbody>
+          <tfoot>
+            <tr><td rowspan="2">COURSE TOTAL</td><td>AVERAGE</td><td colspan="3">7.8</td></tr>
+            <tr><td>STATUS</td><td colspan="3"><font color="Green">PASSED</font></td></tr>
+          </tfoot>
+        </table>
+      </body>
+    </html>
+  `;
+
+  const dom = new JSDOM(SINGLE_ROW_FAP_HTML, {
+    url: "https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100609"
+  });
+
+  const controls = getGradePageControls(dom.window.document);
+  assert.strictEqual(controls.ok, true);
+  assert.strictEqual(controls.courses.length, 3);
+  assert.strictEqual(controls.courses[0].id, "100609");
+  assert.strictEqual(controls.courses[0].courseCode, "EE_100609");
+  assert.strictEqual(controls.courses[0].courseName, "Experiential Entrepreneurship");
+  assert.strictEqual(controls.courses[0].isActive, true);
+
+  const grade = extractStudentGradeFromPage(dom.window.document);
+  assert.ok(grade, "grade extracted");
+  assert.strictEqual(grade.courseCode, "EE_100609");
+  assert.strictEqual(grade.courseName, "Experiential Entrepreneurship");
+});
+
 

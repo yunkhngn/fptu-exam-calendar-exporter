@@ -1191,8 +1191,25 @@ window.renderClassSchedule = renderClassSchedule;
                     }
                   }
                 }
-                if (!table) return null;
-                if (parseFn) return parseFn(table);
+                if (table) {
+                  if (parseFn) return parseFn(table);
+                  const rows = Array.from(table.querySelectorAll("tbody tr"));
+                  const categories = [];
+                  rows.forEach((r) => {
+                    const cells = Array.from(r.cells).map((c) => c.textContent.trim());
+                    if (cells.length >= 4) {
+                      const weight = parseFloat(cells[2].replace(/%/g, "")) || 0;
+                      const val = parseFloat(cells[3]);
+                      categories.push({
+                        category: cells[0],
+                        item: cells[1],
+                        weight,
+                        value: isNaN(val) ? null : val
+                      });
+                    }
+                  });
+                  return { categories, bonus: 0, average: null, status: null };
+                }
               } catch (_) {}
               return null;
             },
@@ -1359,7 +1376,16 @@ window.renderClassSchedule = renderClassSchedule;
 
               // Otherwise fetch URL via the active tab (same-origin with auth cookies)
               try {
-                const fetchUrl = c.href || `https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?course=${c.id}`;
+                let fetchUrl = c.href;
+                if (!fetchUrl || !/^https?:\/\//i.test(fetchUrl)) {
+                  try {
+                    const base = new URL(activeTab.url || "https://fap.fpt.edu.vn/Grade/StudentGrade.aspx");
+                    base.searchParams.set("course", c.id);
+                    fetchUrl = base.href;
+                  } catch (_) {
+                    fetchUrl = `https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?course=${c.id}`;
+                  }
+                }
                 const parsed = await fetchGradeInTab(activeTab.id, fetchUrl);
                 if (!parsed || !parsed.categories) {
                   console.warn("Không lấy được điểm môn:", c.courseCode, fetchUrl);

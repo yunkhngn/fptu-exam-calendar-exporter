@@ -429,6 +429,16 @@ function extractCourseCodeAndName(rawText, courseId = "") {
   };
 }
 
+function isGradeReportTable(tbl) {
+  if (!tbl) return false;
+  if (tbl.getAttribute && tbl.getAttribute("summary") === "Report") return true;
+  const text = tbl.textContent || "";
+  if (/Grade\s*item/i.test(text) && /Weight/i.test(text) && /Value/i.test(text)) return true;
+  if (/Grade\s*category/i.test(text) && /Weight/i.test(text)) return true;
+  if (/Course\s*total/i.test(text) && (/Average/i.test(text) || /Status/i.test(text))) return true;
+  return false;
+}
+
 function getGradePageCourses(doc) {
   if (!doc) doc = typeof document !== "undefined" ? document : null;
   if (!doc) return [];
@@ -443,68 +453,105 @@ function getGradePageCourses(doc) {
     currentCourseId = params.get("course") || "";
   } catch (_) {}
 
-  // 1. Scan the table containing TERM and COURSE columns
-  const courseHeaders = Array.from(doc.querySelectorAll("th, td")).filter((el) => /COURSE/i.test(el.textContent));
-  for (const ch of courseHeaders) {
-    const table = ch.closest("table");
-    if (!table) continue;
-    const trs = Array.from(table.querySelectorAll("tr"));
-    for (const tr of trs) {
-      const tds = Array.from(tr.querySelectorAll("td"));
-      if (tds.length >= 2) {
-        const courseCell = tds[1];
-        const link = courseCell.querySelector("a");
-        if (link) {
-          const href = link.getAttribute("href") || "";
-          const m = href.match(/course=([^&]+)/i);
-          if (m) {
-            const courseId = m[1];
-            if (!seen.has(courseId)) {
-              seen.add(courseId);
-              const fullText = (link.textContent || "").trim();
-              const { courseCode, courseName } = extractCourseCodeAndName(fullText, courseId);
-              const fullHref = link.href || href;
-              courses.push({
-                id: courseId,
-                href: fullHref,
-                courseCode,
-                courseName,
-                fullText,
-                isActive: courseId === currentCourseId
-              });
-            }
+  const activeHref = (win && win.location ? win.location.href : "") || "";
+
+  // 1. Scan candidate course tables, strictly excluding grade report tables
+  const allTables = Array.from(doc.querySelectorAll("table"));
+  const nonGradeTables = allTables.filter((tbl) => !isGradeReportTable(tbl));
+
+  let courseTable = null;
+  for (const tbl of nonGradeTables) {
+    const text = tbl.textContent || "";
+    if (/\bCOURSE\b/i.test(text) || tbl.querySelector('a[href*="course="]')) {
+      courseTable = tbl;
+      break;
+    }
+  }
+
+  if (courseTable) {
+    // A. Collect inactive course links inside courseTable
+    const courseLinks = Array.from(courseTable.querySelectorAll('a[href*="course="]'));
+    courseLinks.forEach((a) => {
+      const href = a.getAttribute("href") || "";
+      const m = href.match(/course=([^&]+)/i);
+      if (m) {
+        const courseId = m[1];
+        if (!seen.has(courseId)) {
+          seen.add(courseId);
+          const fullText = (a.textContent || "").trim();
+          const { courseCode, courseName } = extractCourseCodeAndName(fullText, courseId);
+          let fullHref = a.href || href;
+          if (fullHref && !/^https?:\/\//i.test(fullHref) && activeHref) {
+            try {
+              fullHref = new URL(fullHref, activeHref).href;
+            } catch (_) {}
           }
-        } else {
-          // Non-link cell: this is the currently selected active course
-          const activeText = (courseCell.textContent || "").trim();
-          if (activeText && !/^(TERM|COURSE)$/i.test(activeText) && !/^(Spring|Summer|Fall|Winter)\d{4}$/i.test(activeText)) {
-            const courseId = currentCourseId || "current";
-            if (!seen.has(courseId)) {
-              seen.add(courseId);
-              const { courseCode, courseName } = extractCourseCodeAndName(activeText, courseId);
-              const activeHref = (win && win.location ? win.location.href : "") || "";
-              courses.unshift({
-                id: courseId,
-                href: activeHref,
-                courseCode,
-                courseName,
-                fullText: activeText,
-                isActive: true
-              });
-            }
-          }
+          courses.push({
+            id: courseId,
+            href: fullHref,
+            courseCode,
+            courseName,
+            fullText,
+            isActive: courseId === currentCourseId
+          });
+        }
+      }
+    });
+
+    // B. Find the active (non-link) course in courseTable
+    let activeText = "";
+    const boldEls = Array.from(courseTable.querySelectorAll("b, strong, u, .selected, span[style*='bold']"));
+    for (const el of boldEls) {
+      if (el.closest("a")) continue;
+      const t = (el.textContent || "").trim();
+      if (
+        t &&
+        !/^(TERM|COURSE)$/i.test(t) &&
+        !/^(Spring|Summer|Fall|Winter)\d{4}$/i.test(t) &&
+        !/^Grade report/i.test(t)
+      ) {
+        activeText = t;
+        break;
+      }
+    }
+
+    if (!activeText) {
+      const cells = Array.from(courseTable.querySelectorAll("td"));
+      for (const cell of cells) {
+        if (cell.querySelector('a[href*="course="]')) continue;
+        const t = (cell.textContent || "").trim();
+        if (
+          t &&
+          !/^(TERM|COURSE)$/i.test(t) &&
+          !/^(Spring|Summer|Fall|Winter)\d{4}$/i.test(t) &&
+          !/^Grade report/i.test(t) &&
+          t.length > 3
+        ) {
+          activeText = t;
+          break;
         }
       }
     }
-    if (courses.length > 0) break;
+
+    if (activeText) {
+      const activeId = currentCourseId || "current";
+      if (!seen.has(activeId)) {
+        seen.add(activeId);
+        const { courseCode, courseName } = extractCourseCodeAndName(activeText, activeId);
+        courses.unshift({
+          id: activeId,
+          href: activeHref,
+          courseCode,
+          courseName,
+          fullText: activeText,
+          isActive: true
+        });
+      }
+    }
   }
 
-  // 2. Fallback: all <a> links with course=ID
-  const links = Array.from(doc.querySelectorAll("a")).filter((a) => {
-    const href = a.getAttribute("href") || "";
-    return /[?&]course=/i.test(href);
-  });
-
+  // 2. Fallback: all <a> links with course=ID across doc
+  const links = Array.from(doc.querySelectorAll('a[href*="course="]'));
   links.forEach((a) => {
     try {
       const href = a.getAttribute("href") || "";
@@ -515,7 +562,12 @@ function getGradePageCourses(doc) {
           seen.add(courseId);
           const fullText = (a.textContent || "").trim();
           const { courseCode, courseName } = extractCourseCodeAndName(fullText, courseId);
-          const fullHref = a.href || href;
+          let fullHref = a.href || href;
+          if (fullHref && !/^https?:\/\//i.test(fullHref) && activeHref) {
+            try {
+              fullHref = new URL(fullHref, activeHref).href;
+            } catch (_) {}
+          }
           courses.push({
             id: courseId,
             href: fullHref,
@@ -574,32 +626,9 @@ function getActiveCourseInfo(doc) {
   if (currentCourseId) {
     activeCourse = courses.find((c) => c.id === currentCourseId);
   }
-
-  // Check table with TERM and COURSE headers for selected/bold element
-  if (!activeCourse && doc) {
-    const courseHeaders = Array.from(doc.querySelectorAll("th")).filter((th) => /COURSE/i.test(th.textContent));
-    if (courseHeaders.length > 0) {
-      const table = courseHeaders[0].closest("table");
-      if (table) {
-        const activeEls = Array.from(table.querySelectorAll("b, strong, .selected, span[style*='bold']"));
-        for (const el of activeEls) {
-          const text = (el.textContent || "").trim();
-          if (text && !/^(TERM|COURSE)$/i.test(text) && !/^(Spring|Summer|Fall|Winter)\d{4}$/i.test(text)) {
-            const { courseCode, courseName } = extractCourseCodeAndName(text, currentCourseId);
-            activeCourse = {
-              id: currentCourseId || courseCode,
-              courseCode,
-              courseName,
-              fullText: text
-            };
-            break;
-          }
-        }
-      }
-    }
+  if (!activeCourse) {
+    activeCourse = courses.find((c) => c.isActive);
   }
-
-  // Fallback if still not matched
   if (!activeCourse && courses.length > 0) {
     activeCourse = courses[0];
   } else if (!activeCourse && currentCourseId) {
