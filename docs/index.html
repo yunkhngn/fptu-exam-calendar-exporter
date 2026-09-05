@@ -29,6 +29,7 @@
         <a href="#guide">Hướng dẫn</a>
         <a href="#platforms">Đồng bộ lịch</a>
         <a href="#download">Tải về</a>
+        <a href="#changelog">Changelog</a>
         <a href="#faq">FAQ</a>
       </nav>
 
@@ -607,7 +608,8 @@
             <span class="step-number">1</span>
             <h3>Đăng nhập FAP</h3>
             <p>Mở trang FAP trường bạn (fap.fpt.edu.vn), đăng nhập bằng tài khoản sinh viên và truy cập mục
-              <strong>Weekly Timetable</strong> hoặc <strong>Exam Schedule</strong>.</p>
+              <strong>Weekly Timetable</strong> hoặc <strong>Exam Schedule</strong>.
+            </p>
           </div>
 
           <div class="step-card">
@@ -665,7 +667,8 @@
               <li>Tại cột bên trái, bấm biểu tượng dấu cộng bên cạnh <strong>Lịch khác</strong> → Chọn <strong>Nhập
                   (Import)</strong>.</li>
               <li>Chọn file <code>lich-hoc.ics</code> hoặc <code>lich-thi.ics</code> vừa tải từ extension và bấm
-                <strong>Nhập</strong>.</li>
+                <strong>Nhập</strong>.
+              </li>
             </ol>
           </div>
 
@@ -794,6 +797,98 @@
         </div>
       </div>
     </section>
+
+    <!-- Changelog Section -->
+    <section class="section section--surface" id="changelog">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-head__tag">Lịch sử phát triển</span>
+          <h2>Nhật ký thay đổi (Changelog)</h2>
+          <p>Theo dõi quá trình nâng cấp và cải tiến tính năng qua từng phiên bản của FPTU Schedule.</p>
+        </div>
+
+        <div class="changelog-container">
+          <!-- Release v3.6.0 -->
+          <article class="changelog-card changelog-card--latest">
+            <div class="changelog-card__head">
+              <div class="changelog-version-tag">
+                <span class="version-name">v3.6.0</span>
+                <span class="version-status">Bản mới nhất</span>
+              </div>
+              <time class="changelog-date">06/09/2026</time>
+            </div>
+            <div class="changelog-body">
+              <h4>Tính năng &amp; Nâng cấp nổi bật</h4>
+              <ul class="changelog-list">
+                <li><strong>Đồng bộ điện thoại qua mã QR:</strong> Tạo mã QR chuẩn ISO/IEC 18004 bằng SVG vector offline, quét trực tiếp bằng Camera iPhone / Android để thêm lịch vào Apple Calendar hoặc Google Calendar không cần cáp kết nối.</li>
+                <li><strong>Modal Hợp nhất &amp; Chống tràn (Anti-overflow):</strong> Gộp thao tác tải file <code>.ics</code> và quét QR vào một giao diện popup nổi tinh gọn, tối ưu chiều cao 580px chống tràn màn hình.</li>
+                <li><strong>True Dark Mode:</strong> Hỗ trợ chế độ Sáng / Tối toàn diện cho extension và trang tài liệu với bảng màu WCAG AA dịu mắt khi học đêm.</li>
+                <li><strong>Today's Agenda:</strong> Hero card ở đầu tab Lịch học hiển thị slot kế tiếp, đếm ngược thời gian, phòng học và cảnh báo thi trong ngày kèm đèn pulse animation.</li>
+                <li><strong>Bảng điểm &amp; Dự đoán qua môn (Pass Predictor):</strong> Tích hợp theo dõi GPA, số tín chỉ tích lũy và thanh trượt tính điểm thi Final Exam tối thiểu cần đạt theo trọng số FPTU.</li>
+                <li><strong>Thông báo máy tính:</strong> Hỗ trợ nhắc nhở trước giờ học (15 - 30 phút) và trước giờ thi (1 giờ - 1 ngày) bằng Chrome Alarms.</li>
+                <li><strong>Thiết kế Zero-Emoji:</strong> Thay thế toàn bộ ký tự emoji bằng icon inline SVG vector sắc nét, đồng bộ và chuyên nghiệp.</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Release v3.5.1 -->
+          <article class="changelog-card">
+            <div class="changelog-card__head">
+              <div class="changelog-version-tag">
+                <span class="version-name">v3.5.1</span>
+              </div>
+              <time class="changelog-date">18/02/2025</time>
+            </div>
+            <div class="changelog-body">
+              <ul class="changelog-list">
+                <li><strong>Click thẻ môn học:</strong> Click trực tiếp vào thẻ lớp học để mở nhanh trang chi tiết điểm danh trên FAP.</li>
+                <li><strong>Cảnh báo vắng học &amp; Nguy cơ cấm thi:</strong> Hiển thị chip cảnh báo màu cam khi vắng &ge; 15% và màu đỏ khi vắng &ge; 20% (nguy cơ cấm thi).</li>
+                <li><strong>Modal xác nhận theo theme:</strong> Thay thế hộp thoại <code>window.confirm()</code> nguyên bản bằng modal giao diện đồng bộ.</li>
+                <li><strong>Nhận diện lớp học Online:</strong> Bóc tách chính xác các lớp chuyển học trực tuyến và link Google Meet trên FAP.</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Release v3.5.0 -->
+          <article class="changelog-card">
+            <div class="changelog-card__head">
+              <div class="changelog-version-tag">
+                <span class="version-name">v3.5.0</span>
+              </div>
+              <time class="changelog-date">15/02/2025</time>
+            </div>
+            <div class="changelog-body">
+              <ul class="changelog-list">
+                <li><strong>Bộ lọc thời gian linh hoạt:</strong> Lọc hiển thị lịch học theo Hôm nay, Tuần này, 2 tuần tới, hoặc Tháng này.</li>
+                <li><strong>Chuẩn hóa xuất file .ics:</strong> Thoát ký tự đặc biệt, ngắt dòng 75 byte theo RFC 5545 và chuẩn hóa timestamp UTC.</li>
+                <li><strong>Kiến trúc mã nguồn mới:</strong> Tách thư viện tiện ích vào thư mục <code>lib/</code> và bổ sung bộ 95 unit test tự động.</li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Release v3.0.0 -->
+          <article class="changelog-card">
+            <div class="changelog-card__head">
+              <div class="changelog-version-tag">
+                <span class="version-name">v3.0.0</span>
+              </div>
+              <time class="changelog-date">10/01/2025</time>
+            </div>
+            <div class="changelog-body">
+              <ul class="changelog-list">
+                <li><strong>Hỗ trợ Lịch học hàng tuần:</strong> Mở rộng tính năng trích xuất toàn bộ thời khóa biểu học tập từ FAP.</li>
+                <li><strong>Đồng bộ nhiều tuần:</strong> Cho phép quét và gộp lịch học của nhiều tuần liên tiếp trong học kỳ.</li>
+                <li><strong>Nâng cấp Manifest V3:</strong> Tối ưu hiệu năng và bảo mật theo tiêu chuẩn Chrome Extension mới nhất.</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+
+        <div class="changelog-footer-note">
+          <p>Xem toàn bộ lịch sử phát triển chi tiết từ v1.0.0 tại tệp <a href="https://github.com/yunkhngn/fptu-schedule/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG.md trên GitHub</a>.</p>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- Site Footer -->
@@ -806,6 +901,7 @@
       </div>
 
       <div class="site-footer__links">
+        <a href="#changelog">Changelog</a>
         <a href="https://github.com/yunkhngn/fptu-schedule" target="_blank" rel="noopener">GitHub</a>
         <a href="https://github.com/yunkhngn/fptu-schedule/releases" target="_blank" rel="noopener">Bản phát hành</a>
         <a href="https://github.com/yunkhngn/fptu-schedule/issues" target="_blank" rel="noopener">Báo lỗi / Góp ý</a>

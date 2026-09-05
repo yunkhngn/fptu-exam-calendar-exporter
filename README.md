@@ -113,7 +113,19 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.5.1 (current)
+Detailed release notes and full version history are documented in [CHANGELOG.md](CHANGELOG.md).
+
+### v3.6.0 (current)
+- **Offline QR Phone Calendar Synchronization:** Pure JavaScript vector SVG QR codes generated entirely offline. Scan via iOS Camera or Android Lens to directly import classes and exams into Apple Calendar or Google Calendar without cables.
+- **Unified Export & QR Modal:** Consolidated download and QR features into an intuitive single modal with time range filters (Today, This Week, Next Week, Exams), direct `.ics` download, and clipboard copy.
+- **True Dark Mode Support:** 3-state theme switcher (System / Light / Dark) matching WCAG AA contrast standards across the popup and documentation website.
+- **Today's Agenda Live Hero Banner:** Real-time hero widget at the top of the schedule tab showing slot countdown, classroom, instructor, and same-day exam alerts.
+- **Student Grades Tracker & Pass Predictor:** FAP grade reports scraper with cumulative GPA, credits tally, and an interactive Target Grade slider calculating the minimum final exam score needed to pass.
+- **Desktop Schedule & Exam Alerts:** Local advance reminders (15/30 mins for classes, 1h/1d for exams) via Chrome Alarms.
+- **Strict Zero-Emoji Design:** Clean, modern inline SVG icons across the extension and landing pages.
+- **Test Coverage:** 95 passing unit and integration tests using native `node --test`.
+
+### v3.5.1
 - **Whole card is clickable.** The "Chi tiết" chip is gone — click (or Tab to focus and press
   Enter/Space on) any class card with a detail link to refresh its attendance and open the FAP
   page, with a hover glow and pressed-state feedback marking it clickable.
@@ -220,7 +232,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 - [@yunkhngn](https://github.com/yunkhngn)
 
-**I 💛 FPTU**
+**Built for FPT University Students**
 
 ## License
 
@@ -228,4 +240,4 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-If this helps your semester planning, a ⭐ on the repo is appreciated.
+If this helps your semester planning, a star on the repo is appreciated.
