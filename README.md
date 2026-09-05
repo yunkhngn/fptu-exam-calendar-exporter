@@ -18,6 +18,7 @@ Chrome extension (Manifest V3) for **FPT University** students: read **exam** an
 - **Tải lịch** / export class timetable to `.ics`
 - **Multi-week sync**: Background merge across a range of weeks (service worker + `chrome.storage.local` for progress and merged data)
 - **Filter**: Show only today, this week, two weeks or this month — display only, the export is unaffected
+- **Attendance-risk chip**: per-course absence rate, warns before the 20% exam-ban threshold
 
 ### Study suggestions (exam cards)
 - **Ôn tập** strip under each exam card: links by **course code** (from `study-sources.json`)
@@ -112,7 +113,13 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.4.1 (current)
+### v3.5.0 (current)
+- **Attendance-risk warning.** FPTU bans a student from a course's final exam once
+  unauthorized absences pass 20% of its graded sessions. Every class card of a course at
+  ≥15% ("Not yet" sessions don't count toward the rate) now shows a "N% vắng" chip — amber
+  with a glowing ring at ≥15%, red with a slow pulsing glow at ≥20% — computed from the full
+  saved schedule regardless of the current Lọc range, so it stays accurate even when filtered
+  down to "Hôm nay".
 - **Online chip** moved to the card header, next to the attendance status, and recolored
   green (was indigo, in its own row under Slot/Room).
 - **`window.confirm()` replaced with a themed modal** for all four remaining yes/no prompts
@@ -163,7 +170,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.4.1**; release zip `fptu-schedule.zip`
+- Manifest **3.5.0**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
