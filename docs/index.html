@@ -1,448 +1,926 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-theme="light">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FPTU Schedule — Hướng dẫn &amp; tải extension</title>
-  <meta name="description" content="FPTU Schedule: tiện ích Chrome đồng bộ lịch học và lịch thi từ FAP, xuất .ics, đồng bộ nhiều tuần, giao diện hiện đại." />
+  <title>FPTU Schedule — Tiện ích Đồng bộ Lịch học & Kỳ thi FPTU</title>
+  <meta name="description"
+    content="FPTU Schedule v3.6.0: Tiện ích mở rộng Chrome đồng bộ lịch học, lịch thi từ FAP, quét QR chuyển lịch sang điện thoại tức thì, dự đoán điểm qua môn và cảnh báo cấm thi." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="./icon.png" />
 </head>
+
 <body>
-  <header class="site-top">
-    <div class="site-top__inner">
+  <!-- Site Header -->
+  <header class="site-header">
+    <div class="container site-header__inner">
       <a class="site-brand" href="#top">
-        <img class="site-brand__logo" src="icon-128.png" alt="" width="36" height="36" />
-        <span class="site-brand__text">
-          <span class="site-brand__name">FPTU Schedule</span>
-          <span class="site-brand__tag">Lịch học &amp; kỳ thi từ FAP</span>
+        <img class="site-brand__logo" src="icon-128.png" alt="FPTU Schedule Logo" width="36" height="36" />
+        <span class="site-brand__title">
+          FPTU Schedule
+          <span class="site-brand__badge">v3.6.0</span>
         </span>
       </a>
+
       <nav class="site-nav" aria-label="Điều hướng chính">
-        <a href="#features">Tính năng</a>
+        <a href="#simulator">Trải nghiệm UI</a>
+        <a href="#features">Tính năng mới</a>
         <a href="#guide">Hướng dẫn</a>
+        <a href="#platforms">Đồng bộ lịch</a>
         <a href="#download">Tải về</a>
-        <a class="site-nav__cta" href="https://chromewebstore.google.com/detail/fptu-exam-to-calendar/obiiippodjlfcmdipfbkneknbakjekfm" target="_blank" rel="noopener">Chrome Web Store</a>
+        <a href="#faq">FAQ</a>
       </nav>
+
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="theme-toggle-btn" type="button" aria-label="Chuyển chế độ sáng tối"
+          title="Chuyển chế độ Sáng / Tối">
+          <svg class="icon icon--sm icon-sun" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path
+              d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41">
+            </path>
+          </svg>
+          <svg class="icon icon--sm icon-moon" viewBox="0 0 24 24" style="display: none;">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
+        <a class="btn btn--primary"
+          href="https://chromewebstore.google.com/detail/fptu-exam-to-calendar/obiiippodjlfcmdipfbkneknbakjekfm"
+          target="_blank" rel="noopener">
+          <svg class="icon icon--sm" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"></circle>
+            <circle cx="12" cy="4" r="4"></circle>
+            <line x1="21.17" y1="8" x2="12" y2="8"></line>
+            <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+            <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
+          </svg>
+          <span>Chrome Web Store</span>
+        </a>
+      </div>
     </div>
   </header>
 
   <main id="top">
+    <!-- Hero Section -->
     <section class="hero">
       <div class="container hero__grid">
-        <div>
-          <p class="hero__kicker">Phiên bản <strong>3.1.1</strong> · Giao diện mới</p>
-          <h1>Lịch học &amp; kỳ thi FPTU trong một tiện ích</h1>
-          <p class="hero__lead">
-            Đồng bộ từ FAP, xem trong popup hiện đại, xuất <strong>.ics</strong> cho Apple Calendar, Google Calendar hay Outlook — kèm đồng bộ nhiều tuần cho lịch học.
-          </p>
-          <div class="hero__actions">
-            <a class="btn btn--primary" href="#download">Cài đặt extension</a>
-            <a class="btn btn--secondary" href="#guide">Xem hướng dẫn</a>
+        <div class="hero__content">
+          <div class="hero__kicker">
+            <span class="hero__kicker-dot"></span>
+            <span>Bản phát hành chính thức v3.6.0</span>
           </div>
-          <ul class="hero__bullets">
-            <li>Hai tab chính: <strong>Lịch học</strong> (mở mặc định) và <strong>Kỳ thi</strong></li>
-            <li>Nút <strong>Tải lịch</strong> xuất file <code>lich-hoc.ics</code> hoặc <code>lich-thi.ics</code></li>
-            <li>Khối <strong>Đồng bộ nhiều tuần</strong> (có thể thu gọn) trên tab lịch học</li>
+
+          <h1>Lịch học, kỳ thi &amp; điểm số <span class="gradient-text">FPTU trong tầm tay</span></h1>
+
+          <p class="hero__lead">
+            Đồng bộ dữ liệu tức thì từ FAP, quét mã QR thêm trực tiếp vào điện thoại chỉ trong 2 giây, dự đoán điểm thi
+            qua môn và kiểm soát rủi ro cấm thi chuẩn xác.
+          </p>
+
+          <div class="hero__actions">
+            <a class="btn btn--primary btn--lg" href="#download">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Cài đặt Extension</span>
+            </a>
+            <a class="btn btn--secondary btn--lg" href="#simulator">
+              <svg class="icon" viewBox="0 0 24 24">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Trải nghiệm trực tiếp</span>
+            </a>
+          </div>
+
+          <ul class="hero__checklist">
+            <li>
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Quét QR chuyển lịch sang iPhone / Android</span>
+            </li>
+            <li>
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Today's Agenda nhắc nhở slot học kế tiếp</span>
+            </li>
+            <li>
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Dự đoán điểm Final Exam cần để qua môn</span>
+            </li>
+            <li>
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>100% Riêng tư, xử lý trực tiếp tại máy</span>
+            </li>
           </ul>
         </div>
-        <div class="app-mockup" aria-hidden="true">
-          <div class="app-mockup__head">
-            <img src="icon-128.png" alt="" width="40" height="40" />
-            <div class="app-mockup__titles">
-              <h2>FPTU Schedule</h2>
-              <p>Đồng bộ lịch học &amp; lịch thi từ FAP</p>
-            </div>
-          </div>
-          <div class="app-mockup__tabs">
-            <span class="app-mockup__tab app-mockup__tab--active">Lịch học</span>
-            <span class="app-mockup__tab">Kỳ thi</span>
-          </div>
-          <div class="app-mockup__scroll">
-            <div class="mock-card">
-              <div class="mock-card__head">
-                <span class="mock-card__code">DBI202</span>
-                <span class="mock-pill mock-pill--att">Attended</span>
-              </div>
-              <div class="mock-pills-row">
-                <span class="mock-pill mock-pill--slot">Slot 1</span>
-                <span class="mock-pill mock-pill--room">DE-C305</span>
-                <span class="mock-pill mock-pill--link">Chi tiết</span>
-              </div>
-              <div class="mock-card__meta">
-                <div class="mock-meta-row"><span>Ngày:</span><span>05/02/2025</span></div>
-                <div class="mock-meta-row"><span>Giờ:</span><span>07:30 – 09:50</span></div>
-              </div>
-            </div>
-          </div>
-          <div class="app-mockup__actions">
-            <span class="mock-action">Đồng bộ lịch học</span>
-            <span class="mock-action mock-action--primary">Tải lịch</span>
-            <span class="mock-action mock-action--ghost">Xoá</span>
-          </div>
-          <div class="app-mockup__range">
-            <span>Đồng bộ nhiều tuần</span>
-            <span>Thu gọn / mở rộng</span>
-          </div>
-          <div class="app-mockup__foot">FPTU · GitHub · Hướng dẫn</div>
-        </div>
-      </div>
-    </section>
 
-    <section id="features" class="section section--surface">
-      <div class="container">
-        <div class="section__head">
-          <h2>Tính năng theo bản mới</h2>
-          <p>Đồng bộ dữ liệu từ FAP, thẻ lịch thiết kế lại, và quy trình xuất lịch rõ ràng hơn.</p>
-        </div>
+        <!-- Interactive Extension Simulator -->
+        <div class="simulator-wrapper" id="simulator">
+          <div class="simulator-badge">Interactive UI Preview</div>
 
-        <div class="preview-grid">
-          <div>
-            <p class="preview-grid__label">Tab Kỳ thi</p>
-            <div class="mock-card">
-              <div class="mock-card__head">
-                <span class="mock-card__code">PRJ301</span>
-                <div class="mock-card__tags">
-                  <span class="mock-pill mock-pill--pe" style="background:#eff6ff;color:#1d4ed8;border-color:#bfdbfe">FE</span>
-                  <span class="mock-pill mock-pill--count">Hôm nay</span>
+          <div class="extension-window" id="extensionSimulator">
+            <!-- Mockup Header -->
+            <div class="ext-head">
+              <div class="ext-brand">
+                <img src="icon-128.png" alt="Extension Icon" />
+                <div class="ext-brand__info">
+                  <h3>FPTU Schedule</h3>
+                  <p>Học kỳ Spring 2025 · FAP Sync</p>
                 </div>
               </div>
-              <div class="mock-card__meta">
-                <div class="mock-meta-row"><span>Phòng:</span><span>BE-205</span></div>
-                <div class="mock-meta-row"><span>Thời gian:</span><span>12:50 – 14:20</span></div>
+              <div class="ext-controls">
+                <button class="ext-icon-btn" id="simThemeToggle" type="button" title="Chuyển chế độ xem UI">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                  </svg>
+                </button>
               </div>
             </div>
-          </div>
-          <div>
-            <p class="preview-grid__label">Tab Lịch học</p>
-            <div class="mock-card">
-              <div class="mock-card__head">
-                <span class="mock-card__code">DBI202</span>
-                <span class="mock-pill mock-pill--att">Attended</span>
+
+            <!-- Mockup Navigation Tabs -->
+            <div class="ext-tabs" role="tablist">
+              <button class="ext-tab-btn active" id="tabBtnSchedule" type="button" data-tab="panelSchedule">
+                <svg class="icon icon--sm" viewBox="0 0 24 24">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="16" y1="2" x2="16" y2="6"></line>
+                  <line x1="8" y1="2" x2="8" y2="6"></line>
+                  <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <span>Lịch học</span>
+              </button>
+              <button class="ext-tab-btn" id="tabBtnExams" type="button" data-tab="panelExams">
+                <svg class="icon icon--sm" viewBox="0 0 24 24">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>Kỳ thi</span>
+              </button>
+              <button class="ext-tab-btn" id="tabBtnGrades" type="button" data-tab="panelGrades">
+                <svg class="icon icon--sm" viewBox="0 0 24 24">
+                  <circle cx="12" cy="8" r="7"></circle>
+                  <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+                </svg>
+                <span>Điểm số</span>
+              </button>
+            </div>
+
+            <!-- Mockup Content Body -->
+            <div class="ext-body">
+              <!-- Panel 1: Lịch học -->
+              <div class="ext-panel active" id="panelSchedule">
+                <!-- Today's Live Agenda Banner -->
+                <div class="agenda-hero">
+                  <div class="agenda-hero__header">
+                    <span class="agenda-hero__badge">
+                      <span class="pulse-dot"></span>
+                      <span>Hôm nay · Slot kế tiếp</span>
+                    </span>
+                    <span class="agenda-hero__countdown">Bắt đầu trong 35 phút</span>
+                  </div>
+                  <div class="agenda-hero__title">SWP391 — Software Development Project</div>
+                  <div class="agenda-hero__chips">
+                    <span class="agenda-chip agenda-chip--accent">Slot 2 · 09:10 - 11:30</span>
+                    <span class="agenda-chip">Phòng AL-R204</span>
+                    <span class="agenda-chip agenda-chip--online">Giảng viên: SonNT5</span>
+                  </div>
+                </div>
+
+                <!-- Nearest Exam Alert -->
+                <div class="exam-alert">
+                  <svg class="icon icon--sm" viewBox="0 0 24 24">
+                    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                    </path>
+                    <line x1="12" y1="9" x2="12" y2="13"></line>
+                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                  </svg>
+                  <span>Thi DBI202 vào Thứ Hai, 10/02/2025 (còn 4 ngày)</span>
+                </div>
+
+                <!-- Schedule Card 1 -->
+                <div class="card-mock">
+                  <div class="card-mock__row">
+                    <span class="card-mock__code">SWP391</span>
+                    <span class="chip-status chip-status--att">Có mặt (Attended)</span>
+                  </div>
+                  <div class="card-mock__meta">
+                    <span>Thứ Tư, 05/02</span>
+                    <span>·</span>
+                    <span>Slot 2 (09:10 - 11:30)</span>
+                    <span>·</span>
+                    <span>Phòng AL-R204</span>
+                  </div>
+                </div>
+
+                <!-- Schedule Card 2 (Absence Risk Warning) -->
+                <div class="card-mock">
+                  <div class="card-mock__row">
+                    <span class="card-mock__code">PRN212</span>
+                    <span class="chip-status chip-status--warn">Vắng 3/20 buổi (15%)</span>
+                  </div>
+                  <div class="card-mock__meta">
+                    <span>Thứ Năm, 06/02</span>
+                    <span>·</span>
+                    <span>Slot 4 (15:00 - 17:20)</span>
+                    <span>·</span>
+                    <span>Phòng BE-302</span>
+                  </div>
+                </div>
+
+                <!-- Schedule Card 3 -->
+                <div class="card-mock">
+                  <div class="card-mock__row">
+                    <span class="card-mock__code">DBI202</span>
+                    <span class="chip-status chip-status--att">Có mặt (Attended)</span>
+                  </div>
+                  <div class="card-mock__meta">
+                    <span>Thứ Sáu, 07/02</span>
+                    <span>·</span>
+                    <span>Slot 1 (07:30 - 09:50)</span>
+                    <span>·</span>
+                    <span>Phòng DE-C305</span>
+                  </div>
+                </div>
               </div>
-              <div class="mock-pills-row">
-                <span class="mock-pill mock-pill--slot">Slot 1</span>
-                <span class="mock-pill mock-pill--room">DE-C305</span>
-                <span class="mock-pill mock-pill--link">Chi tiết</span>
+
+              <!-- Panel 2: Kỳ thi -->
+              <div class="ext-panel" id="panelExams">
+                <div class="card-mock">
+                  <div class="card-mock__row">
+                    <span class="card-mock__code">DBI202 — Database Systems</span>
+                    <span class="chip-status chip-status--warn">FE EOS</span>
+                  </div>
+                  <div class="card-mock__meta">
+                    <span>10/02/2025</span>
+                    <span>·</span>
+                    <span>07:30 - 09:00</span>
+                    <span>·</span>
+                    <span>Phòng LAB-402</span>
+                  </div>
+                </div>
+
+                <div class="card-mock">
+                  <div class="card-mock__row">
+                    <span class="card-mock__code">PRN212 — .NET Programming</span>
+                    <span class="chip-status chip-status--att">Practical Exam</span>
+                  </div>
+                  <div class="card-mock__meta">
+                    <span>14/02/2025</span>
+                    <span>·</span>
+                    <span>13:00 - 15:30</span>
+                    <span>·</span>
+                    <span>Phòng LAB-201</span>
+                  </div>
+                </div>
+
+                <div class="card-mock">
+                  <div class="card-mock__row">
+                    <span class="card-mock__code">SWP391 — Software Project</span>
+                    <span class="chip-status chip-status--att">Bảo vệ đồ án</span>
+                  </div>
+                  <div class="card-mock__meta">
+                    <span>20/02/2025</span>
+                    <span>·</span>
+                    <span>Hội đồng 03</span>
+                    <span>·</span>
+                    <span>Phòng Hội trường Alpha</span>
+                  </div>
+                </div>
               </div>
-              <div class="mock-card__meta">
-                <div class="mock-meta-row"><span>Ngày:</span><span>05/02/2025</span></div>
-                <div class="mock-meta-row"><span>Giờ:</span><span>07:30 – 09:50</span></div>
+
+              <!-- Panel 3: Điểm số & Pass Predictor -->
+              <div class="ext-panel" id="panelGrades">
+                <!-- GPA Card -->
+                <div class="gpa-card">
+                  <div class="gpa-card__top">
+                    <div>
+                      <div style="font-size: 11px; opacity: 0.85; text-transform: uppercase; font-weight: 700;">GPA Tích
+                        lũy kỳ này</div>
+                      <div class="gpa-card__num">3.42 <span style="font-size: 13px; font-weight: 500;">/ 4.0</span>
+                      </div>
+                    </div>
+                    <div style="text-align: right;">
+                      <div class="gpa-card__credits">84 / 145 Tín chỉ</div>
+                      <span
+                        style="display: inline-block; font-size: 11px; background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 999px; margin-top: 4px;">Xếp
+                        loại Giỏi</span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Pass Predictor Interactive Card -->
+                <div class="pass-predictor-card">
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                    <span style="font-size: 12.5px; font-weight: 750;">Dự đoán điểm qua môn DBI202</span>
+                    <span style="font-size: 11px; color: var(--text-muted);">Trọng số Final: 40%</span>
+                  </div>
+                  <div style="font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px;">
+                    Điểm thành phần hiện có: <strong>7.2 / 10</strong>
+                  </div>
+
+                  <div class="slider-group">
+                    <div style="display: flex; justify-content: space-between; font-size: 11.5px; margin-bottom: 4px;">
+                      <span>Mục tiêu điểm tổng kết môn:</span>
+                      <strong id="simTargetScoreDisplay">7.0 / 10</strong>
+                    </div>
+                    <input type="range" id="simTargetSlider" min="5.0" max="9.5" step="0.1" value="7.0" />
+                  </div>
+
+                  <div class="slider-result" id="simPredictResult">
+                    Bạn chỉ cần đạt tối thiểu <strong>6.70</strong> ở bài thi Final Exam để đạt mục tiêu này.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Mockup Actions Toolbar -->
+            <div class="ext-actions">
+              <button class="ext-btn" type="button" title="Đồng bộ lại từ FAP">
+                <svg class="icon icon--sm" viewBox="0 0 24 24">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <polyline points="1 20 1 14 7 14"></polyline>
+                  <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                <span>Đồng bộ</span>
+              </button>
+
+              <button class="ext-btn ext-btn--primary" id="simOpenModalBtn" type="button">
+                <svg class="icon icon--sm" viewBox="0 0 24 24">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                <span>Xuất lịch &amp; Quét QR</span>
+              </button>
+            </div>
+
+            <!-- Mockup Unified Export & QR Modal -->
+            <div class="mockup-modal" id="simModal">
+              <div class="mockup-modal__dialog">
+                <div class="mockup-modal__header">
+                  <h4>Xuất &amp; Đồng bộ điện thoại</h4>
+                  <button class="mockup-modal__close" id="simCloseModalBtn" type="button" aria-label="Đóng modal">
+                    <svg class="icon icon--sm" viewBox="0 0 24 24">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <div class="mockup-modal__body">
+                  <!-- Sharp SVG QR Mockup -->
+                  <div class="qr-card-box">
+                    <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+                      <rect width="120" height="120" fill="#ffffff" />
+                      <!-- Top-Left Finder -->
+                      <rect x="10" y="10" width="30" height="30" fill="#0f172a" rx="4" />
+                      <rect x="16" y="16" width="18" height="18" fill="#ffffff" rx="2" />
+                      <rect x="20" y="20" width="10" height="10" fill="#0f172a" rx="1" />
+                      <!-- Top-Right Finder -->
+                      <rect x="80" y="10" width="30" height="30" fill="#0f172a" rx="4" />
+                      <rect x="86" y="16" width="18" height="18" fill="#ffffff" rx="2" />
+                      <rect x="90" y="20" width="10" height="10" fill="#0f172a" rx="1" />
+                      <!-- Bottom-Left Finder -->
+                      <rect x="10" y="80" width="30" height="30" fill="#0f172a" rx="4" />
+                      <rect x="16" y="86" width="18" height="18" fill="#ffffff" rx="2" />
+                      <rect x="20" y="90" width="10" height="10" fill="#0f172a" rx="1" />
+                      <!-- Data Blocks -->
+                      <rect x="48" y="14" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="62" y="14" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="48" y="28" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="62" y="28" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="14" y="48" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="28" y="48" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="48" y="48" width="24" height="24" fill="#2563eb" rx="3" />
+                      <rect x="80" y="48" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="98" y="48" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="80" y="62" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="98" y="62" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="48" y="80" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="62" y="80" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="80" y="80" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="98" y="80" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="48" y="98" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="62" y="98" width="8" height="8" fill="#0f172a" rx="1" />
+                      <rect x="80" y="98" width="8" height="8" fill="#0f172a" rx="1" />
+                    </svg>
+                  </div>
+                  <p class="qr-caption">
+                    Dùng Camera điện thoại quét mã QR để nhập lịch vào Apple / Google Calendar ngay lập tức.
+                  </p>
+                  <div class="modal-actions-row">
+                    <button class="ext-btn ext-btn--primary" type="button">
+                      <svg class="icon icon--sm" viewBox="0 0 24 24">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                      </svg>
+                      <span>Tải file .ics</span>
+                    </button>
+                    <button class="ext-btn" type="button">
+                      <svg class="icon icon--sm" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                      <span>Copy link</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </section>
 
-        <div class="feature-grid feature-grid--spaced">
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M8 2v4m8-4v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg>
+    <!-- Features Deep Dive Section -->
+    <section class="section section--surface" id="features">
+      <div class="container">
+        <div class="section-head">
+          <span class="section-head__tag">Đổi mới trong v3.6.0</span>
+          <h2>Những tính năng vượt trội cho sinh viên FPTU</h2>
+          <p>Thiết kế tinh gọn, tốc độ tức thì và giải quyết trọn vẹn mọi nhu cầu học tập mỗi học kỳ.</p>
+        </div>
+
+        <div class="feature-cards-grid">
+          <!-- Feat 1 -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
             </div>
-            <h3>Hai không gian: Lịch học &amp; Kỳ thi</h3>
-            <p>Chuyển tab trên cùng để xem lịch học đã đồng bộ hoặc danh sách kỳ thi từ trang lịch thi FAP.</p>
+            <h3>QR Phone Sync 1 chạm</h3>
+            <p>
+              Không cần cắm cáp hay gửi email file .ics thủ công. Chỉ cần mở camera điện thoại quét mã QR từ popup, toàn
+              bộ lịch học và lịch thi sẽ tự động thêm vào ứng dụng Lịch của máy.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Hỗ trợ iOS Calendar &amp; Google Calendar</span>
+            </div>
           </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3"/></svg>
+
+          <!-- Feat 2 -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="3" x2="9" y2="21"></line>
+              </svg>
             </div>
-            <h3>Đồng bộ nhiều tuần</h3>
-            <p>Trên tab Lịch học, mở mục <strong>Đồng bộ nhiều tuần</strong>, tải danh sách tuần từ FAP và đồng bộ cả khoảng trong nền (service worker).</p>
+            <h3>Modal Hợp nhất &amp; Chống tràn</h3>
+            <p>
+              Tối ưu hóa bố cục hiển thị theo tiêu chuẩn Chrome Extension mới. Gộp nút Tải file .ics và Quét mã QR trong
+              một modal nổi tinh gọn, triệt tiêu hoàn toàn lỗi vỡ layout hoặc tràn màn hình.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Trải nghiệm trực quan, không cuộn thừa</span>
+            </div>
           </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+
+          <!-- Feat 3 -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
             </div>
-            <h3>Tải lịch (.ics)</h3>
-            <p>Nút xanh <strong>Tải lịch</strong> tạo <code>lich-hoc.ics</code> hoặc <code>lich-thi.ics</code> tùy tab đang mở.</p>
+            <h3>True Dark Mode toàn diện</h3>
+            <p>
+              Bổ sung giao diện tối chuẩn mực cho cả Extension và trang tài liệu hướng dẫn. Tự động chuyển đổi theo hệ
+              điều hành hoặc tuỳ chọn thủ công, dịu mắt khi xem lịch vào ban đêm.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Bảng màu chuẩn Slate tối ưu độ tương phản</span>
+            </div>
           </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M9 11l3 3L22 4M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+
+          <!-- Feat 4 -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
             </div>
-            <h3>Điểm danh &amp; chi tiết buổi học</h3>
-            <p>Chip trạng thái và liên kết <strong>Chi tiết</strong> trên từng buổi học; có thể cập nhật điểm danh sau khi mở trang FAP.</p>
+            <h3>Today's Agenda &amp; Countdown</h3>
+            <p>
+              Card đầu trang với đèn xung nhịp (pulse animation) thông báo ngay môn học tiếp theo trong ngày, phòng học,
+              giảng viên và thời gian đếm ngược chính xác tới giờ vào slot.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Không bao giờ lo muộn học hay nhầm phòng</span>
+            </div>
           </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h10M4 18h16"/></svg>
+
+          <!-- Feat 5 -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
             </div>
-            <h3>Lọc loại kỳ thi</h3>
-            <p>Modal lọc FE, PE, 2NDFE, 2NDPE; lựa chọn được ghi nhớ cho lần mở sau.</p>
+            <h3>Pass Predictor &amp; Điểm số FAP</h3>
+            <p>
+              Tra cứu bảng điểm trực tiếp trên extension với GPA và tín chỉ tích luỹ. Tính năng Dự đoán điểm thông minh
+              tính toán số điểm Final Exam bạn cần đạt dựa theo trọng số môn học thực tế.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Chuẩn công thức tính điểm của Đại học FPT</span>
+            </div>
           </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+
+          <!-- Feat 6 -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                </path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
             </div>
-            <h3>Gợi ý ôn tập (Quizlet) theo mã môn</h3>
-            <p>Trên thẻ kỳ thi: gợi ý liên kết Quizlet/Google theo mã môn; chỉnh trong <code>study-sources.json</code> nếu cần.</p>
-          </article>
-          <article class="feature-tile">
-            <div class="feature-tile__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <h3>Cảnh báo Vắng &amp; Nguy cơ Cấm thi</h3>
+            <p>
+              Tự động phân tích tỷ lệ vắng học của từng môn học trên FAP. Gắn thẻ cảnh báo màu cam khi vắng trên 15% và
+              màu đỏ khi chạm ngưỡng cấm thi (20%), giúp sinh viên chủ động bảo vệ kỳ thi.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Kiểm soát rủi ro học tập tức thì</span>
             </div>
-            <h3>Định dạng giờ FAP</h3>
-            <p>Tự nhận dạng nhiều kiểu giờ từ FAP (10h00, 10:00, 10.00, …) khi xử lý lịch.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="section section--muted" id="time-formats">
+    <!-- Usage Guide Section -->
+    <section class="section" id="guide">
       <div class="container">
-        <div class="section__head">
-          <h2>Xử lý định dạng thời gian</h2>
-          <p>Extension gom và chuẩn hoá giờ từ các phiên bản giao diện FAP khác nhau — bạn không cần chỉnh tay.</p>
+        <div class="section-head">
+          <span class="section-head__tag">Quy trình đơn giản</span>
+          <h2>Cách sử dụng FPTU Schedule trong 4 bước</h2>
+          <p>Đồng bộ dữ liệu an toàn, không lưu mật khẩu và hoạt động ngay tức thì trên trình duyệt của bạn.</p>
         </div>
-        <div class="format-grid">
-          <div class="format-tile">
-            <h3>Kiểu Việt Nam</h3>
-            <div class="format-examples">
-              <code>10h00 - 12h00</code>
-              <code>14h30 - 16h00</code>
-            </div>
-            <p>Dùng chữ <strong>h</strong> / <strong>H</strong> giữa giờ và phút.</p>
+
+        <div class="workflow-grid">
+          <div class="step-card">
+            <span class="step-number">1</span>
+            <h3>Đăng nhập FAP</h3>
+            <p>Mở trang FAP trường bạn (fap.fpt.edu.vn), đăng nhập bằng tài khoản sinh viên và truy cập mục
+              <strong>Weekly Timetable</strong> hoặc <strong>Exam Schedule</strong>.</p>
           </div>
-          <div class="format-tile">
-            <h3>Kiểu quốc tế</h3>
-            <div class="format-examples">
-              <code>10:00 - 12:00</code>
-              <code>14:30 - 16:00</code>
-            </div>
-            <p>Dấu hai chấm giữa giờ và phút.</p>
+
+          <div class="step-card">
+            <span class="step-number">2</span>
+            <h3>Mở Extension &amp; Đồng bộ</h3>
+            <p>Click vào biểu tượng FPTU Schedule trên thanh công cụ trình duyệt. Bấm nút <strong>Đồng bộ</strong> để
+              trích xuất lịch học nhiều tuần hoặc lịch thi.</p>
           </div>
-          <div class="format-tile">
-            <h3>Chỉ có giờ</h3>
-            <div class="format-examples">
-              <code>10 - 12</code>
-              <code>8 - 10</code>
-            </div>
-            <p>Thiếu phút thì mặc định :00.</p>
+
+          <div class="step-card">
+            <span class="step-number">3</span>
+            <h3>Xuất lịch hoặc Quét QR</h3>
+            <p>Bấm <strong>Xuất lịch &amp; Quét QR</strong>. Bạn có thể tải file <code>.ics</code> về máy tính hoặc giơ
+              camera điện thoại quét mã để nhập thẳng vào Apple / Google Calendar.</p>
           </div>
-          <div class="format-tile">
-            <h3>Dấu chấm</h3>
-            <div class="format-examples">
-              <code>10.00 - 12.30</code>
-            </div>
-            <p>Một số bảng FAP dùng dấu chấm thay cho hai chấm.</p>
+
+          <div class="step-card">
+            <span class="step-number">4</span>
+            <h3>Nhận thông báo nhắc học</h3>
+            <p>Lịch trên điện thoại và máy tính sẽ tự động thông báo trước mỗi slot 15 phút, kèm thông tin phòng học, ca
+              học và giảng viên phụ trách.</p>
           </div>
         </div>
-        <div class="callout">
-          <h3>Lưu ý</h3>
-          <p>Không cần cấu hình: extension cố gắng parse đúng định dạng trang bạn đang dùng. Nếu FAP đổi mạnh cấu trúc trang, hãy báo trên GitHub.</p>
+
+        <!-- Platforms Guide -->
+        <div class="calendar-grid" id="platforms">
+          <div class="cal-card">
+            <h4>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path
+                  d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 14.93V18a1 1 0 0 1-2 0v-1.07A7 7 0 0 1 5.07 11H4a1 1 0 0 1 0-2h1.07A7 7 0 0 1 11 3.07V2a1 1 0 0 1 2 0v1.07A7 7 0 0 1 18.93 9H20a1 1 0 0 1 0 2h-1.07A7 7 0 0 1 13 16.93z">
+                </path>
+              </svg>
+              <span>Apple Calendar (iOS / macOS)</span>
+            </h4>
+            <ol>
+              <li>Cách nhanh nhất: Dùng Camera iPhone quét mã QR trên extension để thêm toàn bộ sự kiện.</li>
+              <li>Hoặc tải file <code>lich-hoc.ics</code> về máy Mac, mở file và chọn bộ lịch cần lưu.</li>
+              <li>Bật thông báo để nhận nhắc nhở trên Apple Watch và iPhone trước giờ vào lớp.</li>
+            </ol>
+          </div>
+
+          <div class="cal-card">
+            <h4>
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>Google Calendar</span>
+            </h4>
+            <ol>
+              <li>Truy cập <code>calendar.google.com</code> trên trình duyệt máy tính.</li>
+              <li>Tại cột bên trái, bấm biểu tượng dấu cộng bên cạnh <strong>Lịch khác</strong> → Chọn <strong>Nhập
+                  (Import)</strong>.</li>
+              <li>Chọn file <code>lich-hoc.ics</code> hoặc <code>lich-thi.ics</code> vừa tải từ extension và bấm
+                <strong>Nhập</strong>.</li>
+            </ol>
+          </div>
+
+          <div class="cal-card">
+            <h4>
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              <span>Microsoft Outlook</span>
+            </h4>
+            <ol>
+              <li>Mở Outlook trên máy tính hoặc truy cập <code>outlook.live.com/calendar</code>.</li>
+              <li>Chọn <strong>Thêm lịch (Add calendar)</strong> → Chọn <strong>Tải lên từ tệp (Upload from
+                  file)</strong>.</li>
+              <li>Duyệt tìm tệp <code>.ics</code> đã xuất, chọn lịch lưu trữ và xác nhận.</li>
+            </ol>
+          </div>
         </div>
       </div>
     </section>
 
-    <section id="download" class="section">
+    <!-- Download & Installation Section -->
+    <section class="section section--surface" id="download">
       <div class="container">
-        <div class="section__head">
-          <h2>Tải về &amp; cài đặt</h2>
-          <p>Phiên bản tài liệu này căn theo <strong>manifest 3.1.1</strong>. Trên Web Store có thể là số hiệu khác cho đến khi bản mới được duyệt.</p>
+        <div class="section-head">
+          <span class="section-head__tag">Cài đặt dễ dàng</span>
+          <h2>Tải FPTU Schedule cho trình duyệt</h2>
+          <p>Tương thích hoàn hảo với Google Chrome, Microsoft Edge, Brave Browser, Cốc Cốc và Opera.</p>
         </div>
-        <div class="download-grid">
-          <div class="download-card download-card--featured">
-            <div class="download-card__row">
-              <span class="badge badge--version">v3.x</span>
-              <span class="badge badge--ok">Khuyến nghị</span>
-            </div>
+
+        <div class="download-cards">
+          <!-- Card 1: Chrome Store -->
+          <div class="dl-card dl-card--featured">
             <h3>Chrome Web Store</h3>
-            <p>Cài trực tiếp trên Chrome, có cập nhật tự động khi nhà phát hành đẩy bản mới.</p>
-            <ul class="check-list">
-              <li>Một cú nhấp, không cần bật chế độ nhà phát triển</li>
-              <li>Phù hợp hầu hết sinh viên</li>
+            <p>Cài đặt trực tiếp từ kho ứng dụng chính thức của Google. Tự động cập nhật phiên bản mới nhất khi có nâng
+              cấp.</p>
+            <ul>
+              <li>Cài đặt 1 click an toàn tuyệt đối</li>
+              <li>Tự động nhận các bản vá lỗi và tính năng mới</li>
+              <li>Được kiểm duyệt bảo mật bởi Google</li>
             </ul>
-            <a class="btn btn--primary btn--block" href="https://chromewebstore.google.com/detail/fptu-exam-to-calendar/obiiippodjlfcmdipfbkneknbakjekfm" target="_blank" rel="noopener">Mở trang Chrome Web Store</a>
+            <a class="btn btn--primary btn--lg"
+              href="https://chromewebstore.google.com/detail/fptu-exam-to-calendar/obiiippodjlfcmdipfbkneknbakjekfm"
+              target="_blank" rel="noopener">
+              <svg class="icon" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10"></circle>
+                <circle cx="12" cy="4" r="4"></circle>
+                <line x1="21.17" y1="8" x2="12" y2="8"></line>
+                <line x1="3.95" y1="6.06" x2="8.54" y2="14"></line>
+                <line x1="10.88" y1="21.94" x2="15.46" y2="14"></line>
+              </svg>
+              <span>Thêm vào Chrome</span>
+            </a>
           </div>
-          <div class="download-card">
-            <div class="download-card__row">
-              <strong style="font-size:1.1rem">Từ mã nguồn</strong>
-              <span class="badge badge--dev">Developer</span>
-            </div>
-            <h3>Load unpacked</h3>
-            <p>Dùng đúng bản trong repo GitHub (gồm lịch học + đồng bộ nhiều tuần).</p>
-            <ol class="install-list">
-              <li>Clone hoặc tải ZIP từ GitHub <code>fptu-schedule</code></li>
-              <li>Mở <code>chrome://extensions</code></li>
-              <li>Bật <strong>Developer mode</strong></li>
-              <li><strong>Load unpacked</strong> và chọn thư mục extension</li>
-            </ol>
-            <a class="btn btn--secondary btn--block" href="https://github.com/yunkhngn/fptu-schedule" target="_blank" rel="noopener">Mở GitHub</a>
-          </div>
-        </div>
 
-        <div class="release-notes">
-          <h3>Nổi bật ở bản 3.x (so với tài liệu cũ)</h3>
-          <div class="release-grid">
-            <div class="release-item">
-              <strong>Tab Lịch học</strong>
-              <span>Đồng bộ lịch tuần từ FAP, thẻ môn với slot, phòng, điểm danh, link chi tiết.</span>
-            </div>
-            <div class="release-item">
-              <strong>Đồng bộ nhiều tuần</strong>
-              <span>Chạy trong service worker; có thể đóng popup khi đang đồng bộ khoảng tuần.</span>
-            </div>
-            <div class="release-item">
-              <strong>UI mới</strong>
-              <span>Thẻ lịch, nút Tải lịch, header dùng logo extension, khối tuần thu gọn được.</span>
-            </div>
-            <div class="release-item">
-              <strong>Hai file .ics</strong>
-              <span><code>lich-thi.ics</code> từ tab kỳ thi; <code>lich-hoc.ics</code> từ tab lịch học.</span>
-            </div>
+          <!-- Card 2: Manual ZIP -->
+          <div class="dl-card">
+            <h3>Bản ZIP v3.6.0 (GitHub Release)</h3>
+            <p>Dành cho các bạn muốn cài đặt thủ công qua chế độ Developer Mode hoặc trải nghiệm phiên bản đóng gói độc
+              lập.</p>
+            <ul>
+              <li>Tải tệp nén <code>fptu-schedule.zip</code> hoàn chỉnh</li>
+              <li>Giải nén và mở <code>chrome://extensions</code></li>
+              <li>Bật <strong>Developer mode</strong> và chọn <strong>Load unpacked</strong></li>
+            </ul>
+            <a class="btn btn--secondary btn--lg"
+              href="https://github.com/yunkhngn/fptu-schedule/releases/download/v3.6.0/fptu-schedule.zip"
+              target="_blank" rel="noopener">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Tải file ZIP (v3.6.0)</span>
+            </a>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="guide" class="section section--surface">
+    <!-- FAQ Section -->
+    <section class="section" id="faq">
       <div class="container">
-        <div class="section__head">
-          <h2>Hướng dẫn sử dụng</h2>
-          <p>Tóm tắt quy trình cho cả lịch thi và lịch học.</p>
-        </div>
-        <div class="steps">
-          <div class="step-row">
-            <div class="step-num">1</div>
-            <div class="step-body">
-              <h3>Đăng nhập FAP</h3>
-              <p>Dùng tài khoản sinh viên trên <strong>fap.fpt.edu.vn</strong>. Với kỳ thi, mở trang lịch thi; với lịch học, dùng trang lịch tuần (Schedule of week).</p>
-            </div>
-          </div>
-          <div class="step-row">
-            <div class="step-num">2</div>
-            <div class="step-body">
-              <h3>Mở FPTU Schedule</h3>
-              <p>Nhấn biểu tượng extension trên thanh công cụ. Nếu vừa cài, nhấn <strong>Đồng bộ lịch thi</strong> hoặc <strong>Đồng bộ lịch học</strong> tùy tab.</p>
-            </div>
-          </div>
-          <div class="step-row">
-            <div class="step-num">3</div>
-            <div class="step-body">
-              <h3>Tab Kỳ thi</h3>
-              <p>Xem các kỳ sắp tới, nhãn loại thi (FE, PE, …), đếm ngày. Dùng <strong>Lọc</strong> để ẩn/hiện loại thi. <strong>Tải lịch</strong> xuất <code>lich-thi.ics</code> (thường chỉ gồm kỳ sắp tới có phòng).</p>
-            </div>
-          </div>
-          <div class="step-row">
-            <div class="step-num">4</div>
-            <div class="step-body">
-              <h3>Tab Lịch học</h3>
-              <p><strong>Đồng bộ lịch học</strong> tải tuần hiện tại từ tab FAP đang mở. Mở rộng <strong>Đồng bộ nhiều tuần</strong> để tải danh sách tuần và đồng bộ cả khoảng. <strong>Tải lịch</strong> xuất <code>lich-hoc.ics</code>. <strong>Xoá</strong> xóa bản lưu cục bộ.</p>
-            </div>
-          </div>
-          <div class="step-row">
-            <div class="step-num">5</div>
-            <div class="step-body">
-              <h3>Import vào app lịch</h3>
-              <p>Mở file .ics bằng ứng dụng lịch hoặc import qua Google / Outlook (xem mục dưới).</p>
-            </div>
-          </div>
-        </div>
-        <div class="note-panel">
-          <h3>Lưu ý</h3>
-          <ul>
-            <li>Extension chạy tốt nhất trên <strong>Chrome desktop</strong>; file .ics vẫn dùng được trên điện thoại sau khi import qua cloud.</li>
-            <li>Đồng bộ nhiều tuần cần tab FAP đúng trang lịch tuần; có thể đóng popup trong lúc chạy nền.</li>
-            <li>Dữ liệu lưu cục bộ (storage / local); không gửi lịch lên server của extension.</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section--muted" id="ics-guide">
-      <div class="container">
-        <div class="section__head">
-          <h2>Import file .ics</h2>
-          <p>Sau khi tải <code>lich-thi.ics</code> hoặc <code>lich-hoc.ics</code>, bạn có thể thêm vào lịch hệ thống.</p>
-        </div>
-        <div class="method-stack">
-          <div class="method-block">
-            <h3>Apple Calendar (macOS)</h3>
-            <ol>
-              <li>Double-click file .ics hoặc kéo vào Calendar.</li>
-              <li>Chọn lịch đích và xác nhận <strong>Add All</strong> / <strong>Import</strong>.</li>
-            </ol>
-          </div>
-          <div class="method-block">
-            <h3>Google Calendar</h3>
-            <ol>
-              <li>Vào Cài đặt → <strong>Import &amp; export</strong>.</li>
-              <li>Chọn file từ máy, chọn lịch đích, nhấn <strong>Import</strong>.</li>
-            </ol>
-          </div>
-          <div class="method-block">
-            <h3>Microsoft Outlook</h3>
-            <ol>
-              <li>Outlook: File → Open &amp; Export → Import/Export → <strong>Import an iCalendar (.ics)</strong>.</li>
-              <li>Outlook web: Calendar → Add calendar → Upload from file.</li>
-            </ol>
-          </div>
-        </div>
-        <div class="tips-grid">
-          <div class="tip">
-            <h4>Nhắc nhở</h4>
-            <p>Sự kiện .ics thường kèm nhắc (ví dụ trước 1 ngày / 1 giờ); chỉnh thêm trong app lịch nếu cần.</p>
-          </div>
-          <div class="tip">
-            <h4>Cập nhật lịch</h4>
-            <p>Khi FAP đổi lịch, đồng bộ lại trong extension rồi tải file .ics mới và import đè hoặc xoá sự kiện cũ.</p>
-          </div>
-          <div class="tip">
-            <h4>Hai file khác nhau</h4>
-            <p>Nên đặt tên / màu lịch khác nhau cho lịch thi và lịch học để dễ phân biệt trên Google hoặc Apple.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section class="section section--surface" id="faq">
-      <div class="container">
-        <div class="section__head">
+        <div class="section-head">
+          <span class="section-head__tag">Giải đáp thắc mắc</span>
           <h2>Câu hỏi thường gặp</h2>
-          <p>Giải đáp nhanh các thắc mắc thường gặp.</p>
+          <p>Mọi điều bạn cần biết về tính an toàn và cơ chế hoạt động của tiện ích.</p>
         </div>
+
         <div class="faq-grid">
-          <div class="faq-item">
-            <h3>Extension có thu thập dữ liệu cá nhân không?</h3>
-            <p>Không có máy chủ riêng của extension: dữ liệu đọc từ trang FAP và lưu cục bộ trên trình duyệt của bạn.</p>
+          <div class="faq-card">
+            <h3>Tiện ích có lưu mật khẩu hay dữ liệu cá nhân không?</h3>
+            <p>
+              Hoàn toàn không. FPTU Schedule hoạt động hoàn toàn ở chế độ Local (phía máy khách). Tiện ích chỉ đọc HTML
+              bảng lịch hiển thị trên tab FAP hiện tại của bạn để tạo file lịch hoặc mã QR, không gửi bất kỳ thông tin
+              nào về máy chủ bên ngoài.
+            </p>
           </div>
-          <div class="faq-item">
-            <h3>Sao một số kỳ thi không vào file .ics?</h3>
-            <p>Logic xuất thường chỉ gồm kỳ <strong>sắp tới</strong> và đã có <strong>phòng</strong>. Kỳ chưa xếp phòng có thể bị bỏ qua.</p>
+
+          <div class="faq-card">
+            <h3>Tiện ích hỗ trợ những cơ sở nào của Đại học FPT?</h3>
+            <p>
+              FPTU Schedule tương thích với toàn bộ hệ thống FAP của Đại học FPT trên toàn quốc: FAP Hà Nội (Hòa Lạc),
+              TP. Hồ Chí Minh, Đà Nẵng, Cần Thơ và Quy Nhơn.
+            </p>
           </div>
-          <div class="faq-item">
-            <h3>Đồng bộ nhiều tuần báo lỗi kết nối?</h3>
-            <p>Hãy reload extension trên <code>chrome://extensions</code>. Nếu vẫn lỗi, mở <strong>Service worker → Inspect</strong> và xem console (thường do phiên FAP hết hạn đăng nhập).</p>
+
+          <div class="faq-card">
+            <h3>Khi nhà trường dời lịch học hoặc đổi phòng thì sao?</h3>
+            <p>
+              Mỗi khi có thông báo đổi slot hoặc đổi phòng học, bạn chỉ cần mở lại FAP và bấm nút <strong>Đồng
+                bộ</strong> trên extension, sau đó quét QR hoặc xuất lại file .ics để cập nhật vào ứng dụng Lịch của
+              mình trong 2 giây.
+            </p>
           </div>
-          <div class="faq-item">
-            <h3>Icon trên thanh công cụ vẫn cũ?</h3>
-            <p>Chrome đôi khi cache icon: gỡ và <strong>Load unpacked</strong> lại, hoặc tăng version trong manifest. Trên Web Store, icon chỉ đổi sau khi bản mới được duyệt.</p>
-          </div>
-          <div class="faq-item">
-            <h3>Dùng được trên điện thoại không?</h3>
-            <p>Tiện ích chỉ cài trên Chrome desktop; sau khi có file .ics bạn import vào Google/iCloud rồi xem trên mobile.</p>
+
+          <div class="faq-card">
+            <h3>Tính năng Dự đoán điểm Final Exam hoạt động thế nào?</h3>
+            <p>
+              Hệ thống lấy điểm thành phần hiện có từ trang Grade report trên FAP (Lab, Progress Test, Assignment,
+              v.v.), sau đó áp dụng công thức tính điểm trung bình môn có trọng số của trường FPTU để tính ra số điểm
+              tối thiểu bạn cần ở bài thi Final Exam.
+            </p>
           </div>
         </div>
       </div>
     </section>
   </main>
 
-  <footer class="footer">
-    <div class="container">
-      <div class="footer__top">
-        <div>
-          <div class="footer__brand">FPTU Schedule</div>
-          <div>Lịch học &amp; kỳ thi từ FAP — phát triển bởi cộng đồng sinh viên FPTU.</div>
-        </div>
-        <div class="footer__links">
-          <a href="https://github.com/yunkhngn/fptu-schedule" target="_blank" rel="noopener">GitHub</a>
-          <a href="https://github.com/yunkhngn" target="_blank" rel="noopener">@yunkhngn</a>
-          <a href="https://chromewebstore.google.com/detail/fptu-exam-to-calendar/obiiippodjlfcmdipfbkneknbakjekfm" target="_blank" rel="noopener">Chrome Web Store</a>
-        </div>
+  <!-- Site Footer -->
+  <footer class="site-footer">
+    <div class="container site-footer__inner">
+      <div>
+        <div style="font-weight: 700; color: var(--text); margin-bottom: 4px;">FPTU Schedule — Open Source Project</div>
+        <p style="margin: 0;">Được phát triển cho cộng đồng sinh viên Đại học FPT. Phát hành theo giấy phép mã nguồn mở
+          MIT License.</p>
       </div>
-      <div class="footer__bottom">
-        <p>© 2026 · <a href="https://github.com/yunkhngn" target="_blank" rel="noopener">@yunkhngn</a></p>
+
+      <div class="site-footer__links">
+        <a href="https://github.com/yunkhngn/fptu-schedule" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/yunkhngn/fptu-schedule/releases" target="_blank" rel="noopener">Bản phát hành</a>
+        <a href="https://github.com/yunkhngn/fptu-schedule/issues" target="_blank" rel="noopener">Báo lỗi / Góp ý</a>
+        <a href="https://chromewebstore.google.com/detail/fptu-exam-to-calendar/obiiippodjlfcmdipfbkneknbakjekfm"
+          target="_blank" rel="noopener">Chrome Store</a>
       </div>
     </div>
   </footer>
+
+  <!-- Script for Interactive Docs Features -->
+  <script>
+    (function () {
+      // 1. Theme Toggle (Site + Extension Mockup)
+      const themeToggleBtn = document.getElementById('themeToggleBtn');
+      const simThemeToggle = document.getElementById('simThemeToggle');
+      const htmlEl = document.documentElement;
+      const sunIcon = themeToggleBtn.querySelector('.icon-sun');
+      const moonIcon = themeToggleBtn.querySelector('.icon-moon');
+
+      function setTheme(theme) {
+        if (theme === 'dark') {
+          htmlEl.setAttribute('data-theme', 'dark');
+          sunIcon.style.display = 'none';
+          moonIcon.style.display = 'block';
+          localStorage.setItem('fptu_docs_theme', 'dark');
+        } else {
+          htmlEl.setAttribute('data-theme', 'light');
+          sunIcon.style.display = 'block';
+          moonIcon.style.display = 'none';
+          localStorage.setItem('fptu_docs_theme', 'light');
+        }
+      }
+
+      const savedTheme = localStorage.getItem('fptu_docs_theme') ||
+        (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      setTheme(savedTheme);
+
+      themeToggleBtn.addEventListener('click', function () {
+        const currentTheme = htmlEl.getAttribute('data-theme') || 'light';
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+      });
+
+      if (simThemeToggle) {
+        simThemeToggle.addEventListener('click', function () {
+          const currentTheme = htmlEl.getAttribute('data-theme') || 'light';
+          setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+      }
+
+      // 2. Interactive Extension Mockup Tabs
+      const tabButtons = document.querySelectorAll('.ext-tab-btn');
+      const panels = document.querySelectorAll('.ext-panel');
+
+      tabButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          tabButtons.forEach(function (b) { b.classList.remove('active'); });
+          panels.forEach(function (p) { p.classList.remove('active'); });
+
+          btn.classList.add('active');
+          const targetPanelId = btn.getAttribute('data-tab');
+          const targetPanel = document.getElementById(targetPanelId);
+          if (targetPanel) {
+            targetPanel.classList.add('active');
+          }
+        });
+      });
+
+      // 3. Interactive Mockup Modal (Open / Close)
+      const openModalBtn = document.getElementById('simOpenModalBtn');
+      const closeModalBtn = document.getElementById('simCloseModalBtn');
+      const simModal = document.getElementById('simModal');
+
+      if (openModalBtn && simModal) {
+        openModalBtn.addEventListener('click', function () {
+          simModal.classList.add('active');
+        });
+      }
+
+      if (closeModalBtn && simModal) {
+        closeModalBtn.addEventListener('click', function () {
+          simModal.classList.remove('active');
+        });
+      }
+
+      if (simModal) {
+        simModal.addEventListener('click', function (e) {
+          if (e.target === simModal) {
+            simModal.classList.remove('active');
+          }
+        });
+      }
+
+      // 4. Pass Predictor Dynamic Slider
+      const targetSlider = document.getElementById('simTargetSlider');
+      const targetDisplay = document.getElementById('simTargetScoreDisplay');
+      const predictResult = document.getElementById('simPredictResult');
+
+      if (targetSlider && targetDisplay && predictResult) {
+        targetSlider.addEventListener('input', function () {
+          const target = parseFloat(targetSlider.value);
+          targetDisplay.textContent = target.toFixed(1) + ' / 10';
+
+          // Formula: Target = 0.6 * 7.2 + 0.4 * Final => Final = (Target - 4.32) / 0.4
+          const required = (target - 4.32) / 0.4;
+          if (required <= 4.0) {
+            predictResult.innerHTML = 'Môn này đã chắc chắn qua! Bạn chỉ cần đạt mức sàn <strong>4.00</strong> ở bài thi Final Exam.';
+          } else if (required > 10.0) {
+            predictResult.innerHTML = 'Mục tiêu quá cao so với điểm thành phần hiện có (Cần > 10.0). Hãy điều chỉnh lại mục tiêu phù hợp hơn.';
+          } else {
+            predictResult.innerHTML = 'Bạn chỉ cần đạt tối thiểu <strong>' + required.toFixed(2) + '</strong> ở bài thi Final Exam để đạt mục tiêu này.';
+          }
+        });
+      }
+    })();
+  </script>
 </body>
+
 </html>
