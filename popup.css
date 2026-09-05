@@ -723,6 +723,13 @@ html, body {
   min-width: 0;
 }
 
+#scheduleTab .class-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
 #scheduleTab .class-tags {
   display: flex;
   align-items: center;
@@ -757,7 +764,7 @@ html, body {
 }
 
 #scheduleTab .chip.type { color: #c2410c; background: #fff7ed; border-color: rgba(234, 88, 12, 0.2); }
-#scheduleTab .chip.online { color: #4338ca; background: #eef2ff; border-color: rgba(79, 70, 229, 0.2); }
+#scheduleTab .chip.online { color: #047857; background: #ecfdf5; border-color: rgba(5, 150, 105, 0.22); }
 #scheduleTab .chip.room { color: #b91c1c; background: #fef2f2; border-color: rgba(220, 38, 38, 0.18); }
 #scheduleTab .chip.attendance { background: #f1f5f9; color: #475569; border-color: rgba(100, 116, 139, 0.2); }
 #scheduleTab .chip.attendance.notyet { background: #f1f5f9; color: #475569; border-color: rgba(100, 116, 139, 0.2); }

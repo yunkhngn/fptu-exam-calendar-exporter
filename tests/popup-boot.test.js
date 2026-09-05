@@ -292,4 +292,11 @@ test("an online class gets an Online chip; an offline one does not", async () =>
   assert.strictEqual(online.querySelector(".chip.online").textContent.trim(), "Online");
   assert.ok(online.querySelector(".chip.room"), "the room chip stays even though the class is online");
   assert.strictEqual(offline.querySelector(".chip.online"), null, "PRJ301 gets no Online chip");
+
+  const badges = online.querySelector(".class-card__badges");
+  assert.ok(badges, "Online and the attendance status share a header badge group");
+  const badgeChips = [...badges.children];
+  assert.strictEqual(badgeChips[0].className.includes("online"), true, "Online sits to the left of attendance");
+  assert.strictEqual(badgeChips[1].className.includes("attendance"), true, "attendance status sits to its right");
+  assert.strictEqual(online.querySelector(".class-tags .chip.online"), null, "Online no longer duplicated in the tag row");
 });

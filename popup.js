@@ -471,8 +471,23 @@ function renderClassSchedule(schedule) {
     attendanceChip.classList.add(statusClass);
     attendanceChip.appendChild(document.createTextNode(" " + statusLabel));
 
+    // Badges on the right of the header: Online (if applicable), then attendance status.
+    // Grouped in their own row so `justify-content: space-between` on the head keeps them
+    // together at the right edge instead of spreading a third item into the middle.
+    const headBadges = document.createElement("div");
+    headBadges.className = "class-card__badges";
+    if (ev.isOnline) {
+      const chipOnline = document.createElement("span");
+      chipOnline.className = "chip online";
+      const dotOnline = document.createElement("span"); dotOnline.className = "dot";
+      chipOnline.appendChild(dotOnline);
+      chipOnline.appendChild(document.createTextNode(" Online"));
+      headBadges.appendChild(chipOnline);
+    }
+    headBadges.appendChild(attendanceChip);
+
     head.appendChild(code);
-    head.appendChild(attendanceChip);
+    head.appendChild(headBadges);
 
     const tags = document.createElement("div");
     tags.className = "class-tags";
