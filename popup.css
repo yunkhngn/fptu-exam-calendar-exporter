@@ -3,8 +3,10 @@
   --bg-app: #eef1f6;
   --bg-elevated: #ffffff;
   --bg-subtle: #f4f6f9;
+  --bg-card-subtle: #f8fafc;
   --border: #e5e7eb;
   --border-strong: #d1d5db;
+  --border-card-subtle: #e2e8f0;
   --text: #111827;
   --text-muted: #6b7280;
   --accent: #2563eb;
@@ -18,6 +20,25 @@
   --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.06);
   --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.08);
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+[data-theme="dark"] {
+  --bg-app: #0f172a;
+  --bg-elevated: #1e293b;
+  --bg-subtle: #273549;
+  --bg-card-subtle: #162032;
+  --border: #334155;
+  --border-strong: #475569;
+  --border-card-subtle: #293548;
+  --text: #f8fafc;
+  --text-muted: #94a3b8;
+  --accent: #3b82f6;
+  --accent-hover: #60a5fa;
+  --accent-soft: rgba(59, 130, 246, 0.2);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.2);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.45);
 }
 
 html, body {
@@ -124,6 +145,12 @@ html, body {
   font-size: 12px;
   color: var(--text-muted);
   font-weight: 450;
+}
+
+.popup-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .popup-controls button {
@@ -276,8 +303,8 @@ html, body {
   margin-top: 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-card-subtle);
 }
 
 /* Exam study splash (Quizlet-inspired) */
@@ -357,12 +384,12 @@ html, body {
 }
 
 .meta-label {
-  color: #64748b;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
 .meta-value {
-  color: #0f172a;
+  color: var(--text);
   font-weight: 600;
   text-align: right;
   word-break: break-word;
@@ -816,8 +843,8 @@ html, body {
   margin-top: 10px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-card-subtle);
   font-size: 12px;
 }
 
@@ -1258,7 +1285,7 @@ html, body {
 .grade-progress-wrap {
   width: 100%;
   height: 8px;
-  background: #e2e8f0;
+  background: var(--border-strong);
   border-radius: 999px;
   overflow: hidden;
   position: relative;
@@ -1277,8 +1304,8 @@ html, body {
 
 /* Predictor box */
 .grade-predictor-box {
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid #e2e8f0;
+  background: var(--bg-card-subtle);
+  border: 1px solid var(--border-card-subtle);
   border-radius: 10px;
   padding: 10px 12px;
   display: flex;
@@ -1306,7 +1333,7 @@ html, body {
   height: 6px;
   -webkit-appearance: none;
   appearance: none;
-  background: #cbd5e1;
+  background: var(--border-strong);
   border-radius: 3px;
   outline: none;
   cursor: pointer;
@@ -1413,12 +1440,84 @@ html, body {
 
 .grade-table td {
   padding: 5px 6px;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  border-bottom: 1px solid var(--border);
   color: var(--text);
 }
 
 .grade-table tr:last-child td {
   border-bottom: none;
 }
+
+/* ---- Dark Mode Overrides & Component Refinements ---- */
+[data-theme="dark"] .exam-card,
+[data-theme="dark"] #scheduleTab .class-card,
+[data-theme="dark"] .grade-card {
+  border-color: var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+[data-theme="dark"] .modal {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+[data-theme="dark"] .modal-content {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+}
+
+/* Tags in Dark Mode */
+[data-theme="dark"] .tag.fe { color: #93c5fd; background: rgba(37, 99, 235, 0.2); border-color: rgba(96, 165, 250, 0.3); }
+[data-theme="dark"] .tag.pe { color: #6ee7b7; background: rgba(16, 185, 129, 0.2); border-color: rgba(52, 211, 153, 0.3); }
+[data-theme="dark"] .tag.secondfe { color: #fdba74; background: rgba(234, 88, 12, 0.2); border-color: rgba(251, 146, 60, 0.3); }
+[data-theme="dark"] .tag.secondpe { color: #d8b4fe; background: rgba(124, 58, 237, 0.2); border-color: rgba(192, 132, 252, 0.3); }
+[data-theme="dark"] .tag.today,
+[data-theme="dark"] .tag.urgent { color: #fca5a5; background: rgba(239, 68, 68, 0.2); border-color: rgba(248, 113, 113, 0.3); }
+
+/* Schedule Chips in Dark Mode */
+[data-theme="dark"] #scheduleTab .chip.type { color: #fdba74; background: rgba(234, 88, 12, 0.2); border-color: rgba(251, 146, 60, 0.3); }
+[data-theme="dark"] #scheduleTab .chip.online { color: #6ee7b7; background: rgba(16, 185, 129, 0.2); border-color: rgba(52, 211, 153, 0.3); }
+[data-theme="dark"] #scheduleTab .chip.risk-warning {
+  color: #fde68a;
+  background: rgba(146, 64, 14, 0.3);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.16);
+}
+[data-theme="dark"] #scheduleTab .chip.risk-danger {
+  color: #fca5a5;
+  background: rgba(153, 27, 27, 0.35);
+  border-color: rgba(239, 68, 68, 0.45);
+}
+[data-theme="dark"] #scheduleTab .chip.room { color: #fca5a5; background: rgba(239, 68, 68, 0.2); border-color: rgba(248, 113, 113, 0.3); }
+[data-theme="dark"] #scheduleTab .chip.attendance { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border-color: rgba(100, 116, 139, 0.3); }
+[data-theme="dark"] #scheduleTab .chip.attendance.notyet { background: rgba(100, 116, 139, 0.2); color: #cbd5e1; border-color: rgba(100, 116, 139, 0.3); }
+[data-theme="dark"] #scheduleTab .chip.attendance.attended { color: #6ee7b7; background: rgba(16, 185, 129, 0.2); border-color: rgba(52, 211, 153, 0.3); }
+[data-theme="dark"] #scheduleTab .chip.attendance.absent { color: #fca5a5; background: rgba(239, 68, 68, 0.2); border-color: rgba(248, 113, 113, 0.3); }
+
+/* Grades Badges & Predictor in Dark Mode */
+[data-theme="dark"] .grade-badge--passed { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border-color: rgba(52, 211, 153, 0.3); }
+[data-theme="dark"] .grade-badge--inprogress { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: rgba(96, 165, 250, 0.3); }
+[data-theme="dark"] .grade-badge--failed { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border-color: rgba(248, 113, 113, 0.3); }
+
+[data-theme="dark"] .grade-predict-result--guaranteed { background: rgba(22, 101, 52, 0.25); color: #86efac; border-color: rgba(34, 197, 94, 0.3); }
+[data-theme="dark"] .grade-predict-result--achievable { background: rgba(30, 58, 138, 0.25); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); }
+[data-theme="dark"] .grade-predict-result--warning { background: rgba(146, 64, 14, 0.25); color: #fde68a; border-color: rgba(245, 158, 11, 0.3); }
+[data-theme="dark"] .grade-predict-result--impossible { background: rgba(153, 27, 27, 0.25); color: #fca5a5; border-color: rgba(239, 68, 68, 0.3); }
+
+/* Feedback Banners in Dark Mode */
+[data-theme="dark"] .exam-sync-feedback {
+  background: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .exam-sync-feedback--error {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .week-range-btn--primary:hover:not(:disabled) {
+  background: rgba(59, 130, 246, 0.3);
+}
+
 
 
