@@ -113,7 +113,10 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.5.0 (current)
+### v3.5.1 (current)
+- **Whole card is clickable.** The "Chi tiết" chip is gone — click (or Tab to focus and press
+  Enter/Space on) any class card with a detail link to refresh its attendance and open the FAP
+  page, with a hover glow and pressed-state feedback marking it clickable.
 - **Attendance-risk warning.** FPTU bans a student from a course's final exam once
   unauthorized absences pass 20% of its graded sessions. Every class card of a course at
   ≥15% ("Not yet" sessions don't count toward the rate) now shows a "N% vắng" chip — amber
@@ -170,7 +173,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.5.0**; release zip `fptu-schedule.zip`
+- Manifest **3.5.1**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
