@@ -70,7 +70,8 @@ test("popup boots with no uncaught error and wires its controls", async () => {
                     "createExamCalendar", "createClassCalendar",
                     "classScheduleDedupeKey", "mergeNewClassEventsInto",
                     "parseFapGradeTable", "calculateCurrentScore", "calculateRequiredExamScore",
-                    "getNextTheme", "resolveEffectiveTheme"]) {
+                    "getNextTheme", "resolveEffectiveTheme",
+                    "computeTodayAgenda", "formatMinutesCountdown", "getEventTimeBounds"]) {
     assert.strictEqual(typeof window[fn], "function", `${fn} is available to popup.js`);
   }
 
@@ -586,5 +587,58 @@ test("theme toggle button exists and cycles through auto -> light -> dark -> aut
   assert.strictEqual(html.getAttribute("data-theme-preference"), "auto");
   assert.strictEqual(btn.querySelector("use").getAttribute("href"), "#icon-theme-auto");
 });
+
+test("Today's agenda widget renders hero card at top of schedule tab and reflects ongoing/upcoming status", async () => {
+  const { window, calls } = await boot();
+  const doc = window.document;
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+
+  // 1. An upcoming class today
+  const upcomingEvent = {
+    title: "PRJ301",
+    location: "AL-L302",
+    slot: "Slot 5",
+    detailUrl: "https://fap.fpt.edu.vn/Report/ActivityDetail.aspx?id=123",
+    rawDate: { year, month, day, startHour: 23, startMinute: 0, endHour: 23, endMinute: 59 },
+  };
+
+  window.renderClassSchedule([upcomingEvent]);
+
+  const banner = doc.querySelector("#scheduleTab .agenda-banner");
+  assert.ok(banner, "agenda banner is rendered");
+  const card = banner.querySelector(".agenda-card");
+  assert.ok(card, "agenda card exists");
+  assert.ok(
+    card.classList.contains("agenda-card--upcoming") ||
+    card.classList.contains("agenda-card--in_progress") ||
+    card.classList.contains("agenda-card--completed_today")
+  );
+  assert.ok(card.textContent.includes("PRJ301"));
+  assert.strictEqual(card.classList.contains("agenda-card--clickable"), true);
+
+  // Click card to open detail
+  card.click();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(calls.tabsCreated.some((t) => t.url === upcomingEvent.detailUrl), true);
+
+  // 2. Empty schedule yields no banner
+  window.renderClassSchedule([]);
+  assert.strictEqual(doc.querySelector("#scheduleTab .agenda-banner"), null, "no banner when schedule is empty");
+
+  // 3. Exam alert appears if an exam is scheduled today
+  const examDateStr = `${String(day).padStart(2, "0")}/${String(month).padStart(2, "0")}/${year}`;
+  const exam = [{ title: "SWP391 - Final Exam", room: "BE-301", time: "14:00 - 16:00", date: examDateStr }];
+  window.localStorage.setItem("examSchedule", JSON.stringify(exam));
+
+  window.renderClassSchedule([upcomingEvent]);
+  const alertEl = doc.querySelector("#scheduleTab .agenda-exam-alert");
+  assert.ok(alertEl, "today exam alert is displayed");
+  assert.ok(alertEl.textContent.includes("SWP391 - Final Exam"));
+});
+
 
 
