@@ -29,7 +29,7 @@
   - `QRCode.toSvgString(text: string, options?: { size?: number, margin?: number, fgColor?: string, bgColor?: string }): string`
   - `buildQrCalendarPayload(options: { type: 'exam' | 'schedule', events: Array, scope?: 'today' | 'week' | 'next_week', now?: Date }): string`
 
-- [ ] **Step 1: Viết failing test trong `tests/qrcode.test.js`**
+- [x] **Step 1: Viết failing test trong `tests/qrcode.test.js`**
 
 ```javascript
 const test = require("node:test");
@@ -125,21 +125,21 @@ test("buildQrCalendarPayload for schedule filters by scope 'today', 'week', 'nex
 });
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận test fail do chưa có module**
+- [x] **Step 2: Chạy test để xác nhận test fail do chưa có module**
 
 Run: `node --test tests/qrcode.test.js`  
 Expected: FAIL (Cannot find module '../lib/qrcode.js')
 
-- [ ] **Step 3: Viết module `lib/qrcode.js` (UMD)**
+- [x] **Step 3: Viết module `lib/qrcode.js` (UMD)**
 
 Tạo file `lib/qrcode.js` chứa bộ sinh mã QR độc lập chuẩn ISO/IEC 18004 (Reed-Solomon Galois Field GF(256), Byte Mode, 8 Mask Patterns) và hàm `buildQrCalendarPayload`.
 
-- [ ] **Step 4: Chạy toàn bộ test suite**
+- [x] **Step 4: Chạy toàn bộ test suite**
 
 Run: `npm test`  
 Expected: PASS (tất cả các bài test mới và cũ đều pass 100%)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/qrcode.js tests/qrcode.test.js
@@ -156,7 +156,7 @@ git commit -m "feat: add pure js qr code engine and icalendar payload builder"
 **Interfaces:**
 - Produces: CSS classes `#qrSyncModal`, `.qr-scope-selector`, `.qr-scope-btn`, `.qr-display-card`, `.qr-display-card svg`, `.qr-instructions`, `.qr-empty-msg`
 
-- [ ] **Step 1: Thêm CSS styles cho modal và giao diện hiển thị QR**
+- [x] **Step 1: Thêm CSS styles cho modal và giao diện hiển thị QR**
 
 ```css
 /* QR Sync Modal Styles */
@@ -246,7 +246,7 @@ git commit -m "feat: add pure js qr code engine and icalendar payload builder"
 }
 ```
 
-- [ ] **Step 2: Thêm Dark Mode styling cho QR Modal**
+- [x] **Step 2: Thêm Dark Mode styling cho QR Modal**
 
 ```css
 [data-theme="dark"] .qr-scope-selector {
@@ -274,12 +274,12 @@ git commit -m "feat: add pure js qr code engine and icalendar payload builder"
 }
 ```
 
-- [ ] **Step 3: Chạy test suite**
+- [x] **Step 3: Chạy test suite**
 
 Run: `npm test`  
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add popup.css
@@ -293,7 +293,7 @@ git commit -m "feat: add qr sync modal and responsive styles"
 **Files:**
 - Modify: `popup.html`
 
-- [ ] **Step 1: Thêm SVG `#icon-qrcode` vào SVG sprite**
+- [x] **Step 1: Thêm SVG `#icon-qrcode` vào SVG sprite**
 
 ```html
 <symbol id="icon-qrcode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -304,7 +304,7 @@ git commit -m "feat: add qr sync modal and responsive styles"
 </symbol>
 ```
 
-- [ ] **Step 2: Thêm nút `#qrExamBtn` vào `#examActions` và `#qrScheduleBtn` vào `#scheduleActions`**
+- [x] **Step 2: Thêm nút `#qrExamBtn` vào `#examActions` và `#qrScheduleBtn` vào `#scheduleActions`**
 
 Trong `#examActions`:
 ```html
@@ -322,17 +322,17 @@ Trong `#scheduleActions`:
 </button>
 ```
 
-- [ ] **Step 3: Thêm Modal `#qrSyncModal` và thẻ `<script src="lib/qrcode.js"></script>`**
+- [x] **Step 3: Thêm Modal `#qrSyncModal` và thẻ `<script src="lib/qrcode.js"></script>`**
 
 Thêm modal `#qrSyncModal` trước đóng thẻ `</main>`.  
 Thêm `<script src="lib/qrcode.js"></script>` trước `popup.js`.
 
-- [ ] **Step 4: Chạy test suite**
+- [x] **Step 4: Chạy test suite**
 
 Run: `npm test`  
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add popup.html
@@ -346,7 +346,7 @@ git commit -m "feat: add qr sync trigger buttons, svg icon and modal markup"
 **Files:**
 - Modify: `popup.js`
 
-- [ ] **Step 1: Viết hàm `openQrSyncModal(mode)` và các bộ xử lý sự kiện trong `popup.js`**
+- [x] **Step 1: Viết hàm `openQrSyncModal(mode)` và các bộ xử lý sự kiện trong `popup.js`**
 
 Xử lý:
 - Mở modal theo chế độ `exam` hoặc `schedule`.
@@ -355,12 +355,12 @@ Xử lý:
 - Gắn sự kiện sao chép nội dung iCal (`#copyIcalPayloadBtn`).
 - Gắn sự kiện đóng modal (nút X, phím Escape, click ra ngoài).
 
-- [ ] **Step 2: Chạy test suite**
+- [x] **Step 2: Chạy test suite**
 
 Run: `npm test`  
 Expected: PASS
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add popup.js
@@ -374,7 +374,7 @@ git commit -m "feat: wire qr sync modal interactions and scope switching in popu
 **Files:**
 - Modify: `tests/popup-boot.test.js`
 
-- [ ] **Step 1: Thêm test case kiểm tra QR modal và các nút bấm**
+- [x] **Step 1: Thêm test case kiểm tra QR modal và các nút bấm**
 
 Kiểm tra:
 - `QRCode` và `buildQrCalendarPayload` có sẵn trên window.
@@ -383,12 +383,12 @@ Kiểm tra:
 - Click nút scope "Hôm nay" cập nhật mã QR.
 - Đóng modal thành công.
 
-- [ ] **Step 2: Chạy toàn bộ test suite**
+- [x] **Step 2: Chạy toàn bộ test suite**
 
 Run: `npm test`  
 Expected: PASS 100%
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/popup-boot.test.js
@@ -399,11 +399,11 @@ git commit -m "test: add qr sync modal integration tests in popup-boot"
 
 ### Task 6: Xác minh tổng thể (Final Verification)
 
-- [ ] **Step 1: Chạy toàn bộ test suite**
+- [x] **Step 1: Chạy toàn bộ test suite**
 Run: `npm test`  
 Expected: PASS 100%
 
-- [ ] **Step 2: Kiểm tra git status sạch sẽ**
+- [x] **Step 2: Kiểm tra git status sạch sẽ**
 Run: `git status`  
 Expected: clean working tree
 
