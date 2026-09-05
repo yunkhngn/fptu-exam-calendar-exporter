@@ -69,7 +69,8 @@ test("popup boots with no uncaught error and wires its controls", async () => {
   for (const fn of ["icsEscapeText", "icsFoldLine", "icsUtcStamp",
                     "createExamCalendar", "createClassCalendar",
                     "classScheduleDedupeKey", "mergeNewClassEventsInto",
-                    "parseFapGradeTable", "calculateCurrentScore", "calculateRequiredExamScore"]) {
+                    "parseFapGradeTable", "calculateCurrentScore", "calculateRequiredExamScore",
+                    "getNextTheme", "resolveEffectiveTheme"]) {
     assert.strictEqual(typeof window[fn], "function", `${fn} is available to popup.js`);
   }
 
@@ -557,4 +558,33 @@ test("renderStudentGrades renders courses, progress bar, and pass predictor with
   assert.ok(swtCard.querySelector(".grade-badge--passed"), "shows passed badge");
   assert.ok(swtCard.textContent.includes("Passed") || swtCard.textContent.includes("7.8"));
 });
+
+test("theme toggle button exists and cycles through auto -> light -> dark -> auto", async () => {
+  const { dom, calls } = await boot();
+  const doc = dom.window.document;
+  const btn = doc.getElementById("themeToggleBtn");
+  assert.ok(btn, "themeToggleBtn should exist in header");
+
+  const html = doc.documentElement;
+  // Initially starts on auto
+  assert.strictEqual(html.getAttribute("data-theme-preference"), "auto");
+
+  // First click: auto -> light
+  btn.click();
+  assert.strictEqual(html.getAttribute("data-theme-preference"), "light");
+  assert.strictEqual(html.getAttribute("data-theme"), "light");
+  assert.strictEqual(btn.querySelector("use").getAttribute("href"), "#icon-sun");
+
+  // Second click: light -> dark
+  btn.click();
+  assert.strictEqual(html.getAttribute("data-theme-preference"), "dark");
+  assert.strictEqual(html.getAttribute("data-theme"), "dark");
+  assert.strictEqual(btn.querySelector("use").getAttribute("href"), "#icon-moon");
+
+  // Third click: dark -> auto
+  btn.click();
+  assert.strictEqual(html.getAttribute("data-theme-preference"), "auto");
+  assert.strictEqual(btn.querySelector("use").getAttribute("href"), "#icon-theme-auto");
+});
+
 

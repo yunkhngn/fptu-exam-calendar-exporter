@@ -35,6 +35,17 @@ function mirrorExamScheduleToStorage(events) {
   } catch (_) {}
 }
 
+// Immediate theme detection to prevent flash of light theme
+(function () {
+  try {
+    if (typeof window !== "undefined" && window.matchMedia && typeof document !== "undefined" && document.documentElement) {
+      const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.setAttribute("data-theme", systemPrefersDark ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme-preference", "auto");
+    }
+  } catch (_) {}
+})();
+
 document.addEventListener("DOMContentLoaded", () => {
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "WEEK_RANGE_SYNC_DONE") {
@@ -121,6 +132,81 @@ document.addEventListener("DOMContentLoaded", () => {
     locStorage.get(["notificationSettings"], (res) => {
       syncNotificationForm(res && res.notificationSettings);
     });
+  }
+
+  // Theme management
+  const themeToggleBtn = document.getElementById("themeToggleBtn");
+  let currentThemePreference = "auto";
+
+  function applyTheme(preference, showToastFeedback = false) {
+    currentThemePreference = preference || "auto";
+    const systemPrefersDark = !!(
+      typeof window !== "undefined" &&
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches
+    );
+    const effectiveTheme = (typeof resolveEffectiveTheme === "function")
+      ? resolveEffectiveTheme(currentThemePreference, systemPrefersDark)
+      : (currentThemePreference === "dark" || (currentThemePreference === "auto" && systemPrefersDark) ? "dark" : "light");
+
+    if (typeof document !== "undefined" && document.documentElement) {
+      document.documentElement.setAttribute("data-theme", effectiveTheme);
+      document.documentElement.setAttribute("data-theme-preference", currentThemePreference);
+    }
+
+    if (themeToggleBtn) {
+      const iconName = (typeof getThemeIcon === "function") ? getThemeIcon(currentThemePreference) : "icon-theme-auto";
+      const label = (typeof getThemeLabel === "function") ? getThemeLabel(currentThemePreference) : "Chế độ giao diện";
+      themeToggleBtn.setAttribute("title", label);
+      themeToggleBtn.setAttribute("aria-label", label);
+      const useEl = themeToggleBtn.querySelector("use");
+      if (useEl) {
+        useEl.setAttribute("href", `#${iconName}`);
+      }
+    }
+
+    if (showToastFeedback && typeof showToast === "function") {
+      const label = (typeof getThemeLabel === "function") ? getThemeLabel(currentThemePreference) : "Chế độ giao diện";
+      showToast(label);
+    }
+  }
+
+  if (locStorage) {
+    locStorage.get(["theme"], (res) => {
+      applyTheme(res && res.theme ? res.theme : "auto", false);
+    });
+  } else {
+    applyTheme("auto", false);
+  }
+
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener("click", () => {
+      const nextTheme = (typeof getNextTheme === "function")
+        ? getNextTheme(currentThemePreference)
+        : (currentThemePreference === "auto" ? "light" : currentThemePreference === "light" ? "dark" : "auto");
+      const storage = getChromeStorageLocal();
+      if (storage) {
+        storage.set({ theme: nextTheme }, () => {
+          applyTheme(nextTheme, true);
+        });
+      } else {
+        applyTheme(nextTheme, true);
+      }
+    });
+  }
+
+  if (typeof window !== "undefined" && window.matchMedia) {
+    const colorSchemeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleMediaChange = () => {
+      if (currentThemePreference === "auto") {
+        applyTheme("auto", false);
+      }
+    };
+    if (typeof colorSchemeMediaQuery.addEventListener === "function") {
+      colorSchemeMediaQuery.addEventListener("change", handleMediaChange);
+    } else if (typeof colorSchemeMediaQuery.addListener === "function") {
+      colorSchemeMediaQuery.addListener(handleMediaChange);
+    }
   }
 
   if (notificationBtn && notificationModal) {
@@ -2407,9 +2493,12 @@ function showToast(message, duration = 1800, kind = "info") {
   }
   toast.classList.toggle('popup-toast--error', kind === 'error');
   toast.textContent = message;
-  requestAnimationFrame(() => {
-    toast.style.opacity = '1';
-  });
+  const triggerShow = () => { toast.style.opacity = '1'; };
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(triggerShow);
+  } else {
+    setTimeout(triggerShow, 0);
+  }
   clearTimeout(window.__toastTimer);
   window.__toastTimer = setTimeout(() => {
     toast.style.opacity = '0';
