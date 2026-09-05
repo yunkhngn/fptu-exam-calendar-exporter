@@ -68,13 +68,14 @@ test("popup boots with no uncaught error and wires its controls", async () => {
   // the modules the popup now loads from lib/ must be on the page
   for (const fn of ["icsEscapeText", "icsFoldLine", "icsUtcStamp",
                     "createExamCalendar", "createClassCalendar",
-                    "classScheduleDedupeKey", "mergeNewClassEventsInto"]) {
+                    "classScheduleDedupeKey", "mergeNewClassEventsInto",
+                    "parseFapGradeTable", "calculateCurrentScore", "calculateRequiredExamScore"]) {
     assert.strictEqual(typeof window[fn], "function", `${fn} is available to popup.js`);
   }
 
   assert.ok(window.document.querySelector(".tab-bar"), "sticky tab bar exists");
   assert.ok(window.document.getElementById("scheduleTab"), "schedule pane exists");
-  assert.strictEqual(window.document.querySelectorAll(".tab-btn").length, 2);
+  assert.strictEqual(window.document.querySelectorAll(".tab-btn").length, 3);
 });
 
 test("switching tabs swaps the action rows", async () => {
@@ -465,3 +466,95 @@ test("a class card with no detail link is not clickable", async () => {
   assert.strictEqual(card.classList.contains("class-card--clickable"), false);
   assert.strictEqual(card.hasAttribute("role"), false);
 });
+
+test("popup supports 3 tabs: schedule, exams, grades", async () => {
+  const { dom } = await boot();
+  const doc = dom.window.document;
+  const schedBtn = doc.getElementById("scheduleTabBtn");
+  const examBtn = doc.getElementById("upcomingTab");
+  const gradeBtn = doc.getElementById("gradesTabBtn");
+  const gradesTab = doc.getElementById("gradesTab");
+  const gradeActions = doc.getElementById("gradeActions");
+
+  assert.ok(gradeBtn, "gradesTabBtn should exist");
+  assert.ok(gradesTab, "gradesTab should exist");
+  assert.ok(gradeActions, "gradeActions should exist");
+
+  gradeBtn.click();
+  assert.ok(gradeBtn.classList.contains("active"));
+  assert.ok(gradesTab.classList.contains("active"));
+  assert.strictEqual(gradeActions.hidden, false);
+});
+
+test("renderStudentGrades renders courses, progress bar, and pass predictor with slider", async () => {
+  const { dom, window } = await boot();
+  const doc = dom.window.document;
+
+  const sampleGrades = {
+    PRN211: {
+      courseCode: "PRN211",
+      courseName: "Basic Cross-Platform Application Programming With .NET",
+      term: "Summer2024",
+      categories: [
+        { category: "Lab 1", weight: 10, value: 8.0, items: [] },
+        { category: "Progress Test 1", weight: 10, value: 7.0, items: [] },
+        { category: "Assignment", weight: 20, value: 8.5, items: [] },
+        { category: "Final Exam", weight: 60, value: null, items: [] }
+      ],
+      bonus: 0.5,
+      average: null,
+      status: null
+    },
+    SWT301: {
+      courseCode: "SWT301",
+      courseName: "Software Testing",
+      term: "Summer2024",
+      categories: [
+        { category: "Assignments", weight: 60, value: 8.0, items: [] },
+        { category: "Final Exam", weight: 40, value: 7.5, items: [] }
+      ],
+      bonus: 0,
+      average: 7.8,
+      status: "Passed"
+    }
+  };
+
+  window.renderStudentGrades(sampleGrades);
+
+  const cards = doc.querySelectorAll("#gradesTab .grade-card");
+  assert.strictEqual(cards.length, 2, "renders 2 course cards");
+
+  // Tab count
+  const gradeBtn = doc.getElementById("gradesTabBtn");
+  assert.ok(gradeBtn.textContent.includes("(2)"), "tab reflects course count");
+
+  // First card: PRN211 (in-progress)
+  const prnCard = cards[0];
+  assert.ok(prnCard.querySelector(".grade-card__code").textContent.includes("PRN211"));
+  assert.ok(prnCard.querySelector(".grade-badge--inprogress"), "shows in-progress badge");
+
+  // Current score: 0.8 + 0.7 + 1.7 + 0.5 = 3.7
+  assert.ok(prnCard.querySelector(".grade-summary-val").textContent.includes("3.70"));
+
+  // Pass predictor slider
+  const slider = prnCard.querySelector(".grade-slider");
+  const predictResult = prnCard.querySelector(".grade-predict-result");
+  assert.ok(slider, "slider exists");
+  assert.ok(predictResult, "prediction result exists");
+
+  // At target 5.0: needed = 5.0 - 3.7 = 1.3. 1.3 / 0.6 = 2.167 <= 4.0 -> minRequired = 4.0, pass_guaranteed
+  assert.ok(predictResult.textContent.includes("Chắc chắn qua môn"));
+  assert.ok(predictResult.classList.contains("grade-predict-result--guaranteed"));
+
+  // Change slider to 8.0: needed = 8.0 - 3.7 = 4.3. 4.3 / 0.6 = 7.167 -> achievable (7.2)
+  slider.value = "8.0";
+  slider.dispatchEvent(new window.Event("input"));
+  assert.ok(predictResult.textContent.includes("7.2"), "updates required score to 7.2");
+  assert.ok(predictResult.classList.contains("grade-predict-result--achievable"));
+
+  // Second card: SWT301 (passed)
+  const swtCard = cards[1];
+  assert.ok(swtCard.querySelector(".grade-badge--passed"), "shows passed badge");
+  assert.ok(swtCard.textContent.includes("Passed") || swtCard.textContent.includes("7.8"));
+});
+

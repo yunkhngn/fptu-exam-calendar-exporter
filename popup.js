@@ -46,6 +46,10 @@ document.addEventListener("DOMContentLoaded", () => {
       setWeekRangeStatus("", false);
       showError("Phiên đăng nhập hết hạn. Đăng nhập lại FAP rồi thử đồng bộ khoảng tuần.");
     }
+    if (msg.type === "ALL_GRADES_SYNC_DONE") {
+      showToast(`Đã quét xong ${msg.savedCount || 0}/${msg.total || 0} môn!`);
+      loadAndRenderStudentGrades();
+    }
   });
 
   const stInit = getChromeStorageLocal();
@@ -189,26 +193,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const completedContent = document.getElementById("completedExams");
   const scheduleTabBtn = document.getElementById("scheduleTabBtn");
   const scheduleContent = document.getElementById("scheduleTab");
+  const gradesTabBtn = document.getElementById("gradesTabBtn");
+  const gradesContent = document.getElementById("gradesTab");
   const examActionsRow = document.getElementById("examActions");
   const scheduleActionsRow = document.getElementById("scheduleActions");
+  const gradeActionsRow = document.getElementById("gradeActions");
   const examListSection = document.getElementById("examList");
   if (examActionsRow) examActionsRow.hidden = true;
   if (scheduleActionsRow) scheduleActionsRow.hidden = false;
+  if (gradeActionsRow) gradeActionsRow.hidden = true;
 
   if (upcomingContent && completedContent) {
     const activateTab = (name) => {
-      [upcomingTab, scheduleTabBtn].forEach(btn => btn && btn.classList.remove("active"));
-      [upcomingContent, completedContent, scheduleContent].forEach(c => c && c.classList.remove("active"));
+      [upcomingTab, scheduleTabBtn, gradesTabBtn].forEach(btn => btn && btn.classList.remove("active"));
+      [upcomingContent, completedContent, scheduleContent, gradesContent].forEach(c => c && c.classList.remove("active"));
 
       const examAct = document.getElementById("examActions");
       const schedAct = document.getElementById("scheduleActions");
-      if (name === "schedule") {
-        if (examAct) examAct.hidden = true;
-        if (schedAct) schedAct.hidden = false;
-      } else {
-        if (examAct) examAct.hidden = false;
-        if (schedAct) schedAct.hidden = true;
-      }
+      const gradeAct = document.getElementById("gradeActions");
+      if (examAct) examAct.hidden = (name !== "exams");
+      if (schedAct) schedAct.hidden = (name !== "schedule");
+      if (gradeAct) gradeAct.hidden = (name !== "grades");
 
       if (name === "schedule") {
         if (scheduleTabBtn) {
@@ -216,26 +221,39 @@ document.addEventListener("DOMContentLoaded", () => {
           scheduleTabBtn.setAttribute("aria-selected", "true");
         }
         if (upcomingTab) upcomingTab.setAttribute("aria-selected", "false");
+        if (gradesTabBtn) gradesTabBtn.setAttribute("aria-selected", "false");
         if (scheduleContent) scheduleContent.classList.add("active");
         if (examListSection) examListSection.classList.remove("exams-two-col");
         const syncLoad = document.getElementById("examSyncLoading");
         const syncErr = document.getElementById("examSyncError");
         if (syncLoad) syncLoad.hidden = true;
         if (syncErr) syncErr.hidden = true;
-      } else {
+      } else if (name === "exams") {
         if (upcomingTab) {
           upcomingTab.classList.add("active");
           upcomingTab.setAttribute("aria-selected", "true");
         }
         if (scheduleTabBtn) scheduleTabBtn.setAttribute("aria-selected", "false");
+        if (gradesTabBtn) gradesTabBtn.setAttribute("aria-selected", "false");
         upcomingContent.classList.add("active");
         completedContent.classList.add("active");
         if (examListSection) examListSection.classList.add("exams-two-col");
+      } else if (name === "grades") {
+        if (gradesTabBtn) {
+          gradesTabBtn.classList.add("active");
+          gradesTabBtn.setAttribute("aria-selected", "true");
+        }
+        if (scheduleTabBtn) scheduleTabBtn.setAttribute("aria-selected", "false");
+        if (upcomingTab) upcomingTab.setAttribute("aria-selected", "false");
+        if (gradesContent) gradesContent.classList.add("active");
+        if (examListSection) examListSection.classList.remove("exams-two-col");
+        loadAndRenderStudentGrades();
       }
     };
 
     if (upcomingTab) upcomingTab.addEventListener("click", () => activateTab("exams"));
     if (scheduleTabBtn) scheduleTabBtn.addEventListener("click", () => activateTab("schedule"));
+    if (gradesTabBtn) gradesTabBtn.addEventListener("click", () => activateTab("grades"));
 
     // The tab bar is position:sticky; drop a shadow on it only once content
     // is actually scrolling underneath, so it stays flat at rest.
@@ -523,6 +541,264 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   // Try to auto-refresh attendance status from the current FAP page (only updates matching items)
   tryAutoRefreshAttendance();
+  loadAndRenderStudentGrades();
+
+function renderStudentGrades(gradesMap) {
+  const container = document.getElementById("gradesTab");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  const courses = Object.values(gradesMap || {});
+
+  // Update tab label with count
+  const btn = document.getElementById("gradesTabBtn");
+  const tabText = btn?.querySelector(".tab-btn__text");
+  if (tabText) {
+    tabText.textContent = courses.length ? `Điểm số (${courses.length})` : "Điểm số";
+  }
+
+  if (courses.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "schedule-empty";
+    empty.innerHTML = `
+      <p style="font-weight:650; font-size:14px; margin:0 0 6px;">Chưa có dữ liệu bảng điểm</p>
+      <p style="font-size:12px; color:var(--text-muted); margin:0 0 14px; line-height:1.4;">
+        Mở trang Điểm số FAP (StudentGrade.aspx) rồi nhấn <strong>«Đồng bộ»</strong> hoặc <strong>«Quét tất cả môn»</strong>.
+      </p>
+      <a href="https://fap.fpt.edu.vn/Grade/StudentGrade.aspx" target="_blank" class="action-btn action-btn--secondary" style="display:inline-flex; align-items:center; gap:6px; margin:0 auto; text-decoration:none; width:fit-content;">
+        <svg class="icon" aria-hidden="true" style="width:14px; height:14px;"><use href="#icon-award"/></svg>
+        <span>Mở FAP StudentGrade</span>
+      </a>
+    `;
+    container.appendChild(empty);
+    return;
+  }
+
+  // Sort courses alphabetically by courseCode
+  courses.sort((a, b) => (a.courseCode || "").localeCompare(b.courseCode || ""));
+
+  const list = document.createElement("div");
+  list.className = "grades-list";
+
+  courses.forEach((course) => {
+    const card = document.createElement("div");
+    card.className = "grade-card";
+
+    const categories = course.categories || [];
+    const bonus = Number(course.bonus) || 0;
+    const { currentWeightedScore, completedWeight, remainingWeight } =
+      typeof calculateCurrentScore === "function"
+        ? calculateCurrentScore(categories, bonus)
+        : { currentWeightedScore: 0, completedWeight: 0, remainingWeight: 100 };
+
+    const isPassed = course.status === "Passed" || (remainingWeight === 0 && currentWeightedScore >= 5.0);
+    const isFailed = course.status === "Not passed" || (remainingWeight === 0 && currentWeightedScore < 5.0);
+
+    let statusBadgeClass = "grade-badge--inprogress";
+    let statusText = `Đang học (${completedWeight}%)`;
+
+    if (isPassed) {
+      statusBadgeClass = "grade-badge--passed";
+      statusText = "Passed";
+    } else if (isFailed) {
+      statusBadgeClass = "grade-badge--failed";
+      statusText = "Not passed";
+    }
+
+    // Header
+    const header = document.createElement("div");
+    header.className = "grade-card__header";
+
+    const titleGroup = document.createElement("div");
+    titleGroup.className = "grade-card__title-group";
+
+    const codeEl = document.createElement("div");
+    codeEl.className = "grade-card__code";
+    codeEl.textContent = course.courseCode || "UNKNOWN";
+    titleGroup.appendChild(codeEl);
+
+    if (course.courseName && course.courseName !== course.courseCode) {
+      const nameEl = document.createElement("div");
+      nameEl.className = "grade-card__name";
+      nameEl.textContent = course.courseName;
+      titleGroup.appendChild(nameEl);
+    }
+
+    if (course.term) {
+      const termEl = document.createElement("span");
+      termEl.className = "grade-card__term";
+      termEl.textContent = course.term;
+      titleGroup.appendChild(termEl);
+    }
+
+    const badgeEl = document.createElement("span");
+    badgeEl.className = `grade-badge ${statusBadgeClass}`;
+    badgeEl.textContent = statusText;
+
+    header.appendChild(titleGroup);
+    header.appendChild(badgeEl);
+    card.appendChild(header);
+
+    // Summary row
+    const summaryRow = document.createElement("div");
+    summaryRow.className = "grade-summary-row";
+    summaryRow.innerHTML = `
+      <span>Điểm tích luỹ: <strong class="grade-summary-val">${currentWeightedScore.toFixed(2)}</strong> / 10</span>
+      <span>Đã hoàn thành: <strong>${completedWeight}%</strong></span>
+    `;
+    card.appendChild(summaryRow);
+
+    // Progress bar
+    const progressWrap = document.createElement("div");
+    progressWrap.className = "grade-progress-wrap";
+    const progressBar = document.createElement("div");
+    progressBar.className = "grade-progress-bar" + (isPassed ? " grade-progress-bar--passed" : "");
+    const pct = Math.min(100, Math.max(0, currentWeightedScore * 10));
+    progressBar.style.width = `${pct}%`;
+    progressWrap.appendChild(progressBar);
+    card.appendChild(progressWrap);
+
+    // Predictor Box
+    const predictorBox = document.createElement("div");
+    predictorBox.className = "grade-predictor-box";
+
+    if (remainingWeight <= 0) {
+      const doneText = course.average != null
+        ? `Môn học đã hoàn tất. Điểm tổng kết: <strong>${course.average.toFixed(1)}</strong> (${course.status || (isPassed ? "Passed" : "Not passed")})`
+        : `Môn học đã hoàn tất toàn bộ 100% trọng số. Điểm tổng: <strong>${currentWeightedScore.toFixed(2)}</strong>`;
+      predictorBox.innerHTML = `<div style="font-size:12px; color:var(--text); line-height:1.4;">${doneText}</div>`;
+    } else {
+      const predHeader = document.createElement("div");
+      predHeader.className = "grade-predictor-header";
+      predHeader.innerHTML = `
+        <span>Dự báo điểm thi (FE / PE):</span>
+        <span>Mục tiêu: <strong class="target-display">5.0</strong></span>
+      `;
+      predictorBox.appendChild(predHeader);
+
+      const sliderRow = document.createElement("div");
+      sliderRow.className = "grade-slider-row";
+
+      const slider = document.createElement("input");
+      slider.type = "range";
+      slider.className = "grade-slider";
+      slider.min = "5.0";
+      slider.max = "9.0";
+      slider.step = "0.1";
+      slider.value = "5.0";
+
+      const targetNum = document.createElement("span");
+      targetNum.className = "grade-target-num";
+      targetNum.textContent = "5.0";
+
+      sliderRow.appendChild(slider);
+      sliderRow.appendChild(targetNum);
+      predictorBox.appendChild(sliderRow);
+
+      const resultBox = document.createElement("div");
+      resultBox.className = "grade-predict-result";
+      predictorBox.appendChild(resultBox);
+
+      const updatePrediction = (targetVal) => {
+        targetNum.textContent = targetVal.toFixed(1);
+        const targetDisplay = predHeader.querySelector(".target-display");
+        if (targetDisplay) targetDisplay.textContent = targetVal.toFixed(1);
+
+        if (typeof calculateRequiredExamScore !== "function") return;
+        const res = calculateRequiredExamScore(categories, bonus, targetVal, 4.0);
+
+        resultBox.className = "grade-predict-result";
+        if (res.status === "pass_guaranteed") {
+          resultBox.classList.add("grade-predict-result--guaranteed");
+          resultBox.innerHTML = `🎉 <strong>Chắc chắn qua môn!</strong> Chỉ cần thi ≥ <strong>4.0</strong> (tránh điểm liệt) là đạt mục tiêu ${targetVal.toFixed(1)}.`;
+        } else if (res.status === "achievable") {
+          resultBox.classList.add("grade-predict-result--achievable");
+          resultBox.innerHTML = `🎯 Cần thi tối thiểu: <span class="grade-predict-score">${res.minRequired.toFixed(1)}</span> để đạt tổng kết ${targetVal.toFixed(1)}.`;
+        } else if (res.status === "impossible") {
+          resultBox.classList.add("grade-predict-result--impossible");
+          resultBox.innerHTML = `⚠️ Không thể đạt ${targetVal.toFixed(1)} (Điểm thi cần > 10.0: ${res.requiredScore.toFixed(1)}).`;
+        }
+      };
+
+      slider.addEventListener("input", (e) => {
+        const val = parseFloat(e.target.value) || 5.0;
+        updatePrediction(val);
+      });
+
+      updatePrediction(5.0);
+    }
+    card.appendChild(predictorBox);
+
+    // Collapsible breakdown accordion
+    if (categories.length > 0 || bonus > 0) {
+      const details = document.createElement("details");
+      details.className = "grade-details-accordion";
+
+      const summary = document.createElement("summary");
+      summary.className = "grade-details-summary";
+      summary.innerHTML = `<span>Xem bảng điểm chi tiết (${categories.length} mục)</span>`;
+      details.appendChild(summary);
+
+      const table = document.createElement("table");
+      table.className = "grade-table";
+      const thead = document.createElement("thead");
+      thead.innerHTML = `<tr><th>Thành phần</th><th>Trọng số</th><th style="text-align:right;">Điểm</th></tr>`;
+      table.appendChild(thead);
+
+      const tbody = document.createElement("tbody");
+      categories.forEach((cat) => {
+        const tr = document.createElement("tr");
+        const valText = cat.value != null ? cat.value : "-";
+        tr.innerHTML = `
+          <td><strong>${cat.category || ""}</strong>${cat.items && cat.items.length > 1 ? ` (${cat.items.map(i => i.name).join(", ")})` : ""}</td>
+          <td>${cat.weight}%</td>
+          <td style="text-align:right; font-weight:600;">${valText}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (bonus > 0) {
+        const trBonus = document.createElement("tr");
+        trBonus.innerHTML = `
+          <td><strong>Bonus</strong></td>
+          <td>-</td>
+          <td style="text-align:right; font-weight:600; color:var(--accent);">+${bonus}</td>
+        `;
+        tbody.appendChild(trBonus);
+      }
+
+      table.appendChild(tbody);
+      details.appendChild(table);
+      card.appendChild(details);
+    }
+
+    list.appendChild(card);
+  });
+
+  container.appendChild(list);
+}
+
+function loadAndRenderStudentGrades() {
+  const loc = getChromeStorageLocal();
+  if (loc) {
+    loc.get(["studentGrades"], (res) => {
+      const grades = (res && res.studentGrades) || {};
+      renderStudentGrades(grades);
+    });
+  } else {
+    try {
+      const saved = JSON.parse(localStorage.getItem("studentGrades") || "{}");
+      renderStudentGrades(saved);
+    } catch (_) {
+      renderStudentGrades({});
+    }
+  }
+}
+
+window.renderStudentGrades = renderStudentGrades;
+window.loadAndRenderStudentGrades = loadAndRenderStudentGrades;
+
 function renderClassSchedule(schedule) {
   const container = document.getElementById("scheduleTab");
   if (!container) return;
@@ -815,6 +1091,88 @@ window.renderClassSchedule = renderClassSchedule;
 
   if (clearBtn) {
     clearBtn.addEventListener("click", handleClearClassSchedule);
+  }
+
+  // Grade action buttons
+  const syncGradeBtn = document.getElementById("syncGradeBtn");
+  const syncAllGradesBtn = document.getElementById("syncAllGradesBtn");
+  const clearGradesBtn = document.getElementById("clearGradesBtn");
+
+  if (syncGradeBtn) {
+    syncGradeBtn.addEventListener("click", () => {
+      if (typeof chrome === "undefined" || !chrome.tabs) return;
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs && tabs[0];
+        if (!activeTab || !activeTab.url || !/fap\.fpt\.edu\.vn/i.test(activeTab.url)) {
+          showError("Hãy mở tab FAP (StudentGrade.aspx) để đồng bộ điểm.");
+          return;
+        }
+        chrome.tabs.sendMessage(activeTab.id, { type: "EXTRACT_GRADE_REPORT" }, (resp) => {
+          if (chrome.runtime.lastError || !resp || !resp.ok || !resp.grade) {
+            showError("Không tìm thấy bảng điểm trên trang hiện tại. Hãy chọn môn trên FAP.");
+            return;
+          }
+          const grade = resp.grade;
+          const loc = getChromeStorageLocal();
+          if (loc) {
+            loc.get(["studentGrades"], (r) => {
+              const grades = (r && r.studentGrades) || {};
+              grades[grade.courseCode] = grade;
+              loc.set({ studentGrades: grades }, () => {
+                showToast(`Đã đồng bộ điểm môn ${grade.courseCode}!`);
+                loadAndRenderStudentGrades();
+              });
+            });
+          }
+        });
+      });
+    });
+  }
+
+  if (syncAllGradesBtn) {
+    syncAllGradesBtn.addEventListener("click", () => {
+      if (typeof chrome === "undefined" || !chrome.tabs) return;
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const activeTab = tabs && tabs[0];
+        if (!activeTab || !activeTab.url || !/StudentGrade\.aspx/i.test(activeTab.url)) {
+          showError("Mở trang FAP 'Grade report' (StudentGrade.aspx) để quét tất cả môn.");
+          return;
+        }
+        chrome.tabs.sendMessage(activeTab.id, { type: "GET_GRADE_PAGE_CONTROLS" }, (resp) => {
+          if (chrome.runtime.lastError || !resp || !resp.ok || !resp.courses || resp.courses.length === 0) {
+            showError("Không lấy được danh sách môn học từ FAP.");
+            return;
+          }
+          showToast(`Đang quét ${resp.courses.length} môn học... Vui lòng không đóng tab FAP!`, 3000);
+          if (chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage({
+              type: "START_ALL_GRADES_SYNC",
+              tabId: activeTab.id,
+              totalCourses: resp.courses.length
+            });
+          }
+        });
+      });
+    });
+  }
+
+  if (clearGradesBtn) {
+    clearGradesBtn.addEventListener("click", async () => {
+      const ok = await showConfirm("Bạn có chắc chắn muốn xoá toàn bộ dữ liệu bảng điểm đã lưu?", {
+        title: "Xoá bảng điểm",
+        okLabel: "Xoá tất cả",
+        danger: true
+      });
+      if (!ok) return;
+      const loc = getChromeStorageLocal();
+      if (loc) {
+        loc.remove(["studentGrades"], () => {
+          try { localStorage.removeItem("studentGrades"); } catch (_) {}
+          showToast("Đã xoá dữ liệu bảng điểm.");
+          loadAndRenderStudentGrades();
+        });
+      }
+    });
   }
 
   const scheduleFilterBtn = document.getElementById("scheduleFilterBtn");

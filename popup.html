@@ -43,6 +43,10 @@
     <symbol id="icon-bell" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
     </symbol>
+    <symbol id="icon-award" viewBox="0 0 24 24">
+      <circle cx="12" cy="8" r="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
   </svg>
 
   <div class="popup-wrapper">
@@ -79,6 +83,10 @@
             <svg class="icon" aria-hidden="true"><use href="#icon-clipboard"/></svg>
             <span class="tab-btn__text">Kỳ thi</span>
           </button>
+          <button type="button" id="gradesTabBtn" class="tab-btn" role="tab" aria-selected="false">
+            <svg class="icon" aria-hidden="true"><use href="#icon-award"/></svg>
+            <span class="tab-btn__text">Điểm số</span>
+          </button>
         </div>
       </div>
 
@@ -88,6 +96,7 @@
       <div id="upcomingExams" class="tab-content"></div>
       <div id="completedExams" class="tab-content"></div>
       <div id="scheduleTab" class="tab-content active"></div>
+      <div id="gradesTab" class="tab-content"></div>
     </section>
 
     <div class="popup-actions">
@@ -129,7 +138,20 @@
         </button>
       </div>
 
-
+      <div id="gradeActions" class="actions-row" hidden>
+        <button type="button" id="syncGradeBtn" class="action-btn action-btn--secondary action-btn--compact" title="Đồng bộ điểm môn hiện tại trên FAP">
+          <svg class="icon" aria-hidden="true"><use href="#icon-refresh"/></svg>
+          <span class="action-btn__label">Đồng bộ</span>
+        </button>
+        <button type="button" id="syncAllGradesBtn" class="action-btn action-btn--primary" title="Quét toàn bộ môn học trong kỳ">
+          <svg class="icon" aria-hidden="true"><use href="#icon-award"/></svg>
+          <span class="action-btn__label">Quét tất cả môn</span>
+        </button>
+        <button type="button" id="clearGradesBtn" class="action-btn action-btn--danger action-btn--compact" title="Xoá dữ liệu bảng điểm">
+          <svg class="icon" aria-hidden="true"><use href="#icon-trash"/></svg>
+          <span class="action-btn__label">Xoá</span>
+        </button>
+      </div>
     </div>
 
     <div id="scheduleFilterModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="scheduleFilterTitle">
@@ -323,6 +345,7 @@
     <script src="lib/schedule.js"></script>
     <script src="lib/ics.js"></script>
     <script src="lib/notifications.js"></script>
+    <script src="lib/grades.js"></script>
     <script src="study-suggestions.js"></script>
     <script src="popup.js"></script>
   </div>

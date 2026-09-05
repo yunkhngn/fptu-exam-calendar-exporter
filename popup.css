@@ -1149,3 +1149,276 @@ html, body {
   margin-bottom: 12px;
 }
 
+/* ---- Grades Tab & Cards ---- */
+.grades-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.grade-card {
+  background: var(--bg-elevated);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 6px 16px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grade-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.grade-card__title-group {
+  min-width: 0;
+  flex: 1;
+}
+
+.grade-card__code {
+  font-size: 16px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  line-height: 1.2;
+}
+
+.grade-card__name {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.grade-card__term {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.grade-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.grade-badge--passed {
+  background: #ecfdf5;
+  color: #059669;
+  border: 1px solid #a7f3d0;
+}
+
+.grade-badge--inprogress {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.grade-badge--failed {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Score overview & progress */
+.grade-summary-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.grade-summary-val {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.grade-progress-wrap {
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.grade-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #10b981 100%);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.grade-progress-bar--passed {
+  background: #10b981;
+}
+
+/* Predictor box */
+.grade-predictor-box {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.grade-predictor-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.grade-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.grade-slider {
+  flex: 1;
+  height: 6px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #cbd5e1;
+  border-radius: 3px;
+  outline: none;
+  cursor: pointer;
+}
+
+.grade-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform 0.1s ease;
+}
+
+.grade-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.grade-target-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  min-width: 28px;
+  text-align: right;
+}
+
+.grade-predict-result {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.grade-predict-result--guaranteed {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.grade-predict-result--achievable {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.grade-predict-result--warning {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.grade-predict-result--impossible {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+.grade-predict-score {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* Details breakdown accordion */
+.grade-details-accordion {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.grade-details-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.grade-details-summary:hover {
+  color: var(--accent);
+}
+
+.grade-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.grade-table th {
+  text-align: left;
+  padding: 4px 6px;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+
+.grade-table td {
+  padding: 5px 6px;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  color: var(--text);
+}
+
+.grade-table tr:last-child td {
+  border-bottom: none;
+}
+
+
