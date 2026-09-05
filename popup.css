@@ -1786,6 +1786,121 @@ html, body {
   color: #fdba74;
 }
 
+/* QR Sync Modal Styles */
+.qr-modal-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 16px;
+}
+
+.qr-scope-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: var(--bg-subtle);
+  padding: 3px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border);
+  width: 100%;
+  max-width: 290px;
+}
+
+.qr-scope-btn {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.qr-scope-btn:hover {
+  color: var(--text);
+}
+
+.qr-scope-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+}
+
+.qr-display-card {
+  position: relative;
+  background: #ffffff;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 210px;
+  height: 210px;
+  margin: 4px 0;
+}
+
+.qr-display-card svg {
+  display: block;
+  width: 190px;
+  height: 190px;
+}
+
+.qr-instructions {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  max-width: 280px;
+}
+
+.qr-meta-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.qr-empty-msg {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  padding: 24px 12px;
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Dark mode overrides for QR Modal */
+[data-theme="dark"] .qr-scope-selector {
+  background: var(--bg-card-subtle);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .qr-scope-btn {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .qr-scope-btn:hover {
+  color: var(--text);
+}
+
+[data-theme="dark"] .qr-scope-btn.active {
+  background: var(--accent);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .qr-display-card {
+  background: #ffffff; /* Luôn giữ nền trắng tinh để camera bắt nét tốt */
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+
+
 
 
 
