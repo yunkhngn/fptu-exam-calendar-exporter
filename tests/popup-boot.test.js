@@ -71,9 +71,11 @@ test("popup boots with no uncaught error and wires its controls", async () => {
                     "classScheduleDedupeKey", "mergeNewClassEventsInto",
                     "parseFapGradeTable", "calculateCurrentScore", "calculateRequiredExamScore",
                     "getNextTheme", "resolveEffectiveTheme",
-                    "computeTodayAgenda", "formatMinutesCountdown", "getEventTimeBounds"]) {
+                    "computeTodayAgenda", "formatMinutesCountdown", "getEventTimeBounds",
+                    "buildQrCalendarPayload"]) {
     assert.strictEqual(typeof window[fn], "function", `${fn} is available to popup.js`);
   }
+  assert.strictEqual(typeof window.QRCode, "object", "QRCode is available to popup.js");
 
   assert.ok(window.document.querySelector(".tab-bar"), "sticky tab bar exists");
   assert.ok(window.document.getElementById("scheduleTab"), "schedule pane exists");
@@ -639,6 +641,69 @@ test("Today's agenda widget renders hero card at top of schedule tab and reflect
   assert.ok(alertEl, "today exam alert is displayed");
   assert.ok(alertEl.textContent.includes("SWP391 - Final Exam"));
 });
+
+test("QR sync modal opens from action buttons, renders SVG QR code and handles scope switching", async () => {
+  const { dom } = await boot();
+  const doc = dom.window.document;
+  const win = dom.window;
+
+  const qrExamBtn = doc.getElementById("qrExamBtn");
+  const qrScheduleBtn = doc.getElementById("qrScheduleBtn");
+  const qrSyncModal = doc.getElementById("qrSyncModal");
+  const closeQrSyncModal = doc.getElementById("closeQrSyncModal");
+  const qrDisplayCard = doc.getElementById("qrDisplayCard");
+  const qrScopeContainer = doc.getElementById("qrScopeContainer");
+
+  assert.ok(qrExamBtn, "qrExamBtn exists");
+  assert.ok(qrScheduleBtn, "qrScheduleBtn exists");
+  assert.ok(qrSyncModal, "qrSyncModal exists");
+  assert.strictEqual(qrSyncModal.style.display, "none", "modal initially hidden");
+
+  // 1. Open QR in schedule mode with sample classes
+  const now = new Date();
+  const sampleClass = [
+    {
+      title: "PRJ301",
+      location: "AL-L302",
+      slot: "Slot 1",
+      rawDate: { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate(), startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 }
+    }
+  ];
+  win.localStorage.setItem("classSchedule", JSON.stringify(sampleClass));
+
+  qrScheduleBtn.click();
+  assert.strictEqual(qrSyncModal.style.display, "block", "modal opens on schedule button click");
+  assert.strictEqual(qrScopeContainer.style.display, "flex", "scope selector visible for schedule");
+  assert.ok(qrDisplayCard.querySelector("svg"), "SVG QR code rendered in display card");
+
+  // Switch scope to "today"
+  const todayBtn = doc.querySelector('.qr-scope-btn[data-scope="today"]');
+  assert.ok(todayBtn, "today scope button exists");
+  todayBtn.click();
+  assert.strictEqual(todayBtn.classList.contains("active"), true, "today button becomes active");
+  assert.ok(qrDisplayCard.querySelector("svg"), "SVG updated for today scope");
+
+  // 2. Open QR in exam mode
+  const sampleExam = [
+    {
+      title: "PRJ301",
+      tag: "FE",
+      location: "AL-R402",
+      start: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+      end: new Date(now.getTime() + 26 * 60 * 60 * 1000).toISOString()
+    }
+  ];
+  win.localStorage.setItem("examSchedule", JSON.stringify(sampleExam));
+
+  qrExamBtn.click();
+  assert.strictEqual(qrScopeContainer.style.display, "none", "scope selector hidden for exam mode");
+  assert.ok(qrDisplayCard.querySelector("svg"), "SVG QR code rendered for exam mode");
+
+  // 3. Close modal
+  closeQrSyncModal.click();
+  assert.strictEqual(qrSyncModal.style.display, "none", "modal closes on close button click");
+});
+
 
 
 
