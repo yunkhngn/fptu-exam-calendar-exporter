@@ -362,7 +362,17 @@ function findFapGradeTable(doc) {
   const tables = Array.from(doc.querySelectorAll("table"));
   for (const tbl of tables) {
     const text = tbl.textContent || "";
-    if (/Grade category/i.test(text) && (/Weight/i.test(text) || /Value/i.test(text))) {
+    if (
+      /Weight/i.test(text) &&
+      /Value/i.test(text) &&
+      (/Grade/i.test(text) || /Course total/i.test(text) || /Average/i.test(text) || /Passed|Not passed/i.test(text))
+    ) {
+      return tbl;
+    }
+  }
+  for (const tbl of tables) {
+    const text = tbl.textContent || "";
+    if (/Weight/i.test(text) && /Value/i.test(text) && (/Total/i.test(text) || /Average/i.test(text))) {
       return tbl;
     }
   }
@@ -413,11 +423,79 @@ function extractCourseCodeAndName(rawText, courseId = "") {
 function getGradePageCourses(doc) {
   if (!doc) doc = typeof document !== "undefined" ? document : null;
   if (!doc) return [];
+  const win = (doc && doc.defaultView) || (typeof window !== "undefined" ? window : null);
   const courses = [];
   const seen = new Set();
 
-  // FAP lists courses as <a> links with course=ID
-  const links = Array.from(doc.querySelectorAll('a[href*="course="]'));
+  let currentCourseId = "";
+  try {
+    const search = (win && win.location ? win.location.search : "") || "";
+    const params = new URLSearchParams(search);
+    currentCourseId = params.get("course") || "";
+  } catch (_) {}
+
+  // 1. Scan the table containing TERM and COURSE columns
+  const courseHeaders = Array.from(doc.querySelectorAll("th, td")).filter((el) => /COURSE/i.test(el.textContent));
+  for (const ch of courseHeaders) {
+    const table = ch.closest("table");
+    if (!table) continue;
+    const trs = Array.from(table.querySelectorAll("tr"));
+    for (const tr of trs) {
+      const tds = Array.from(tr.querySelectorAll("td"));
+      if (tds.length >= 2) {
+        const courseCell = tds[1];
+        const link = courseCell.querySelector("a");
+        if (link) {
+          const href = link.getAttribute("href") || "";
+          const m = href.match(/course=([^&]+)/i);
+          if (m) {
+            const courseId = m[1];
+            if (!seen.has(courseId)) {
+              seen.add(courseId);
+              const fullText = (link.textContent || "").trim();
+              const { courseCode, courseName } = extractCourseCodeAndName(fullText, courseId);
+              const fullHref = link.href || href;
+              courses.push({
+                id: courseId,
+                href: fullHref,
+                courseCode,
+                courseName,
+                fullText,
+                isActive: courseId === currentCourseId
+              });
+            }
+          }
+        } else {
+          // Non-link cell: this is the currently selected active course
+          const activeText = (courseCell.textContent || "").trim();
+          if (activeText && !/^(TERM|COURSE)$/i.test(activeText) && !/^(Spring|Summer|Fall|Winter)\d{4}$/i.test(activeText)) {
+            const courseId = currentCourseId || "current";
+            if (!seen.has(courseId)) {
+              seen.add(courseId);
+              const { courseCode, courseName } = extractCourseCodeAndName(activeText, courseId);
+              const activeHref = (win && win.location ? win.location.href : "") || "";
+              courses.unshift({
+                id: courseId,
+                href: activeHref,
+                courseCode,
+                courseName,
+                fullText: activeText,
+                isActive: true
+              });
+            }
+          }
+        }
+      }
+    }
+    if (courses.length > 0) break;
+  }
+
+  // 2. Fallback: all <a> links with course=ID
+  const links = Array.from(doc.querySelectorAll("a")).filter((a) => {
+    const href = a.getAttribute("href") || "";
+    return /[?&]course=/i.test(href);
+  });
+
   links.forEach((a) => {
     try {
       const href = a.getAttribute("href") || "";
@@ -434,12 +512,20 @@ function getGradePageCourses(doc) {
             href: fullHref,
             courseCode,
             courseName,
-            fullText
+            fullText,
+            isActive: courseId === currentCourseId
           });
         }
       }
     } catch (_) {}
   });
+
+  if (currentCourseId) {
+    const existing = courses.find((c) => c.id === currentCourseId);
+    if (existing) {
+      existing.isActive = true;
+    }
+  }
 
   return courses;
 }
@@ -587,6 +673,17 @@ if (typeof window !== "undefined" && /StudentGrade\.aspx/i.test(window.location.
       }
     } catch (_) {}
   }, 500);
+}
+
+if (typeof window !== "undefined") {
+  window.extractWeeklyScheduleFromTable = extractWeeklyScheduleFromTable;
+  window.getScheduleOfWeekControls = getScheduleOfWeekControls;
+  window.extractStudentGradeFromPage = extractStudentGradeFromPage;
+  window.getGradePageControls = getGradePageControls;
+  window.findFapGradeTable = findFapGradeTable;
+  window.extractCourseCodeAndName = extractCourseCodeAndName;
+  window.getGradePageCourses = getGradePageCourses;
+  window.getActiveCourseInfo = getActiveCourseInfo;
 }
 
 if (typeof module !== "undefined" && module.exports) {

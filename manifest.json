@@ -14,7 +14,7 @@
     "service_worker": "background.js"
   },
   "host_permissions": [
-    "https://fap.fpt.edu.vn/*"
+    "*://fap.fpt.edu.vn/*"
   ],
   "action": {
     "default_popup": "popup.html",
@@ -32,10 +32,10 @@
   "content_scripts": [
     {
       "matches": [
-        "https://fap.fpt.edu.vn/Exam/ScheduleExams.aspx",
-        "https://fap.fpt.edu.vn/Schedule/*",
-        "https://fap.fpt.edu.vn/Report/*",
-        "https://fap.fpt.edu.vn/Grade/*"
+        "*://fap.fpt.edu.vn/Exam/ScheduleExams.aspx*",
+        "*://fap.fpt.edu.vn/Schedule/*",
+        "*://fap.fpt.edu.vn/Report/*",
+        "*://fap.fpt.edu.vn/Grade/*"
       ],
       "js": [
         "lib/grades.js",

@@ -231,3 +231,77 @@ test("getGradePageCourses and extractStudentGradeFromPage parse real FAP page la
   assert.strictEqual(grade.term, "Summer2026");
 });
 
+test("parse real screenshot FAP layout with 4 columns and bold active course", () => {
+  const SCREENSHOT_PAGE_HTML = `
+    <!DOCTYPE html>
+    <html>
+      <body>
+        <div id="ctl00_mainContent_divContent">
+          <h2>Grade report for HE190183 (Nguyen Van A)</h2>
+          <table>
+            <thead><tr><th>TERM</th><th>COURSE</th></tr></thead>
+            <tbody>
+              <tr><td>Fall2023</td><td><b>Experiential Entrepreneurship (from 13/05/2026 - 22/07/2026)</b></td></tr>
+              <tr><td>Spring2024</td><td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100610">Multiplatform Mobile App (PRN211)</a></td></tr>
+              <tr><td>Summer2024</td><td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100611">Project management (PMG201c)</a></td></tr>
+              <tr><td>Fall2024</td><td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100612">Server-Side development with VBNET (PRN292)</a></td></tr>
+              <tr><td>Spring2025</td><td><a href="StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100613">SW Architecture and Design (SWD392)</a></td></tr>
+            </tbody>
+          </table>
+
+          <table>
+            <thead>
+              <tr><th>GRADE ITEM</th><th>WEIGHT</th><th>VALUE</th><th>COMMENT</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Group Assignment 1 (Checkpoint 1)</td><td>10.0 %</td><td>8</td><td></td></tr>
+              <tr><td>Total</td><td>10.0 %</td><td>8</td><td></td></tr>
+              <tr><td>Constructivism Presentations</td><td>15.0 %</td><td>8.5</td><td></td></tr>
+              <tr><td>Total</td><td>15.0 %</td><td>8.5</td><td></td></tr>
+              <tr><td>Group Assignment 3 (Checkpoint 3)</td><td>15.0 %</td><td>7.5</td><td></td></tr>
+              <tr><td>Total</td><td>15.0 %</td><td>7.5</td><td></td></tr>
+              <tr><td>Group Assignment 2 (Checkpoint 2)</td><td>20.0 %</td><td>7.6</td><td></td></tr>
+              <tr><td>Total</td><td>20.0 %</td><td>7.6</td><td></td></tr>
+              <tr><td>Presentation (Checkpoint 4)</td><td>40.0 %</td><td>7.6</td><td></td></tr>
+              <tr><td>Total</td><td>40.0 %</td><td>7.6</td><td></td></tr>
+            </tbody>
+            <tfoot>
+              <tr><td>COURSE TOTAL</td><td>AVERAGE</td><td colspan="2">7.8</td></tr>
+              <tr><td>STATUS</td><td colspan="2"><font color="Green">PASSED</font></td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </body>
+    </html>
+  `;
+
+  const dom = new JSDOM(SCREENSHOT_PAGE_HTML, {
+    url: "https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?rollNumber=HE190183&term=Summer2026&course=100609"
+  });
+
+  const controls = getGradePageControls(dom.window.document);
+  assert.strictEqual(controls.ok, true);
+  assert.strictEqual(controls.courses.length, 5);
+  assert.strictEqual(controls.courses[0].isActive, true);
+  assert.strictEqual(controls.courses[0].id, "100609");
+  assert.strictEqual(controls.courses[0].courseCode, "EE_100609");
+  assert.strictEqual(controls.courses[1].courseCode, "PRN211");
+  assert.strictEqual(controls.courses[2].courseCode, "PMG201C");
+  assert.strictEqual(controls.courses[3].courseCode, "PRN292");
+  assert.strictEqual(controls.courses[4].courseCode, "SWD392");
+
+  const grade = extractStudentGradeFromPage(dom.window.document);
+  assert.ok(grade, "grade extracted");
+  assert.strictEqual(grade.courseCode, "EE_100609");
+  assert.strictEqual(grade.categories.length, 5);
+  assert.strictEqual(grade.categories[0].category, "Group Assignment 1 (Checkpoint 1)");
+  assert.strictEqual(grade.categories[0].weight, 10);
+  assert.strictEqual(grade.categories[0].value, 8);
+  assert.strictEqual(grade.categories[4].category, "Presentation (Checkpoint 4)");
+  assert.strictEqual(grade.categories[4].weight, 40);
+  assert.strictEqual(grade.categories[4].value, 7.6);
+  assert.strictEqual(grade.average, 7.8);
+  assert.strictEqual(grade.status, "Passed");
+});
+
+
