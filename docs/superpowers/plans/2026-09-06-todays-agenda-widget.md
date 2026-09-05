@@ -31,7 +31,7 @@
   - `computeTodayAgenda(options: { classEvents: Array, examEvents: Array, now?: Date }): object`
   - `formatMinutesCountdown(minutes: number): string`
 
-- [ ] **Step 1: Viết failing test trong `tests/agenda.test.js`**
+- [x] **Step 1: Viết failing test trong `tests/agenda.test.js`**
 
 ```javascript
 const test = require("node:test");
@@ -152,12 +152,12 @@ test("computeTodayAgenda includes today's exam alert if present", () => {
 });
 ```
 
-- [ ] **Step 2: Chạy test để xác nhận test fail do chưa có module**
+- [x] **Step 2: Chạy test để xác nhận test fail do chưa có module**
 
 Run: `node --test tests/agenda.test.js`  
 Expected: FAIL (Cannot find module '../lib/agenda.js')
 
-- [ ] **Step 3: Viết module `lib/agenda.js` (UMD)**
+- [x] **Step 3: Viết module `lib/agenda.js` (UMD)**
 
 ```javascript
 (function (root, factory) {
@@ -325,12 +325,12 @@ Expected: FAIL (Cannot find module '../lib/agenda.js')
 });
 ```
 
-- [ ] **Step 4: Chạy toàn bộ unit test**
+- [x] **Step 4: Chạy toàn bộ unit test**
 
 Run: `npm test`  
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/agenda.js tests/agenda.test.js
@@ -347,7 +347,7 @@ git commit -m "feat: add agenda calculation engine and unit tests"
 **Interfaces:**
 - Produces: CSS classes `.agenda-banner`, `.agenda-card`, `.agenda-card--*`, `.agenda-dot`, `.agenda-exam-alert`
 
-- [ ] **Step 1: Định nghĩa base styles cho Agenda Widget**
+- [x] **Step 1: Định nghĩa base styles cho Agenda Widget**
 
 ```css
 .agenda-banner {
@@ -486,7 +486,7 @@ git commit -m "feat: add agenda calculation engine and unit tests"
 }
 ```
 
-- [ ] **Step 2: Bổ sung Dark Mode styling cho `.agenda-card`**
+- [x] **Step 2: Bổ sung Dark Mode styling cho `.agenda-card`**
 
 ```css
 [data-theme="dark"] .agenda-card {
@@ -531,12 +531,12 @@ git commit -m "feat: add agenda calculation engine and unit tests"
 }
 ```
 
-- [ ] **Step 3: Chạy test kiểm tra toàn bộ suite**
+- [x] **Step 3: Chạy test kiểm tra toàn bộ suite**
 
 Run: `npm test`  
 Expected: PASS
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add popup.css
@@ -555,14 +555,14 @@ git commit -m "feat: add agenda widget css styles for light and dark mode"
 - Consumes: `lib/agenda.js` (`computeTodayAgenda`, `AGENDA_STATUS`, `formatMinutesCountdown`)
 - Produces: Dynamic DOM element `.agenda-banner` at the top of `#scheduleTab`
 
-- [ ] **Step 1: Thêm script `lib/agenda.js` vào `popup.html`**
+- [x] **Step 1: Thêm script `lib/agenda.js` vào `popup.html`**
 
 ```html
   <script src="lib/agenda.js"></script>
 ```
 Đặt trước `study-suggestions.js` và `popup.js`.
 
-- [ ] **Step 2: Viết hàm render Agenda Widget trong `popup.js`**
+- [x] **Step 2: Viết hàm render Agenda Widget trong `popup.js`**
 
 ```javascript
 function renderTodayAgendaBanner(schedule, examEvents = []) {
@@ -650,17 +650,17 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
 }
 ```
 
-- [ ] **Step 3: Chèn Agenda Banner vào đầu `renderClassSchedule` trong `popup.js`**
+- [x] **Step 3: Chèn Agenda Banner vào đầu `renderClassSchedule` trong `popup.js`**
 
 Trong `renderClassSchedule(schedule)`:
 Chèn html của `renderTodayAgendaBanner` ngay trước danh sách thẻ lớp học. Nếu có `data-url`, gắn sự kiện mở FAP.
 
-- [ ] **Step 4: Chạy test kiểm tra toàn bộ suite**
+- [x] **Step 4: Chạy test kiểm tra toàn bộ suite**
 
 Run: `npm test`  
 Expected: PASS
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add popup.html popup.js
@@ -674,18 +674,18 @@ git commit -m "feat: render today agenda banner in popup schedule tab"
 **Files:**
 - Modify: `tests/popup-boot.test.js`
 
-- [ ] **Step 1: Thêm integration test cho Agenda banner trong `tests/popup-boot.test.js`**
+- [x] **Step 1: Thêm integration test cho Agenda banner trong `tests/popup-boot.test.js`**
 
 Kiểm tra:
 - `computeTodayAgenda` có sẵn trên window.
 - Gọi `renderClassSchedule` với dữ liệu hôm nay sinh ra `.agenda-card`.
 
-- [ ] **Step 2: Chạy toàn bộ test suite**
+- [x] **Step 2: Chạy toàn bộ test suite**
 
 Run: `npm test`  
 Expected: PASS (Tất cả bài test đều pass 100%)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add tests/popup-boot.test.js
@@ -696,11 +696,11 @@ git commit -m "test: add agenda integration test in popup-boot"
 
 ### Task 5: Xác minh tổng thể (Final Verification)
 
-- [ ] **Step 1: Chạy toàn bộ unit test**
+- [x] **Step 1: Chạy toàn bộ unit test**
 Run: `npm test`  
 Expected: PASS 100%
 
-- [ ] **Step 2: Kiểm tra Git status sạch sẽ**
+- [x] **Step 2: Kiểm tra Git status sạch sẽ**
 Run: `git status`  
 Expected: Clean working tree
 
