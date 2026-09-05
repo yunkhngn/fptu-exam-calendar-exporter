@@ -6,6 +6,11 @@ try {
 } catch (e) {
   console.error("background: could not load lib/schedule.js", e);
 }
+try {
+  importScripts("lib/notifications.js");
+} catch (e) {
+  console.error("background: could not load lib/notifications.js", e);
+}
 function armWaitForTabComplete(tabId, timeoutMs, onDone) {
   let settled = false;
   let timer;
@@ -135,6 +140,7 @@ function runWeekRangeSync(tabId, startIdx, endIdx, weekLabels, seedJson, onCompl
         weekRangeLastSummary: { toastText, statusText }
       },
       () => {
+        rescheduleAllAlarms();
         chrome.runtime
           .sendMessage({
             type: "WEEK_RANGE_SYNC_DONE",
@@ -219,8 +225,134 @@ function runWeekRangeSync(tabId, startIdx, endIdx, weekLabels, seedJson, onCompl
   step();
 }
 
+function rescheduleAllAlarms(callback) {
+  if (typeof chrome === "undefined" || !chrome.storage || !chrome.storage.local || !chrome.alarms) {
+    callback && callback();
+    return;
+  }
+
+  chrome.storage.local.get(["classSchedule", "examSchedule", "notificationSettings"], (res) => {
+    if (chrome.runtime.lastError) {
+      callback && callback();
+      return;
+    }
+
+    let settings = res.notificationSettings;
+    if (!settings) {
+      settings = typeof DEFAULT_NOTIFICATION_SETTINGS !== "undefined"
+        ? DEFAULT_NOTIFICATION_SETTINGS
+        : { enabled: true, class: { enabled: true, offset15: true, offset30: false }, exam: { enabled: true, offset1Day: true, offset1Hour: true } };
+    }
+
+    let classEvents = [];
+    try {
+      classEvents = JSON.parse(res.classSchedule || "[]");
+    } catch (_) {}
+
+    let examEvents = [];
+    try {
+      examEvents = JSON.parse(res.examSchedule || "[]");
+    } catch (_) {}
+
+    const now = new Date();
+    const classAlarms = typeof buildClassAlarmItems === "function"
+      ? buildClassAlarmItems(classEvents, settings, now)
+      : [];
+    const examAlarms = typeof buildExamAlarmItems === "function"
+      ? buildExamAlarmItems(examEvents, settings, now)
+      : [];
+
+    const allAlarms = classAlarms.concat(examAlarms);
+    const alarmMetadata = {};
+
+    chrome.alarms.getAll((existing) => {
+      const fptuAlarms = (existing || []).filter((a) => a && a.name && a.name.startsWith("fptu:"));
+      const clearPromises = fptuAlarms.map((a) => new Promise((resolve) => chrome.alarms.clear(a.name, resolve)));
+
+      Promise.all(clearPromises).then(() => {
+        if (!settings.enabled) {
+          chrome.storage.local.set({ activeAlarmsMetadata: {} }, () => callback && callback());
+          return;
+        }
+
+        allAlarms.forEach((item) => {
+          alarmMetadata[item.name] = item;
+          chrome.alarms.create(item.name, { when: item.when });
+        });
+
+        chrome.storage.local.set({ activeAlarmsMetadata: alarmMetadata }, () => callback && callback());
+      });
+    });
+  });
+}
+
+if (typeof chrome !== "undefined" && chrome.alarms && chrome.alarms.onAlarm) {
+  chrome.alarms.onAlarm.addListener((alarm) => {
+    if (!alarm || !alarm.name || !alarm.name.startsWith("fptu:")) return;
+
+    chrome.storage.local.get(["activeAlarmsMetadata"], (res) => {
+      const meta = (res && res.activeAlarmsMetadata) || {};
+      const item = meta[alarm.name] || (typeof parseAlarmName === "function" ? parseAlarmName(alarm.name) : null);
+      const details = typeof formatNotificationDetails === "function"
+        ? formatNotificationDetails(item)
+        : { title: "FPTU Schedule", message: "Bạn có lịch học / lịch thi sắp diễn ra.", iconUrl: "icon-128.png" };
+
+      if (typeof chrome.notifications !== "undefined" && chrome.notifications.create) {
+        chrome.notifications.create(alarm.name, {
+          type: "basic",
+          iconUrl: details.iconUrl || "icon-128.png",
+          title: details.title || "FPTU Schedule",
+          message: details.message || "Bạn có lịch sắp tới.",
+          priority: 2
+        });
+      }
+    });
+  });
+}
+
+if (typeof chrome !== "undefined" && chrome.notifications && chrome.notifications.onClicked) {
+  chrome.notifications.onClicked.addListener((notificationId) => {
+    if (!notificationId || !notificationId.startsWith("fptu:")) return;
+    const isExam = notificationId.startsWith("fptu:exam:");
+    const targetUrl = isExam
+      ? "https://fap.fpt.edu.vn/Exam/ScheduleExams.aspx"
+      : "https://fap.fpt.edu.vn/Report/ScheduleOfWeek.aspx";
+
+    chrome.tabs.query({ url: "*://fap.fpt.edu.vn/*" }, (tabs) => {
+      const matchingTab = (tabs || []).find((t) => t.url && t.url.includes(isExam ? "ScheduleExams" : "ScheduleOfWeek"));
+      if (matchingTab && matchingTab.id) {
+        chrome.tabs.update(matchingTab.id, { active: true });
+      } else {
+        chrome.tabs.create({ url: targetUrl, active: true });
+      }
+      chrome.notifications.clear(notificationId);
+    });
+  });
+}
+
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-  if (!msg || msg.type !== "START_WEEK_RANGE_SYNC") {
+  if (!msg) return false;
+
+  if (msg.type === "RESCHEDULE_ALARMS") {
+    rescheduleAllAlarms(() => sendResponse && sendResponse({ ok: true }));
+    return true;
+  }
+
+  if (msg.type === "TEST_NOTIFICATION") {
+    if (typeof chrome.notifications !== "undefined" && chrome.notifications.create) {
+      chrome.notifications.create("fptu:test:" + Date.now(), {
+        type: "basic",
+        iconUrl: "icon-128.png",
+        title: "[FPTU Schedule] Thông báo thử nghiệm",
+        message: "Hệ thống thông báo hoạt động tốt! Bạn sẽ nhận được nhắc nhở trước giờ học và giờ thi.",
+        priority: 2
+      });
+    }
+    sendResponse && sendResponse({ ok: true });
+    return false;
+  }
+
+  if (msg.type !== "START_WEEK_RANGE_SYNC") {
     return false;
   }
 
