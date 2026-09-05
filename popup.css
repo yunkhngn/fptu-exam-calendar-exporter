@@ -783,6 +783,25 @@ html, body {
 
 #scheduleTab .chip.type { color: #c2410c; background: #fff7ed; border-color: rgba(234, 88, 12, 0.2); }
 #scheduleTab .chip.online { color: #047857; background: #ecfdf5; border-color: rgba(5, 150, 105, 0.22); }
+#scheduleTab .chip.risk-warning {
+  color: #854d0e;
+  background: #fef9c3;
+  border-color: rgba(202, 138, 4, 0.35);
+  box-shadow: 0 0 0 3px rgba(202, 138, 4, 0.16);
+}
+#scheduleTab .chip.risk-danger {
+  color: #7f1d1d;
+  background: #fecaca;
+  border-color: rgba(185, 28, 28, 0.4);
+  font-weight: 750;
+  animation: risk-danger-glow 2.4s ease-out infinite;
+}
+/* A slow breathing ring, not a flashing one — this sits on screen every time the popup opens,
+   it should read as "pay attention" rather than demand it. */
+@keyframes risk-danger-glow {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.25); }
+  50% { box-shadow: 0 0 0 5px rgba(220, 38, 38, 0.1); }
+}
 #scheduleTab .chip.room { color: #b91c1c; background: #fef2f2; border-color: rgba(220, 38, 38, 0.18); }
 #scheduleTab .chip.attendance { background: #f1f5f9; color: #475569; border-color: rgba(100, 116, 139, 0.2); }
 #scheduleTab .chip.attendance.notyet { background: #f1f5f9; color: #475569; border-color: rgba(100, 116, 139, 0.2); }

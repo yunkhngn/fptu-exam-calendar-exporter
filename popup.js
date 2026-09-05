@@ -536,6 +536,10 @@ function renderClassSchedule(schedule) {
   const visible = filterClassScheduleByRange(stored, mode);
   syncClassFilterButton();
 
+  // Absence rate is a fact about the course, not about the currently filtered view — computed
+  // from the full stored schedule so it stays accurate even when filtered down to "Hôm nay".
+  const attendanceByCourse = computeAttendanceByCourse(stored);
+
   // Update tab label with count
   const btn = document.getElementById("scheduleTabBtn");
   const tabText = btn?.querySelector(".tab-btn__text");
@@ -627,6 +631,21 @@ function renderClassSchedule(schedule) {
     chipType.appendChild(dotType);
     chipType.appendChild(document.createTextNode(` ${(ev.slot || ev.type || "Slot ?").toString()}`));
     tags.appendChild(chipType);
+
+    // Attendance-risk chip — shown on every card of a course whose graded sessions so far
+    // put it at or past the early-warning line, using the same rate for all of that course's
+    // cards regardless of which specific session this one is.
+    const courseAttendance = attendanceByCourse[ev.title];
+    const riskLevel = courseAttendance ? attendanceRiskLevel(courseAttendance.rate) : null;
+    if (riskLevel) {
+      const chipRisk = document.createElement("span");
+      chipRisk.className = `chip risk-${riskLevel}`;
+      const dotRisk = document.createElement("span"); dotRisk.className = "dot";
+      chipRisk.appendChild(dotRisk);
+      const pct = Math.round(courseAttendance.rate * 100);
+      chipRisk.appendChild(document.createTextNode(` ${pct}% vắng`));
+      tags.appendChild(chipRisk);
+    }
 
     // Room chip
     if (ev.location) {

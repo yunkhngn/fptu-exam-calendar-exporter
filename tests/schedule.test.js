@@ -142,3 +142,55 @@ test("an unknown mode falls back to showing everything", () => {
   const schedule = [onDay("A", 2026, 9, 1), onDay("B", 2026, 9, 20)];
   assert.strictEqual(filterClassScheduleByRange(schedule, "nonsense", at(2026, 9, 2)).length, 2);
 });
+
+const {
+  computeAttendanceByCourse,
+  attendanceRiskLevel,
+  ATTENDANCE_WARNING_THRESHOLD,
+  ATTENDANCE_DANGER_THRESHOLD,
+} = require("../lib/schedule.js");
+
+const sess = (title, status) => ({ title, attendanceStatus: status });
+
+test("computes an absence rate per course, ignoring events with no course code", () => {
+  const schedule = [
+    sess("PRJ301", "attended"), sess("PRJ301", "attended"), sess("PRJ301", "attended"), sess("PRJ301", "absent"),
+    sess("SWP391", "attended"), sess("SWP391", "not yet"),
+  ];
+  const byCourse = computeAttendanceByCourse(schedule);
+  assert.deepStrictEqual(byCourse.PRJ301, { attended: 3, absent: 1, rate: 0.25 });
+  assert.deepStrictEqual(byCourse.SWP391, { attended: 1, absent: 0, rate: 0 });
+});
+
+test("a course with no graded session yet is left out entirely, not shown as 0%", () => {
+  const schedule = [sess("MAD101", "not yet"), sess("MAD101", "not yet")];
+  const byCourse = computeAttendanceByCourse(schedule);
+  assert.strictEqual(byCourse.MAD101, undefined, "no attended/absent sessions means no rate to report");
+});
+
+test("\"not yet\" sessions never count toward the denominator", () => {
+  const schedule = [sess("DBI202", "attended"), sess("DBI202", "absent"), sess("DBI202", "not yet"), sess("DBI202", "not yet")];
+  assert.strictEqual(computeAttendanceByCourse(schedule).DBI202.rate, 0.5, "rate is 1/2, not 2/4");
+});
+
+test("events with no course code or no attendance status are ignored", () => {
+  const schedule = [{ attendanceStatus: "absent" }, { title: "PRJ301" }, sess("PRJ301", "attended")];
+  const byCourse = computeAttendanceByCourse(schedule);
+  assert.deepStrictEqual(byCourse.PRJ301, { attended: 1, absent: 0, rate: 0 });
+  assert.strictEqual(Object.keys(byCourse).length, 1);
+});
+
+test("risk thresholds are constants, and the boundaries are inclusive", () => {
+  assert.strictEqual(ATTENDANCE_WARNING_THRESHOLD, 0.15);
+  assert.strictEqual(ATTENDANCE_DANGER_THRESHOLD, 0.2);
+
+  assert.strictEqual(attendanceRiskLevel(0), null);
+  assert.strictEqual(attendanceRiskLevel(0.1), null);
+  assert.strictEqual(attendanceRiskLevel(0.149), null);
+  assert.strictEqual(attendanceRiskLevel(0.15), "warning", "the 15% boundary itself is already a warning");
+  assert.strictEqual(attendanceRiskLevel(0.18), "warning");
+  assert.strictEqual(attendanceRiskLevel(0.2), "danger", "the 20% boundary itself is already danger, not a warning");
+  assert.strictEqual(attendanceRiskLevel(0.35), "danger");
+  assert.strictEqual(attendanceRiskLevel(null), null);
+  assert.strictEqual(attendanceRiskLevel(undefined), null);
+});

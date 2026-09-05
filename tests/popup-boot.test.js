@@ -366,3 +366,51 @@ test("notification modal contains master toggle, class offsets, exam offsets and
   assert.ok(doc.getElementById("saveNotificationBtn"), "save button exists");
 });
 
+
+test("a course past the danger threshold gets a risk chip on every one of its cards", async () => {
+  const { window } = await boot();
+  const schedule = [
+    // 1 attended, 3 absent -> 75% for SWP391, well past both thresholds
+    { title: "SWP391", isOnline: false, location: "AL-R402", slot: "Slot 1", attendanceStatus: "attended",
+      rawDate: { year: 2026, month: 9, day: 8, startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 } },
+    { title: "SWP391", isOnline: false, location: "AL-R402", slot: "Slot 2", attendanceStatus: "absent",
+      rawDate: { year: 2026, month: 9, day: 9, startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 } },
+    { title: "SWP391", isOnline: false, location: "AL-R402", slot: "Slot 3", attendanceStatus: "absent",
+      rawDate: { year: 2026, month: 9, day: 10, startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 } },
+    { title: "SWP391", isOnline: false, location: "AL-R402", slot: "Slot 4", attendanceStatus: "absent",
+      rawDate: { year: 2026, month: 9, day: 11, startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 } },
+    // safe course: no risk chip
+    { title: "PRJ301", isOnline: false, location: "DE-226", slot: "Slot 1", attendanceStatus: "attended",
+      rawDate: { year: 2026, month: 9, day: 8, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 } },
+  ];
+  window.renderClassSchedule(schedule);
+  const cards = window.document.querySelectorAll("#scheduleTab .class-card");
+  assert.strictEqual(cards.length, 5);
+
+  const swp391Cards = [...cards].filter((c) => c.querySelector(".class-code").textContent === "SWP391");
+  assert.strictEqual(swp391Cards.length, 4, "every SWP391 session card, not just one");
+  swp391Cards.forEach((card) => {
+    const risk = card.querySelector(".chip.risk-danger");
+    assert.ok(risk, "each SWP391 card shows the danger chip");
+    assert.strictEqual(risk.textContent.trim(), "75% vắng");
+  });
+
+  const prj301 = [...cards].find((c) => c.querySelector(".class-code").textContent === "PRJ301");
+  assert.strictEqual(prj301.querySelector(".chip.risk-warning"), null);
+  assert.strictEqual(prj301.querySelector(".chip.risk-danger"), null);
+});
+
+test("a course between the two thresholds gets the warning chip, not danger", async () => {
+  const { window } = await boot();
+  // 1 absent out of 6 -> ~16.7%, between 15% and 20%
+  const schedule = Array.from({ length: 6 }, (_, i) => ({
+    title: "MAD101", location: "BE-102", slot: `Slot ${i + 1}`,
+    attendanceStatus: i === 0 ? "absent" : "attended",
+    rawDate: { year: 2026, month: 9, day: 8 + i, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 },
+  }));
+  window.renderClassSchedule(schedule);
+  const risk = window.document.querySelector("#scheduleTab .class-card .chip.risk-warning");
+  assert.ok(risk, "16.7% sits in the warning band");
+  assert.strictEqual(risk.textContent.trim(), "17% vắng", "rounded to the nearest percent");
+  assert.strictEqual(window.document.querySelector("#scheduleTab .chip.risk-danger"), null);
+});
