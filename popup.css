@@ -1043,3 +1043,82 @@ html, body {
   margin: 4px 0 0;
   padding: 0;
 }
+
+/* ---- Notification Modal & Header Button ---- */
+.header-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.header-icon-btn:hover {
+  color: var(--text);
+  background: var(--bg-subtle);
+  border-color: var(--accent);
+}
+
+.header-icon-btn.is-active {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.notif-section {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+}
+
+.notif-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.notif-fieldset {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px 12px;
+  margin: 0 0 14px;
+}
+
+.notif-legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0 6px;
+}
+
+.notif-legend label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.notif-sub-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding-left: 8px;
+}
+
+.notif-test-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+

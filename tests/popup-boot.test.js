@@ -333,3 +333,36 @@ test("an online class gets an Online chip; an offline one does not", async () =>
   assert.strictEqual(badgeChips[1].className.includes("attendance"), true, "attendance status sits to its right");
   assert.strictEqual(online.querySelector(".class-tags .chip.online"), null, "Online no longer duplicated in the tag row");
 });
+
+test("notification button exists in header and opens notification modal", async () => {
+  const { dom } = await boot();
+  const doc = dom.window.document;
+  const btn = doc.getElementById("notificationBtn");
+  const modal = doc.getElementById("notificationModal");
+  assert.ok(btn, "notificationBtn should exist");
+  assert.ok(modal, "notificationModal should exist");
+  assert.strictEqual(modal.style.display, "none");
+
+  btn.click();
+  assert.strictEqual(modal.style.display, "block");
+
+  const closeBtn = doc.getElementById("closeNotificationModal");
+  assert.ok(closeBtn);
+  closeBtn.click();
+  assert.strictEqual(modal.style.display, "none");
+});
+
+test("notification modal contains master toggle, class offsets, exam offsets and test button", async () => {
+  const { dom } = await boot();
+  const doc = dom.window.document;
+  assert.ok(doc.getElementById("notifMasterToggle"), "master toggle exists");
+  assert.ok(doc.getElementById("notifClassEnabled"), "class enabled exists");
+  assert.ok(doc.getElementById("notifClass15"), "class 15 offset exists");
+  assert.ok(doc.getElementById("notifClass30"), "class 30 offset exists");
+  assert.ok(doc.getElementById("notifExamEnabled"), "exam enabled exists");
+  assert.ok(doc.getElementById("notifExam1Day"), "exam 1 day offset exists");
+  assert.ok(doc.getElementById("notifExam1Hour"), "exam 1 hour offset exists");
+  assert.ok(doc.getElementById("testNotificationBtn"), "test button exists");
+  assert.ok(doc.getElementById("saveNotificationBtn"), "save button exists");
+});
+

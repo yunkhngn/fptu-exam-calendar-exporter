@@ -40,6 +40,9 @@
     <symbol id="icon-external" viewBox="0 0 24 24">
       <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3"/>
     </symbol>
+    <symbol id="icon-bell" viewBox="0 0 24 24">
+      <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+    </symbol>
   </svg>
 
   <div class="popup-wrapper">
@@ -60,6 +63,9 @@
           <p class="popup-header__subtitle">Đồng bộ lịch học &amp; lịch thi từ FAP</p>
         </div>
       </div>
+      <button type="button" id="notificationBtn" class="header-icon-btn" title="Cài đặt thông báo" aria-label="Cài đặt thông báo">
+        <svg class="icon" aria-hidden="true"><use href="#icon-bell"/></svg>
+      </button>
     </header>
 
     <section id="examList" class="popup-list">
@@ -251,6 +257,53 @@
       </div>
     </div>
 
+    <div id="notificationModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="notificationModalTitle">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="notificationModalTitle">Cài đặt thông báo</h3>
+          <button type="button" id="closeNotificationModal" class="close-btn" aria-label="Đóng">
+            <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="notif-section">
+            <label class="notif-switch-label">
+              <input type="checkbox" id="notifMasterToggle" checked>
+              <span class="notif-switch-text"><strong>Bật thông báo trên màn hình</strong></span>
+            </label>
+          </div>
+
+          <fieldset class="notif-fieldset" id="notifClassGroup">
+            <legend class="notif-legend">
+              <label><input type="checkbox" id="notifClassEnabled" checked> Nhắc nhở Lịch học</label>
+            </legend>
+            <div class="notif-sub-options">
+              <label class="filter-item"><input type="checkbox" id="notifClass15" checked> <span>Trước 15 phút</span></label>
+              <label class="filter-item"><input type="checkbox" id="notifClass30"> <span>Trước 30 phút</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="notif-fieldset" id="notifExamGroup">
+            <legend class="notif-legend">
+              <label><input type="checkbox" id="notifExamEnabled" checked> Nhắc nhở Lịch thi</label>
+            </legend>
+            <div class="notif-sub-options">
+              <label class="filter-item"><input type="checkbox" id="notifExam1Day" checked> <span>Trước 1 ngày</span></label>
+              <label class="filter-item"><input type="checkbox" id="notifExam1Hour" checked> <span>Trước 1 tiếng</span></label>
+            </div>
+          </fieldset>
+
+          <div class="notif-test-row">
+            <button type="button" id="testNotificationBtn" class="filter-btn">Thử thông báo</button>
+          </div>
+
+          <div class="filter-actions">
+            <button type="button" id="saveNotificationBtn" class="filter-btn apply-btn">Lưu &amp; Áp dụng</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <footer class="popup-footer">
       <p class="popup-footer__line">
         <span>I</span>
@@ -269,6 +322,7 @@
 
     <script src="lib/schedule.js"></script>
     <script src="lib/ics.js"></script>
+    <script src="lib/notifications.js"></script>
     <script src="study-suggestions.js"></script>
     <script src="popup.js"></script>
   </div>

@@ -14,7 +14,24 @@ function mirrorClassScheduleToStorage(jsonString) {
   const loc = getChromeStorageLocal();
   if (!loc) return;
   try {
-    loc.set({ classSchedule: jsonString });
+    loc.set({ classSchedule: jsonString }, () => {
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ type: "RESCHEDULE_ALARMS" }).catch(() => {});
+      }
+    });
+  } catch (_) {}
+}
+
+function mirrorExamScheduleToStorage(events) {
+  const loc = getChromeStorageLocal();
+  if (!loc) return;
+  try {
+    const json = typeof events === "string" ? events : JSON.stringify(events || []);
+    loc.set({ examSchedule: json }, () => {
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ type: "RESCHEDULE_ALARMS" }).catch(() => {});
+      }
+    });
   } catch (_) {}
 }
 
@@ -54,6 +71,117 @@ document.addEventListener("DOMContentLoaded", () => {
   const filterModal = document.getElementById("filterModal");
   const closeFilter = document.getElementById("closeFilter");
   const docsLink = document.getElementById("docsLink");
+  
+  // Notification settings modal elements
+  const notificationBtn = document.getElementById("notificationBtn");
+  const notificationModal = document.getElementById("notificationModal");
+  const closeNotificationModal = document.getElementById("closeNotificationModal");
+  const notifMasterToggle = document.getElementById("notifMasterToggle");
+  const notifClassEnabled = document.getElementById("notifClassEnabled");
+  const notifClass15 = document.getElementById("notifClass15");
+  const notifClass30 = document.getElementById("notifClass30");
+  const notifExamEnabled = document.getElementById("notifExamEnabled");
+  const notifExam1Day = document.getElementById("notifExam1Day");
+  const notifExam1Hour = document.getElementById("notifExam1Hour");
+  const testNotificationBtn = document.getElementById("testNotificationBtn");
+  const saveNotificationBtn = document.getElementById("saveNotificationBtn");
+
+  const DEFAULT_SETTINGS = (typeof DEFAULT_NOTIFICATION_SETTINGS !== "undefined")
+    ? DEFAULT_NOTIFICATION_SETTINGS
+    : {
+        enabled: true,
+        class: { enabled: true, offset15: true, offset30: false },
+        exam: { enabled: true, offset1Day: true, offset1Hour: true }
+      };
+
+  function updateNotificationButtonState(enabled) {
+    if (notificationBtn) {
+      notificationBtn.classList.toggle("is-active", !!enabled);
+    }
+  }
+
+  function syncNotificationForm(settings) {
+    const s = settings || DEFAULT_SETTINGS;
+    if (notifMasterToggle) notifMasterToggle.checked = !!s.enabled;
+    if (notifClassEnabled) notifClassEnabled.checked = !!(s.class && s.class.enabled);
+    if (notifClass15) notifClass15.checked = !!(s.class && s.class.offset15);
+    if (notifClass30) notifClass30.checked = !!(s.class && s.class.offset30);
+    if (notifExamEnabled) notifExamEnabled.checked = !!(s.exam && s.exam.enabled);
+    if (notifExam1Day) notifExam1Day.checked = !!(s.exam && s.exam.offset1Day);
+    if (notifExam1Hour) notifExam1Hour.checked = !!(s.exam && s.exam.offset1Hour);
+    updateNotificationButtonState(s.enabled);
+  }
+
+  const locStorage = getChromeStorageLocal();
+  if (locStorage) {
+    locStorage.get(["notificationSettings"], (res) => {
+      syncNotificationForm(res && res.notificationSettings);
+    });
+  }
+
+  if (notificationBtn && notificationModal) {
+    notificationBtn.addEventListener("click", () => {
+      if (locStorage) {
+        locStorage.get(["notificationSettings"], (res) => {
+          syncNotificationForm(res && res.notificationSettings);
+          notificationModal.style.display = "block";
+        });
+      } else {
+        notificationModal.style.display = "block";
+      }
+    });
+  }
+
+  if (closeNotificationModal && notificationModal) {
+    closeNotificationModal.addEventListener("click", () => {
+      notificationModal.style.display = "none";
+    });
+  }
+
+  if (testNotificationBtn) {
+    testNotificationBtn.addEventListener("click", () => {
+      if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+        chrome.runtime.sendMessage({ type: "TEST_NOTIFICATION" }, () => {
+          showToast("Đã gửi thông báo thử nghiệm!");
+        });
+      } else {
+        showToast("Đã gửi thông báo thử nghiệm!");
+      }
+    });
+  }
+
+  if (saveNotificationBtn && notificationModal) {
+    saveNotificationBtn.addEventListener("click", () => {
+      const current = {
+        enabled: notifMasterToggle ? notifMasterToggle.checked : true,
+        class: {
+          enabled: notifClassEnabled ? notifClassEnabled.checked : true,
+          offset15: notifClass15 ? notifClass15.checked : true,
+          offset30: notifClass30 ? notifClass30.checked : false
+        },
+        exam: {
+          enabled: notifExamEnabled ? notifExamEnabled.checked : true,
+          offset1Day: notifExam1Day ? notifExam1Day.checked : true,
+          offset1Hour: notifExam1Hour ? notifExam1Hour.checked : true
+        }
+      };
+
+      if (locStorage) {
+        locStorage.set({ notificationSettings: current }, () => {
+          if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage({ type: "RESCHEDULE_ALARMS" }).catch(() => {});
+          }
+          updateNotificationButtonState(current.enabled);
+          notificationModal.style.display = "none";
+          showToast("Đã lưu cài đặt thông báo!");
+        });
+      } else {
+        updateNotificationButtonState(current.enabled);
+        notificationModal.style.display = "none";
+        showToast("Đã lưu cài đặt thông báo!");
+      }
+    });
+  }
   
   // Tab switching functionality - add this right after the other element declarations
   const upcomingTab = document.getElementById("upcomingTab");
@@ -1336,6 +1464,7 @@ function autoSyncSchedule() {
           return;
         }
         localStorage.setItem("examSchedule", JSON.stringify(response.events));
+        mirrorExamScheduleToStorage(response.events);
 
         renderExamList(response.events);
       });
