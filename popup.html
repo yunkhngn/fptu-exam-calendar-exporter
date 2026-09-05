@@ -58,6 +58,16 @@
       <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/>
       <path fill="currentColor" d="M12 3a9 9 0 000 18V3z"/>
     </symbol>
+    <symbol id="icon-qrcode" viewBox="0 0 24 24">
+      <rect x="3" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="14" y="3" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="14" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="3" y="14" width="7" height="7" fill="none" stroke="currentColor" stroke-width="2"/>
+      <rect x="6" y="6" width="1" height="1" fill="currentColor"/>
+      <rect x="17" y="6" width="1" height="1" fill="currentColor"/>
+      <rect x="6" y="17" width="1" height="1" fill="currentColor"/>
+      <path d="M17 17h.01M14 17h.01M17 14h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </symbol>
   </svg>
 
   <div class="popup-wrapper">
@@ -125,6 +135,10 @@
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
           <span class="action-btn__label">Tải lịch</span>
         </button>
+        <button type="button" id="qrExamBtn" class="action-btn action-btn--secondary action-btn--compact" title="Quét mã QR đồng bộ sang điện thoại">
+          <svg class="icon" aria-hidden="true"><use href="#icon-qrcode"/></svg>
+          <span class="action-btn__label">Quét QR</span>
+        </button>
         <button type="button" id="settingsButton" class="action-btn action-btn--ghost action-btn--compact" title="Lọc loại kỳ thi">
           <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
           <span class="action-btn__label">Lọc</span>
@@ -143,6 +157,10 @@
         <button type="button" id="downloadBtn" class="action-btn action-btn--primary" title="Tải lịch học (file .ics)">
           <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>
           <span class="action-btn__label">Tải lịch</span>
+        </button>
+        <button type="button" id="qrScheduleBtn" class="action-btn action-btn--secondary action-btn--compact" title="Quét mã QR đồng bộ sang điện thoại">
+          <svg class="icon" aria-hidden="true"><use href="#icon-qrcode"/></svg>
+          <span class="action-btn__label">Quét QR</span>
         </button>
         <button type="button" id="scheduleFilterBtn" class="action-btn action-btn--ghost action-btn--compact" title="Lọc lịch học theo khoảng thời gian">
           <svg class="icon" aria-hidden="true"><use href="#icon-sliders"/></svg>
@@ -342,6 +360,28 @@
       </div>
     </div>
 
+    <div id="qrSyncModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="qrSyncTitle">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="qrSyncTitle">Đồng bộ điện thoại qua QR</h3>
+          <button type="button" id="closeQrSyncModal" class="close-btn" aria-label="Đóng">
+            <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
+          </button>
+        </div>
+        <div class="modal-body qr-modal-body">
+          <div id="qrScopeContainer" class="qr-scope-selector">
+            <button type="button" class="qr-scope-btn" data-scope="today">Hôm nay</button>
+            <button type="button" class="qr-scope-btn active" data-scope="week">Tuần này</button>
+            <button type="button" class="qr-scope-btn" data-scope="next_week">Tuần tới</button>
+          </div>
+          <div id="qrMetaInfo" class="qr-meta-count"></div>
+          <div id="qrDisplayCard" class="qr-display-card"></div>
+          <p class="qr-instructions">Mở Camera điện thoại (iOS / Android) để quét mã và thêm sự kiện vào Lịch máy.</p>
+          <button type="button" id="copyIcalPayloadBtn" class="filter-btn" style="width:100%;max-width:240px;margin-top:2px;">Sao chép nội dung iCal</button>
+        </div>
+      </div>
+    </div>
+
     <footer class="popup-footer">
       <p class="popup-footer__line">
         <span>I</span>
@@ -364,6 +404,7 @@
     <script src="lib/grades.js"></script>
     <script src="lib/theme.js"></script>
     <script src="lib/agenda.js"></script>
+    <script src="lib/qrcode.js"></script>
     <script src="study-suggestions.js"></script>
     <script src="popup.js"></script>
   </div>
