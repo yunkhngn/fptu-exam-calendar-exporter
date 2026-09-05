@@ -414,3 +414,54 @@ test("a course between the two thresholds gets the warning chip, not danger", as
   assert.strictEqual(risk.textContent.trim(), "17% vắng", "rounded to the nearest percent");
   assert.strictEqual(window.document.querySelector("#scheduleTab .chip.risk-danger"), null);
 });
+
+test("a class card with a detail link is itself the click target, not a separate chip", async () => {
+  const { window, calls } = await boot();
+  const ev = {
+    title: "PRJ301", location: "DE-226", slot: "Slot 1", detailUrl: "https://fap.fpt.edu.vn/Report/ActivityDetail.aspx?id=1",
+    rawDate: { year: 2026, month: 9, day: 21, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 },
+  };
+  window.renderClassSchedule([ev]);
+  const card = window.document.querySelector("#scheduleTab .class-card");
+
+  assert.strictEqual(card.querySelector(".chip.link"), null, "no separate Chi tiết chip");
+  assert.strictEqual(card.classList.contains("class-card--clickable"), true);
+  assert.strictEqual(card.getAttribute("role"), "button");
+  assert.strictEqual(card.tabIndex, 0, "reachable by keyboard, like the anchor it replaces");
+  assert.match(card.getAttribute("aria-label"), /PRJ301/);
+
+  card.dispatchEvent(new window.Event("click"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(calls.tabsCreated.length, 1, "clicking anywhere on the card opens the detail page");
+  assert.strictEqual(calls.tabsCreated[0].url, ev.detailUrl);
+});
+
+test("Enter and Space on a focused card also open the detail page", async () => {
+  const { window, calls } = await boot();
+  const ev = {
+    title: "SWP391", location: "AL-R402", slot: "Slot 2", detailUrl: "https://fap.fpt.edu.vn/Report/ActivityDetail.aspx?id=2",
+    rawDate: { year: 2026, month: 9, day: 22, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 },
+  };
+  window.renderClassSchedule([ev]);
+  const card = window.document.querySelector("#scheduleTab .class-card");
+
+  card.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Enter" }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(calls.tabsCreated.length, 1);
+
+  card.dispatchEvent(new window.KeyboardEvent("keydown", { key: " " }));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  assert.strictEqual(calls.tabsCreated.length, 2, "Space opens it too");
+});
+
+test("a class card with no detail link is not clickable", async () => {
+  const { window } = await boot();
+  const ev = {
+    title: "MAD101", location: "BE-102", slot: "Slot 1",
+    rawDate: { year: 2026, month: 9, day: 21, startHour: 9, startMinute: 10, endHour: 11, endMinute: 30 },
+  };
+  window.renderClassSchedule([ev]);
+  const card = window.document.querySelector("#scheduleTab .class-card");
+  assert.strictEqual(card.classList.contains("class-card--clickable"), false);
+  assert.strictEqual(card.hasAttribute("role"), false);
+});

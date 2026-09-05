@@ -658,20 +658,10 @@ function renderClassSchedule(schedule) {
       tags.appendChild(chipRoom);
     }
 
-    // Detail link chip (third) — open detail page and refresh attendance from there
+    // The whole card opens the detail page — see the click/keydown wiring appended to
+    // `card` below, right after this event object's chips are all built.
     if (ev.detailUrl) {
-      const linkChip = document.createElement("a");
-      linkChip.href = ev.detailUrl;
-      linkChip.target = "_blank";
-      linkChip.rel = "noopener";
-      linkChip.className = "chip link";
-      const dotLink = document.createElement("span");
-      dotLink.className = "dot";
-      linkChip.appendChild(dotLink);
-      linkChip.appendChild(document.createTextNode(" Chi tiết"));
-
-      linkChip.addEventListener("click", async (e) => {
-        e.preventDefault();
+      const openDetail = async () => {
         const url = ev.detailUrl;
 
         // 1) Fetch the detail page directly and parse attendance
@@ -734,9 +724,19 @@ function renderClassSchedule(schedule) {
 
         // 3) Open the detail page for the user
         try { chrome.tabs.create({ url }); } catch (_) { window.open(url, '_blank'); }
-      });
+      };
 
-      tags.appendChild(linkChip);
+      card.classList.add("class-card--clickable");
+      card.tabIndex = 0;
+      card.setAttribute("role", "button");
+      card.setAttribute("aria-label", `Xem chi tiết ${ev.title || "buổi học"}`);
+      card.addEventListener("click", openDetail);
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          openDetail();
+        }
+      });
     }
 
     card.appendChild(head);

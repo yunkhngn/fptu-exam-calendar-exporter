@@ -723,6 +723,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 0;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 
 #scheduleTab .class-card__head {
@@ -820,6 +821,28 @@ html, body {
   font-size: 12px;
 }
 
+/* The whole card is the "Chi tiết" affordance now — clicking anywhere opens the FAP detail
+   page and refreshes attendance, instead of a separate chip competing for space in the row. */
+#scheduleTab .class-card--clickable {
+  cursor: pointer;
+}
+
+#scheduleTab .class-card--clickable:hover {
+  border-color: rgba(37, 99, 235, 0.28);
+  box-shadow:
+    0 2px 6px rgba(15, 23, 42, 0.08),
+    0 12px 26px rgba(37, 99, 235, 0.14);
+}
+
+#scheduleTab .class-card--clickable:active {
+  transform: translateY(1px);
+}
+
+#scheduleTab .class-card--clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 #scheduleTab .schedule-empty {
   text-align: center;
   color: var(--text-muted);
@@ -857,21 +880,6 @@ html, body {
   #examList.exams-two-col {
     flex-direction: column;
   }
-}
-
-#scheduleTab a.chip {
-  display: inline-flex;
-  text-decoration: none;
-}
-
-#scheduleTab .chip.link {
-  color: var(--accent);
-  border-color: #bfdbfe;
-  background: var(--accent-soft);
-}
-
-#scheduleTab .chip.link:hover {
-  background: #dbeafe;
 }
 
 /* Sync banners */
