@@ -112,7 +112,18 @@ start-up. The extension itself ships as plain files — npm is not part of the b
 
 ## Changelog
 
-### v3.3.2 (current)
+### v3.4.0 (current)
+- **Online classes parsed correctly.** FAP marks a session moved online with its own
+  `online-indicator` block, a "View Materials" link, and — when the move just happened — an
+  "Update Online" note plus a second time badge next to the Meet URL. The scraper now always
+  reads the `label-success` time badge (the one paired with attendance, present on every cell)
+  instead of trusting whichever time badge happened to come first in the markup, and flags the
+  class with `isOnline`. A room sharing a line with the next badge ("AL-L302 - Meet URL", no
+  `<br>` between them) no longer leaves a trailing dash in the stored room name.
+- **Online chip** on the class card, next to Slot and Room — a class keeps showing its
+  originally assigned room even when it is actually held online.
+- The "View Materials" link's href carries a bearer token; it is deliberately never read or
+  stored, so it cannot leak into exported `.ics` files or `chrome.storage.local`.
 - **Short labels are back** on the sync / multi-week / filter / delete buttons — icon-only
   turned out to read as unlabeled icons rather than buttons. They now size to icon + a short
   word ("Đồng bộ", "Nhiều tuần", "Lọc", "Xoá") instead of stretching, so **Tải lịch** still
@@ -147,7 +158,7 @@ start-up. The extension itself ships as plain files — npm is not part of the b
   `npm test` suite covering the ICS output, the merge logic, the scraper and popup start-up.
 - Dead code removed: two unreachable message handlers, `parseClassCell`, `sanitize-utils.js`
   and `shared-schedule.js`.
-- Manifest **3.3.2**; release zip `fptu-schedule.zip`
+- Manifest **3.4.0**; release zip `fptu-schedule.zip`
 
 ### v3.2.0
 - Exam study splash: white CTA buttons on cards; primary actions use blue accent
