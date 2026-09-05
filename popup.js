@@ -272,6 +272,160 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   }
+
+  // QR Sync Modal elements & event handlers
+  const qrExamBtn = document.getElementById("qrExamBtn");
+  const qrScheduleBtn = document.getElementById("qrScheduleBtn");
+  const qrSyncModal = document.getElementById("qrSyncModal");
+  const closeQrSyncModal = document.getElementById("closeQrSyncModal");
+  const qrScopeContainer = document.getElementById("qrScopeContainer");
+  const qrMetaInfo = document.getElementById("qrMetaInfo");
+  const qrDisplayCard = document.getElementById("qrDisplayCard");
+  const copyIcalPayloadBtn = document.getElementById("copyIcalPayloadBtn");
+
+  let currentQrMode = "schedule";
+  let currentQrScope = "week";
+  let currentQrPayload = "";
+
+  function updateQrSyncModal() {
+    if (!qrDisplayCard) return;
+
+    if (currentQrMode === "exam") {
+      if (qrScopeContainer) qrScopeContainer.style.display = "none";
+      let examEvents = [];
+      try {
+        const raw = localStorage.getItem("examSchedule");
+        if (raw) examEvents = JSON.parse(raw);
+      } catch (_) {}
+
+      if (typeof buildQrCalendarPayload === "function") {
+        currentQrPayload = buildQrCalendarPayload({ type: "exam", events: examEvents, now: new Date() });
+      } else {
+        currentQrPayload = "";
+      }
+
+      if (!currentQrPayload) {
+        if (qrMetaInfo) qrMetaInfo.textContent = "Không có kỳ thi sắp tới có phòng";
+        qrDisplayCard.innerHTML = '<div class="qr-empty-msg">Chưa có lịch thi sắp tới đã có phòng để tạo mã QR. Hãy đồng bộ từ FAP trước.</div>';
+        if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = true;
+      } else {
+        const count = (currentQrPayload.match(/BEGIN:VEVENT/g) || []).length;
+        if (qrMetaInfo) qrMetaInfo.textContent = `Tất cả môn thi sắp tới (${count} môn)`;
+        if (typeof QRCode !== "undefined" && QRCode.toSvgString) {
+          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 190, margin: 4, ecLevel: "M" });
+        }
+        if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = false;
+      }
+    } else {
+      // schedule mode
+      if (qrScopeContainer) {
+        qrScopeContainer.style.display = "flex";
+        const buttons = qrScopeContainer.querySelectorAll(".qr-scope-btn");
+        buttons.forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.scope === currentQrScope);
+        });
+      }
+
+      let classSchedule = [];
+      try {
+        const raw = localStorage.getItem("classSchedule");
+        if (raw) classSchedule = JSON.parse(raw);
+      } catch (_) {}
+
+      if (typeof buildQrCalendarPayload === "function") {
+        currentQrPayload = buildQrCalendarPayload({
+          type: "schedule",
+          events: classSchedule,
+          scope: currentQrScope,
+          now: new Date()
+        });
+      } else {
+        currentQrPayload = "";
+      }
+
+      if (!currentQrPayload) {
+        const scopeLabels = { today: "hôm nay", week: "tuần này", next_week: "tuần tới" };
+        const label = scopeLabels[currentQrScope] || currentQrScope;
+        if (qrMetaInfo) qrMetaInfo.textContent = `Không có tiết học ${label}`;
+        qrDisplayCard.innerHTML = `<div class="qr-empty-msg">Không có tiết học nào trong <strong>${label}</strong> để tạo mã QR.</div>`;
+        if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = true;
+      } else {
+        const count = (currentQrPayload.match(/BEGIN:VEVENT/g) || []).length;
+        const scopeLabels = { today: "Hôm nay", week: "Tuần này", next_week: "Tuần tới" };
+        const label = scopeLabels[currentQrScope] || currentQrScope;
+        if (qrMetaInfo) qrMetaInfo.textContent = `Lịch học ${label}: ${count} tiết`;
+        if (typeof QRCode !== "undefined" && QRCode.toSvgString) {
+          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 190, margin: 4, ecLevel: "M" });
+        }
+        if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = false;
+      }
+    }
+  }
+
+  function openQrSyncModal(mode) {
+    currentQrMode = mode;
+    if (mode === "schedule") currentQrScope = "week";
+    if (qrSyncModal) qrSyncModal.style.display = "block";
+    updateQrSyncModal();
+  }
+
+  function closeQrSyncModalFunc() {
+    if (qrSyncModal) qrSyncModal.style.display = "none";
+  }
+
+  if (qrExamBtn) {
+    qrExamBtn.addEventListener("click", () => openQrSyncModal("exam"));
+  }
+
+  if (qrScheduleBtn) {
+    qrScheduleBtn.addEventListener("click", () => openQrSyncModal("schedule"));
+  }
+
+  if (closeQrSyncModal) {
+    closeQrSyncModal.addEventListener("click", closeQrSyncModalFunc);
+  }
+
+  if (qrScopeContainer) {
+    const scopeBtns = qrScopeContainer.querySelectorAll(".qr-scope-btn");
+    scopeBtns.forEach((btn) => {
+      btn.addEventListener("click", () => {
+        currentQrScope = btn.dataset.scope;
+        updateQrSyncModal();
+      });
+    });
+  }
+
+  if (copyIcalPayloadBtn) {
+    copyIcalPayloadBtn.addEventListener("click", () => {
+      if (!currentQrPayload) return;
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(currentQrPayload).then(() => {
+          showToast("Đã sao chép nội dung iCal!");
+        }).catch(() => {
+          showToast("Không thể sao chép vào clipboard.");
+        });
+      } else {
+        showToast("Đã sao chép nội dung iCal!");
+      }
+    });
+  }
+
+  window.addEventListener("click", (e) => {
+    if (e.target === qrSyncModal) {
+      closeQrSyncModalFunc();
+    }
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && qrSyncModal && qrSyncModal.style.display === "block") {
+      closeQrSyncModalFunc();
+    }
+  });
+
+  window.openQrSyncModal = openQrSyncModal;
+  window.updateQrSyncModal = updateQrSyncModal;
+  window.closeQrSyncModal = closeQrSyncModalFunc;
+
   
   // Tab switching functionality - add this right after the other element declarations
   const upcomingTab = document.getElementById("upcomingTab");
