@@ -191,6 +191,15 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       sendResponse({ ok: false, error: String(e.message || e) });
     }
     return true;
+  } else if (msg.action === "fetchCourseGrade" || msg.type === "FETCH_COURSE_GRADE" || msg.action === "FETCH_COURSE_GRADE") {
+    fetchCourseGradeFromPage(msg.url)
+      .then((grade) => {
+        sendResponse({ ok: !!grade, grade });
+      })
+      .catch((e) => {
+        sendResponse({ ok: false, error: String(e.message || e) });
+      });
+    return true;
   }
 });
 }
@@ -662,6 +671,38 @@ function getGradePageControls(doc) {
   };
 }
 
+async function fetchCourseGradeFromPage(url) {
+  try {
+    const res = await fetch(url, { credentials: "include" });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const findFn = typeof findFapGradeTable === "function"
+      ? findFapGradeTable
+      : (typeof window !== "undefined" && typeof window.findFapGradeTable === "function"
+          ? window.findFapGradeTable
+          : (typeof globalThis !== "undefined" && typeof globalThis.findFapGradeTable === "function" ? globalThis.findFapGradeTable : null));
+    const table = findFn ? findFn(doc) : doc.querySelector('table[summary="Report"]');
+    if (!table) return null;
+    let parseFn = typeof parseFapGradeTable === "function"
+      ? parseFapGradeTable
+      : (typeof window !== "undefined" && typeof window.parseFapGradeTable === "function"
+          ? window.parseFapGradeTable
+          : (typeof globalThis !== "undefined" && typeof globalThis.parseFapGradeTable === "function" ? globalThis.parseFapGradeTable : null));
+    if (!parseFn) {
+      try {
+        const g = require("./lib/grades.js");
+        if (g && typeof g.parseFapGradeTable === "function") parseFn = g.parseFapGradeTable;
+      } catch (_) {}
+    }
+    if (!parseFn) return null;
+    return parseFn(table);
+  } catch (err) {
+    return null;
+  }
+}
+
 if (typeof window !== "undefined" && /StudentGrade\.aspx/i.test(window.location.pathname || "")) {
   setTimeout(() => {
     try {
@@ -684,6 +725,7 @@ if (typeof window !== "undefined") {
   window.extractCourseCodeAndName = extractCourseCodeAndName;
   window.getGradePageCourses = getGradePageCourses;
   window.getActiveCourseInfo = getActiveCourseInfo;
+  window.fetchCourseGradeFromPage = fetchCourseGradeFromPage;
 }
 
 if (typeof module !== "undefined" && module.exports) {
@@ -695,6 +737,7 @@ if (typeof module !== "undefined" && module.exports) {
     findFapGradeTable,
     extractCourseCodeAndName,
     getGradePageCourses,
-    getActiveCourseInfo
+    getActiveCourseInfo,
+    fetchCourseGradeFromPage
   };
 }

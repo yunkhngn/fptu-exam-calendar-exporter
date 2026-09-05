@@ -1134,6 +1134,79 @@ window.renderClassSchedule = renderClassSchedule;
     }
   }
 
+  async function fetchGradeInTab(tabId, url) {
+    // 1. Try sendMessage to content script in tab
+    const fromMsg = await new Promise((resolve) => {
+      chrome.tabs.sendMessage(
+        tabId,
+        { action: "fetchCourseGrade", type: "FETCH_COURSE_GRADE", url },
+        (resp) => {
+          if (chrome.runtime.lastError || !resp || !resp.ok || !resp.grade) {
+            resolve(null);
+          } else {
+            resolve(resp.grade);
+          }
+        }
+      );
+    });
+    if (fromMsg) return fromMsg;
+
+    // 2. Direct executeScript fallback inside tab context (with auth cookies)
+    if (chrome.scripting && chrome.scripting.executeScript) {
+      const fromScript = await new Promise((resolve) => {
+        chrome.scripting.executeScript(
+          {
+            target: { tabId },
+            func: async (fetchUrl) => {
+              try {
+                if (typeof window !== "undefined" && typeof window.fetchCourseGradeFromPage === "function") {
+                  return await window.fetchCourseGradeFromPage(fetchUrl);
+                }
+                const res = await fetch(fetchUrl, { credentials: "include" });
+                if (!res.ok) return null;
+                const html = await res.text();
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, "text/html");
+
+                const findFn = typeof window !== "undefined" && typeof window.findFapGradeTable === "function"
+                  ? window.findFapGradeTable
+                  : (typeof findFapGradeTable === "function" ? findFapGradeTable : null);
+                const parseFn = typeof window !== "undefined" && typeof window.parseFapGradeTable === "function"
+                  ? window.parseFapGradeTable
+                  : (typeof parseFapGradeTable === "function" ? parseFapGradeTable : null);
+
+                let table = findFn ? findFn(doc) : null;
+                if (!table) table = doc.querySelector('table[summary="Report"]');
+                if (!table) {
+                  const tables = Array.from(doc.querySelectorAll("table"));
+                  for (const tbl of tables) {
+                    const text = tbl.textContent || "";
+                    if (
+                      /Weight/i.test(text) &&
+                      /Value/i.test(text) &&
+                      (/Grade/i.test(text) || /Course total/i.test(text) || /Average/i.test(text) || /Passed|Not passed/i.test(text))
+                    ) {
+                      table = tbl;
+                      break;
+                    }
+                  }
+                }
+                if (!table) return null;
+                if (parseFn) return parseFn(table);
+              } catch (_) {}
+              return null;
+            },
+            args: [url]
+          },
+          (results) => resolve(results && results[0] && results[0].result)
+        );
+      });
+      if (fromScript) return fromScript;
+    }
+
+    return null;
+  }
+
   if (syncGradeBtn) {
     syncGradeBtn.addEventListener("click", () => {
       if (typeof chrome === "undefined" || !chrome.tabs) return;
@@ -1284,21 +1357,14 @@ window.renderClassSchedule = renderClassSchedule;
                 } catch (_) {}
               }
 
-              // Otherwise fetch URL with credentials
+              // Otherwise fetch URL via the active tab (same-origin with auth cookies)
               try {
                 const fetchUrl = c.href || `https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?course=${c.id}`;
-                const res = await fetch(fetchUrl, { credentials: "include" });
-                if (!res.ok) continue;
-                const html = await res.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, "text/html");
-                const table = (typeof findFapGradeTable === "function")
-                  ? findFapGradeTable(doc)
-                  : doc.querySelector('table[summary="Report"]');
-                if (!table) continue;
-
-                const parsed = (typeof parseFapGradeTable === "function") ? parseFapGradeTable(table) : null;
-                if (!parsed) continue;
+                const parsed = await fetchGradeInTab(activeTab.id, fetchUrl);
+                if (!parsed || !parsed.categories) {
+                  console.warn("Không lấy được điểm môn:", c.courseCode, fetchUrl);
+                  continue;
+                }
 
                 grades[c.courseCode] = {
                   courseCode: c.courseCode,

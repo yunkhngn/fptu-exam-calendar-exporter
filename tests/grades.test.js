@@ -11,7 +11,8 @@ const {
   extractCourseCodeAndName,
   getGradePageCourses,
   extractStudentGradeFromPage,
-  getGradePageControls
+  getGradePageControls,
+  fetchCourseGradeFromPage
 } = require("../content.js");
 
 const REAL_FAP_HTML = `
@@ -302,6 +303,50 @@ test("parse real screenshot FAP layout with 4 columns and bold active course", (
   assert.strictEqual(grade.categories[4].value, 7.6);
   assert.strictEqual(grade.average, 7.8);
   assert.strictEqual(grade.status, "Passed");
+});
+
+test("fetchCourseGradeFromPage fetches and parses course HTML in tab context", async () => {
+  const dom = new JSDOM();
+  global.DOMParser = dom.window.DOMParser;
+
+  const OTHER_COURSE_HTML = `
+    <table>
+      <thead><tr><th>GRADE ITEM</th><th>WEIGHT</th><th>VALUE</th><th>COMMENT</th></tr></thead>
+      <tbody>
+        <tr><td>Assignment 1</td><td>20.0 %</td><td>8.5</td><td></td></tr>
+        <tr><td>Total</td><td>20.0 %</td><td>8.5</td><td></td></tr>
+        <tr><td>Final Exam PE</td><td>80.0 %</td><td>9.0</td><td></td></tr>
+        <tr><td>Total</td><td>80.0 %</td><td>9.0</td><td></td></tr>
+      </tbody>
+      <tfoot>
+        <tr><td>AVERAGE</td><td>8.9</td></tr>
+        <tr><td>STATUS</td><td>PASSED</td></tr>
+      </tfoot>
+    </table>
+  `;
+
+  const originalFetch = global.fetch;
+  try {
+    global.fetch = async (url) => {
+      assert.ok(url.includes("course=100610"));
+      return {
+        ok: true,
+        text: async () => OTHER_COURSE_HTML
+      };
+    };
+
+    const res = await fetchCourseGradeFromPage("https://fap.fpt.edu.vn/Grade/StudentGrade.aspx?course=100610");
+    assert.ok(res, "parsed course grade");
+    assert.strictEqual(res.categories.length, 2);
+    assert.strictEqual(res.categories[0].category, "Assignment 1");
+    assert.strictEqual(res.categories[0].value, 8.5);
+    assert.strictEqual(res.categories[1].category, "Final Exam PE");
+    assert.strictEqual(res.categories[1].value, 9.0);
+    assert.strictEqual(res.average, 8.9);
+    assert.strictEqual(res.status, "Passed");
+  } finally {
+    global.fetch = originalFetch;
+  }
 });
 
 
