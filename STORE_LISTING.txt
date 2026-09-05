@@ -1,0 +1,89 @@
+================================================================================
+CHROME WEB STORE - WHAT'S NEW IN VERSION 3.6.0 (ENGLISH)
+[Ready to paste into Chrome Web Store Description / Release Notes]
+================================================================================
+
+WHAT'S NEW IN VERSION 3.6.0:
+
+• OFFLINE QR PHONE SYNC
+Instantly import your class and exam timetable to your phone. Scan the offline-generated QR code using your iPhone Camera or Android Google Lens to sync events directly with Apple Calendar or Google Calendar without cables or third-party apps.
+
+• UNIFIED EXPORT MODAL & ANTI-OVERFLOW DESIGN
+Consolidated file download and QR code features into a single, clean modal. Choose your preferred time range (Today, This Week, Next Week, or Upcoming Exams), download .ics files, or copy calendar data seamlessly. Optimized window dimensions eliminate bottom-edge overflow.
+
+• TRUE DARK MODE SUPPORT
+Comprehensive dark theme designed for night-time studying. Supports three modes: Automatic (follows system preference), Light, and Dark, adhering strictly to WCAG AA contrast standards.
+
+• TODAY'S AGENDA & SLOT COUNTDOWN
+A persistent hero card at the top of your schedule shows your next class slot, classroom number, instructor, and exact minute countdown. Features live status pulse indicators and same-day exam alerts.
+
+• STUDENT GRADES TRACKER & PASS PREDICTOR
+View your FAP grade breakdown, GPA, and completed credits directly in the extension. Use the interactive Target Grade slider to calculate the exact minimum Final Exam score you need to pass or reach your target grade.
+
+• DESKTOP SCHEDULE & EXAM REMINDERS
+Never miss a class with local advance notifications (15 or 30 minutes before classes; 1 hour or 1 day before exams) powered by Chrome Alarms.
+
+• STRICT PRIVACY & ZERO EMOJIS
+100% offline local processing. Student data never leaves your computer. Redesigned with clean, crisp SVG graphics and zero character emojis.
+
+
+================================================================================
+CHROME WEB STORE - NHỮNG ĐIỂM MỚI TRONG BẢN 3.6.0 (TIẾNG VIỆT)
+[Bản Tiếng Việt chuẩn bị sẵn để dán vào mô tả Chrome Web Store]
+================================================================================
+
+NHỮNG ĐIỂM MỚI TRONG PHIÊN BẢN 3.6.0:
+
+• ĐỒNG BỘ ĐIỆN THOẠI BẰNG MÃ QR (OFFLINE)
+Đồng bộ lịch học và lịch thi vào điện thoại chỉ trong 2 giây. Dùng Camera iPhone hoặc Google Lens trên Android quét mã QR tạo trực tiếp từ extension để thêm ngay vào Apple Calendar hoặc Google Calendar, không cần dây cáp và không cần đăng nhập bên thứ ba.
+
+• MODAL XUẤT LỊCH HỢP NHẤT & CHỐNG TRÀN
+Gộp tính năng Tải file .ics và Quét mã QR vào một cửa sổ popup trực quan duy nhất. Cho phép chọn phạm vi linh hoạt (Hôm nay, Tuần này, Tuần sau, hoặc Kỳ thi). Chiều cao popup được tối ưu chuẩn 580px, triệt tiêu hoàn toàn lỗi tràn viền.
+
+• GIAO DIỆN TỐI (TRUE DARK MODE)
+Bổ sung Dark Mode toàn diện, bảo vệ mắt khi tra cứu lịch vào ban đêm. Hỗ trợ 3 trạng thái: Tự động theo hệ thống, Sáng (Light) và Tối (Dark) đạt chuẩn tương phản WCAG AA.
+
+• TODAY'S AGENDA & ĐẾM NGƯỢC SLOT HỌC
+Card đầu trang hiển thị thông minh slot học kế tiếp trong ngày, số phòng, giảng viên và thời gian đếm ngược chính xác. Tích hợp đèn pulse báo trạng thái và cảnh báo môn thi trong ngày.
+
+• BẢNG ĐIỂM FAP & DỰ ĐOÁN ĐIỂM QUA MÔN (PASS PREDICTOR)
+Tra cứu bảng điểm từng môn, GPA và số tín chỉ tích lũy. Tích hợp thanh trượt tính điểm thi Final Exam tối thiểu cần đạt theo trọng số FPTU để đảm bảo qua môn hoặc đạt mục tiêu GPA mong muốn.
+
+• THÔNG BÁO NHẮC HỌC TRÊN MÁY TÍNH
+Nhận thông báo tự động trước giờ vào lớp 15 - 30 phút và trước ca thi 1 giờ - 1 ngày trực tiếp trên màn hình máy tính thông qua Chrome Alarms.
+
+• BẢO MẬT TUYỆT ĐỐI & THIẾT KẾ KHÔNG EMOJI
+Xử lý dữ liệu 100% local trên trình duyệt của bạn, không gửi thông tin ra ngoài. Giao diện thiết kế lại hoàn toàn với hệ thống icon vector sắc nét, không dùng emoji.
+
+
+================================================================================
+FULL CHROME WEB STORE DESCRIPTION TEMPLATE (ENGLISH & VIETNAMESE)
+================================================================================
+
+A modern Chrome extension that helps FPT University students easily view, extract, and manage their schedules from the FAP system.
+
+Key Features:
+- Synchronize weekly class timetables and exam schedules from FAP.
+- 1-Click offline QR code phone sync for Apple Calendar and Google Calendar.
+- Export standard .ics files compatible with iOS, macOS, Android, Windows, and Outlook.
+- Today's Agenda live banner with countdown to your upcoming class slot and room info.
+- Student Grade Tracker with interactive Pass Predictor and Target Grade calculator.
+- Attendance risk chips: visual alerts when absences approach the exam ban limit (15% - 20%).
+- Full Dark Mode support with WCAG AA compliance.
+- Advance desktop notifications for upcoming classes and exams.
+- 100% private and offline: student data never leaves your device.
+
+---
+
+Tiện ích mở rộng hiện đại dành cho sinh viên Đại học FPT giúp tra cứu, đồng bộ và quản lý thời khóa biểu từ FAP một cách dễ dàng và hiệu quả.
+
+Tính năng nổi bật:
+- Đồng bộ lịch học hàng tuần và lịch thi cuối kỳ trực tiếp từ FAP.
+- Quét mã QR offline 1 chạm để thêm lịch vào Apple Calendar (iPhone) và Google Calendar.
+- Xuất file chuẩn .ics tương thích với iOS, Android, macOS, Windows và Outlook.
+- Bảng tóm tắt Today's Agenda đếm ngược thời gian đến slot học kế tiếp kèm thông tin phòng học.
+- Tra cứu bảng điểm FAP và công cụ Dự đoán điểm thi Final Exam cần đạt để qua môn.
+- Cảnh báo nguy cơ cấm thi khi tỷ lệ vắng học chạm ngưỡng 15% - 20%.
+- Hỗ trợ giao diện tối (Dark Mode) chuẩn mực.
+- Thông báo nhắc nhở trước giờ học và giờ thi trên máy tính.
+- An toàn và bảo mật tuyệt đối: 100% xử lý tại máy khách, không lưu trữ thông tin cá nhân.
