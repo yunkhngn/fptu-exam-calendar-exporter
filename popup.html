@@ -323,7 +323,7 @@
     <div id="notificationModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="notificationModalTitle">
       <div class="modal-content">
         <div class="modal-header">
-          <h3 id="notificationModalTitle">Cài đặt thông báo</h3>
+          <h3 id="notificationModalTitle">Cài đặt &amp; Tiện ích</h3>
           <button type="button" id="closeNotificationModal" class="close-btn" aria-label="Đóng">
             <svg class="icon" aria-hidden="true"><use href="#icon-x"/></svg>
           </button>
@@ -358,6 +358,16 @@
 
           <div class="notif-test-row">
             <button type="button" id="testNotificationBtn" class="filter-btn">Thử thông báo</button>
+          </div>
+
+          <div class="notif-section" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));">
+            <label class="notif-switch-label">
+              <input type="checkbox" id="fapKeepSessionToggle" checked>
+              <span class="notif-switch-text"><strong>Giữ phiên đăng nhập FAP (Keep Session)</strong></span>
+            </label>
+            <div style="font-size: 11.5px; color: var(--text-muted, #94a3b8); margin-top: 4px; padding-left: 24px; line-height: 1.4;">
+              Tự động duy trì phiên FAP mỗi 7 phút khi có tab FAP đang mở để tránh bị đẩy về màn hình đăng nhập.
+            </div>
           </div>
 
           <div class="filter-actions">

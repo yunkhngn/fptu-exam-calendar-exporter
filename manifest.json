@@ -32,12 +32,11 @@
   "content_scripts": [
     {
       "matches": [
-        "*://fap.fpt.edu.vn/Exam/ScheduleExams.aspx*",
-        "*://fap.fpt.edu.vn/Schedule/*",
-        "*://fap.fpt.edu.vn/Report/*",
-        "*://fap.fpt.edu.vn/Grade/*"
+        "*://fap.fpt.edu.vn/*"
       ],
       "js": [
+        "lib/fap-keepalive.js",
+        "lib/fap-feedback.js",
         "lib/grades.js",
         "content.js"
       ],

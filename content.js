@@ -780,6 +780,40 @@ if (typeof window !== "undefined" && /StudentGrade\.aspx/i.test(window.location.
   }, 500);
 }
 
+if (typeof window !== "undefined" && typeof window.location !== "undefined") {
+  const isCandidate = typeof isFapSessionCandidate === "function"
+    ? isFapSessionCandidate(window.location.pathname)
+    : (typeof FapKeepAlive !== "undefined" && typeof FapKeepAlive.isFapSessionCandidate === "function"
+        ? FapKeepAlive.isFapSessionCandidate(window.location.pathname)
+        : !window.location.pathname.toLowerCase().includes("default.aspx") && !window.location.pathname.toLowerCase().includes("logout.aspx"));
+
+  if (isCandidate) {
+    try {
+      const createFn = typeof createFapKeepAlive === "function"
+        ? createFapKeepAlive
+        : (typeof FapKeepAlive !== "undefined" && FapKeepAlive.createFapKeepAlive ? FapKeepAlive.createFapKeepAlive : null);
+      if (createFn) {
+        const keepAlive = createFn();
+        keepAlive.start();
+        window.__fapKeepAlive = keepAlive;
+      }
+    } catch (_) {}
+  }
+}
+
+if (typeof window !== "undefined" && /Feedback/i.test(window.location.pathname || "")) {
+  setTimeout(() => {
+    try {
+      const injectFn = typeof injectFapFeedbackToolbar === "function"
+        ? injectFapFeedbackToolbar
+        : (typeof FapFeedback !== "undefined" && FapFeedback.injectFapFeedbackToolbar ? FapFeedback.injectFapFeedbackToolbar : null);
+      if (injectFn) {
+        injectFn(document);
+      }
+    } catch (_) {}
+  }, 400);
+}
+
 if (typeof window !== "undefined") {
   window.extractWeeklyScheduleFromTable = extractWeeklyScheduleFromTable;
   window.getScheduleOfWeekControls = getScheduleOfWeekControls;

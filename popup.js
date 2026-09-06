@@ -112,6 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const notifExam1Hour = document.getElementById("notifExam1Hour");
   const testNotificationBtn = document.getElementById("testNotificationBtn");
   const saveNotificationBtn = document.getElementById("saveNotificationBtn");
+  const fapKeepSessionToggle = document.getElementById("fapKeepSessionToggle");
 
   const DEFAULT_SETTINGS = (typeof DEFAULT_NOTIFICATION_SETTINGS !== "undefined")
     ? DEFAULT_NOTIFICATION_SETTINGS
@@ -224,12 +225,23 @@ document.addEventListener("DOMContentLoaded", () => {
   if (notificationBtn && notificationModal) {
     notificationBtn.addEventListener("click", () => {
       if (locStorage) {
-        locStorage.get(["notificationSettings"], (res) => {
+        locStorage.get(["notificationSettings", "fapKeepSessionEnabled"], (res) => {
           syncNotificationForm(res && res.notificationSettings);
+          if (fapKeepSessionToggle) {
+            fapKeepSessionToggle.checked = res && res.fapKeepSessionEnabled !== false;
+          }
           notificationModal.style.display = "block";
         });
       } else {
         notificationModal.style.display = "block";
+      }
+    });
+  }
+
+  if (fapKeepSessionToggle) {
+    fapKeepSessionToggle.addEventListener("change", () => {
+      if (locStorage) {
+        locStorage.set({ fapKeepSessionEnabled: fapKeepSessionToggle.checked });
       }
     });
   }
@@ -268,19 +280,21 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
 
+      const fapKeepSessionEnabled = fapKeepSessionToggle ? fapKeepSessionToggle.checked : true;
+
       if (locStorage) {
-        locStorage.set({ notificationSettings: current }, () => {
+        locStorage.set({ notificationSettings: current, fapKeepSessionEnabled }, () => {
           if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
             chrome.runtime.sendMessage({ type: "RESCHEDULE_ALARMS" }).catch(() => {});
           }
           updateNotificationButtonState(current.enabled);
           notificationModal.style.display = "none";
-          showToast("Đã lưu cài đặt thông báo!");
+          showToast("Đã lưu cài đặt!");
         });
       } else {
         updateNotificationButtonState(current.enabled);
         notificationModal.style.display = "none";
-        showToast("Đã lưu cài đặt thông báo!");
+        showToast("Đã lưu cài đặt!");
       }
     });
   }
