@@ -32,7 +32,7 @@
   - `createFapKeepAlive(options: { pingUrl?: string, intervalMs?: number, storage?: object, fetchFn?: Function }): { start(): void, stop(): void, ping(): Promise<{ ok: boolean, status: number }>, getStatus(): object }`
   - Default interval: 420,000 ms (7 mins).
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/fap-keepalive.test.js`:
 ```javascript
@@ -114,12 +114,12 @@ describe("FAP Keep-Alive Engine", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/fap-keepalive.test.js`
 Expected: FAIL with `Cannot find module '../lib/fap-keepalive.js'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Create `lib/fap-keepalive.js`:
 ```javascript
@@ -243,12 +243,12 @@ Create `lib/fap-keepalive.js`:
 });
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test tests/fap-keepalive.test.js`
 Expected: PASS all 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/fap-keepalive.js tests/fap-keepalive.test.js
@@ -272,7 +272,7 @@ git commit -m "feat(keepalive): implement FAP session heartbeat engine"
   - `fillFapFeedbackForm(container: Element, commentText?: string): { radiosFilled: number, commentFilled: boolean }`
   - `resetFapFeedbackForm(container: Element): { radiosCleared: number, commentCleared: boolean }`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Create `tests/fap-feedback.test.js`:
 ```javascript
@@ -394,12 +394,12 @@ describe("FAP Survey Feedback Core Engine", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `node --test tests/fap-feedback.test.js`
 Expected: FAIL with `Cannot find module '../lib/fap-feedback.js'`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 Create `lib/fap-feedback.js`:
 ```javascript
@@ -559,12 +559,12 @@ Create `lib/fap-feedback.js`:
 });
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `node --test tests/fap-feedback.test.js`
 Expected: PASS all 4 tests.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/fap-feedback.js tests/fap-feedback.test.js
@@ -588,7 +588,7 @@ git commit -m "feat(feedback): implement FAP survey feedback auto-fill core logi
     - Button: `btn-toggle-collapse` (`_` / `⚡ Khảo sát nhanh`)
     - Toast notifications for user feedback.
 
-- [ ] **Step 1: Write UI injection test**
+- [x] **Step 1: Write UI injection test**
 
 Create `tests/fap-feedback-ui.test.js`:
 ```javascript
@@ -603,20 +603,20 @@ describe("FAP Feedback Toolbar UI Injection", () => {
 });
 ```
 
-- [ ] **Step 2: Run test to verify it passes/fails**
+- [x] **Step 2: Run test to verify it passes/fails**
 
 Run: `node --test tests/fap-feedback-ui.test.js`
 
-- [ ] **Step 3: Add `injectFapFeedbackToolbar` with styles to `lib/fap-feedback.js`**
+- [x] **Step 3: Add `injectFapFeedbackToolbar` with styles to `lib/fap-feedback.js`**
 
 Implement `injectFapFeedbackToolbar` in `lib/fap-feedback.js` using self-contained CSS styles (scoped with `#fptu-feedback-toolbar`), including collapsed floating pill mode, toast popup, and event listeners.
 
-- [ ] **Step 4: Run tests to verify**
+- [x] **Step 4: Run tests to verify**
 
 Run: `node --test tests/fap-feedback*.test.js`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add lib/fap-feedback.js tests/fap-feedback-ui.test.js
@@ -634,21 +634,21 @@ git commit -m "feat(feedback): add floating toolbar UI and injection"
 - Modify: `popup.js` (persist `fapKeepSessionEnabled` toggle to `chrome.storage.local`)
 - Test: `tests/popup-boot.test.js`
 
-- [ ] **Step 1: Update `manifest.json`**
+- [x] **Step 1: Update `manifest.json`**
 Add `*://fap.fpt.edu.vn/Feedback/*` and load scripts.
 
-- [ ] **Step 2: Update `content.js`**
+- [x] **Step 2: Update `content.js`**
 Boot `FapKeepAlive` if URL is candidate; boot `injectFapFeedbackToolbar` if path matches `/Feedback/`.
 
-- [ ] **Step 3: Update `popup.html` & `popup.js`**
+- [x] **Step 3: Update `popup.html` & `popup.js`**
 Add toggle checkbox `#fap-keep-session-toggle`, sync with `chrome.storage.local.get/set`.
 
-- [ ] **Step 4: Run all tests**
+- [x] **Step 4: Run all tests**
 
 Run: `node --test tests/*.test.js`
 Expected: 100% tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add manifest.json content.js popup.html popup.js
@@ -663,13 +663,13 @@ git commit -m "feat(integration): wire FAP keep-alive and feedback toolbar into 
 - Modify: `walkthrough.md`
 - Create: `fptu-schedule.zip`
 
-- [ ] **Step 1: Run complete test suite**
+- [x] **Step 1: Run complete test suite**
 Run: `node --test tests/*.test.js`
 
-- [ ] **Step 2: Package extension**
+- [x] **Step 2: Package extension**
 Run: `zip -r fptu-schedule.zip manifest.json *.png popup.html popup.js popup.css background.js content.js lib/`
 
-- [ ] **Step 3: Commit and update walkthrough**
+- [x] **Step 3: Commit and update walkthrough**
 ```bash
 git add fptu-schedule.zip docs/superpowers/plans/2026-09-06-fap-survival-kit.md
 git commit -m "chore(release): complete v3.7.0 FAP Survival Kit features"
