@@ -721,6 +721,64 @@ test("Export & QR sync modal opens from downloadBtn and exportBtn, renders SVG Q
   assert.strictEqual(qrSyncModal.style.display, "none", "modal closes on close button click");
 });
 
+test("week timetable matrix view toggle switches between list and week view", async () => {
+  const { dom, window } = await boot();
+  const doc = dom.window.document;
+  const viewListBtn = doc.getElementById("viewListBtn");
+  const viewWeekBtn = doc.getElementById("viewWeekBtn");
+  assert.ok(viewListBtn, "viewListBtn exists");
+  assert.ok(viewWeekBtn, "viewWeekBtn exists");
+  assert.strictEqual(viewListBtn.classList.contains("active"), true);
+  assert.strictEqual(viewWeekBtn.classList.contains("active"), false);
+
+  const schedule = [
+    {
+      title: "EXE201",
+      slot: "Slot 2",
+      isOnline: true,
+      rawDate: { year: 2026, month: 9, day: 11, startHour: 10, startMinute: 0, endHour: 12, endMinute: 20 },
+    },
+    {
+      title: "MLN111",
+      slot: "Slot 3",
+      location: "AL-R402",
+      isOnline: false,
+      rawDate: { year: 2026, month: 9, day: 7, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 },
+    },
+  ];
+
+  window.renderClassSchedule(schedule);
+
+  // In list view: schedule-grid exists
+  assert.ok(doc.querySelector("#scheduleTab .schedule-grid"));
+  assert.strictEqual(doc.querySelector("#scheduleTab .week-matrix-container"), null);
+
+  // Click week view button
+  viewWeekBtn.click();
+  assert.strictEqual(viewWeekBtn.classList.contains("active"), true);
+  assert.strictEqual(viewListBtn.classList.contains("active"), false);
+  assert.strictEqual(window.localStorage.getItem("fptu_schedule_view_mode"), "week");
+
+  // In week view: week-matrix-container exists
+  assert.ok(doc.querySelector("#scheduleTab .week-matrix-container"));
+  assert.strictEqual(doc.querySelector("#scheduleTab .schedule-grid"), null);
+
+  const weekMatrix = doc.querySelector("#scheduleTab .week-matrix");
+  assert.ok(weekMatrix, "week matrix grid rendered");
+
+  // Check prev/next week buttons exist
+  assert.ok(doc.getElementById("prevWeekBtn"));
+  assert.ok(doc.getElementById("nextWeekBtn"));
+  assert.ok(doc.getElementById("todayWeekBtn"));
+
+  // Click back to list view
+  viewListBtn.click();
+  assert.strictEqual(viewListBtn.classList.contains("active"), true);
+  assert.strictEqual(window.localStorage.getItem("fptu_schedule_view_mode"), "list");
+  assert.ok(doc.querySelector("#scheduleTab .schedule-grid"));
+});
+
+
 
 
 

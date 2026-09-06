@@ -1194,6 +1194,229 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
 }
 window.renderTodayAgendaBanner = renderTodayAgendaBanner;
 
+let currentScheduleViewMode = "list";
+try {
+  const savedViewMode = localStorage.getItem("fptu_schedule_view_mode");
+  if (savedViewMode === "week" || savedViewMode === "list") {
+    currentScheduleViewMode = savedViewMode;
+  }
+} catch (_) {}
+let currentWeekOffset = 0;
+
+function syncScheduleViewToggleButtons() {
+  const viewListBtn = document.getElementById("viewListBtn");
+  const viewWeekBtn = document.getElementById("viewWeekBtn");
+  if (!viewListBtn || !viewWeekBtn) return;
+  if (currentScheduleViewMode === "week") {
+    viewListBtn.classList.remove("active");
+    viewWeekBtn.classList.add("active");
+  } else {
+    viewListBtn.classList.add("active");
+    viewWeekBtn.classList.remove("active");
+  }
+}
+
+function renderClassScheduleWeek(container, stored) {
+  const getWeekRange = typeof getWeekDateRange === "function" ? getWeekDateRange : (window.getWeekDateRange || globalThis.getWeekDateRange);
+  const groupWeek = typeof groupScheduleByWeekAndSlot === "function" ? groupScheduleByWeekAndSlot : (window.groupScheduleByWeekAndSlot || globalThis.groupScheduleByWeekAndSlot);
+  if (!getWeekRange || !groupWeek) return;
+
+  const weekRange = getWeekRange(new Date(), currentWeekOffset);
+  const grouped = groupWeek(stored, weekRange);
+
+  const weekContainer = document.createElement("div");
+  weekContainer.className = "week-matrix-container";
+
+  // Navigation Header
+  const nav = document.createElement("div");
+  nav.className = "week-matrix-nav";
+
+  const controls = document.createElement("div");
+  controls.className = "week-matrix-nav__controls";
+
+  const prevBtn = document.createElement("button");
+  prevBtn.type = "button";
+  prevBtn.id = "prevWeekBtn";
+  prevBtn.className = "week-matrix-nav__btn";
+  prevBtn.title = "Tuần trước";
+  prevBtn.innerHTML = '<svg class="icon icon--xs" aria-hidden="true"><use href="#icon-chevron-left"/></svg>';
+  prevBtn.addEventListener("click", () => {
+    currentWeekOffset -= 1;
+    renderClassSchedule(stored);
+  });
+
+  const nextBtn = document.createElement("button");
+  nextBtn.type = "button";
+  nextBtn.id = "nextWeekBtn";
+  nextBtn.className = "week-matrix-nav__btn";
+  nextBtn.title = "Tuần sau";
+  nextBtn.innerHTML = '<svg class="icon icon--xs" aria-hidden="true"><use href="#icon-chevron-right"/></svg>';
+  nextBtn.addEventListener("click", () => {
+    currentWeekOffset += 1;
+    renderClassSchedule(stored);
+  });
+
+  controls.appendChild(prevBtn);
+  controls.appendChild(nextBtn);
+
+  const title = document.createElement("div");
+  title.className = "week-matrix-nav__title";
+  const two = (n) => String(n).padStart(2, "0");
+  const dStart = weekRange.startMonday;
+  const dEnd = weekRange.endSunday;
+  title.textContent = `${two(dStart.getDate())}/${two(dStart.getMonth() + 1)} – ${two(dEnd.getDate())}/${two(dEnd.getMonth() + 1)}/${dEnd.getFullYear()}`;
+
+  const todayBtn = document.createElement("button");
+  todayBtn.type = "button";
+  todayBtn.id = "todayWeekBtn";
+  todayBtn.className = "week-matrix-nav__today-btn";
+  todayBtn.textContent = "Hôm nay";
+  todayBtn.addEventListener("click", () => {
+    currentWeekOffset = 0;
+    renderClassSchedule(stored);
+  });
+
+  nav.appendChild(controls);
+  nav.appendChild(title);
+  nav.appendChild(todayBtn);
+  weekContainer.appendChild(nav);
+
+  // Matrix Grid
+  const matrix = document.createElement("div");
+  matrix.className = "week-matrix";
+
+  // Corner cell
+  const corner = document.createElement("div");
+  corner.className = "week-matrix__head-cell";
+  corner.innerHTML = '<span class="week-matrix__day-name">Slot</span>';
+  matrix.appendChild(corner);
+
+  // Header row (7 days)
+  const DAY_LABELS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+  weekRange.days.forEach((d, idx) => {
+    const headCell = document.createElement("div");
+    headCell.className = "week-matrix__head-cell";
+    if (d.isToday) headCell.classList.add("is-today");
+
+    const nameSpan = document.createElement("span");
+    nameSpan.className = "week-matrix__day-name";
+    nameSpan.textContent = DAY_LABELS[idx];
+
+    const numSpan = document.createElement("span");
+    numSpan.className = "week-matrix__day-num";
+    numSpan.textContent = two(d.day);
+
+    headCell.appendChild(nameSpan);
+    headCell.appendChild(numSpan);
+    matrix.appendChild(headCell);
+  });
+
+  // 6 Slot rows
+  const SLOTS = [
+    { slot: 1, time: "07:30" },
+    { slot: 2, time: "10:00" },
+    { slot: 3, time: "12:50" },
+    { slot: 4, time: "15:20" },
+    { slot: 5, time: "17:50" },
+    { slot: 6, time: "20:20" },
+  ];
+
+  SLOTS.forEach((st) => {
+    const slotLabelCell = document.createElement("div");
+    slotLabelCell.className = "week-matrix__slot-cell";
+
+    const sName = document.createElement("span");
+    sName.className = "week-matrix__slot-name";
+    sName.textContent = `Slot ${st.slot}`;
+
+    const sTime = document.createElement("span");
+    sTime.className = "week-matrix__slot-time";
+    sTime.textContent = st.time;
+
+    slotLabelCell.appendChild(sName);
+    slotLabelCell.appendChild(sTime);
+    matrix.appendChild(slotLabelCell);
+
+    weekRange.days.forEach((d) => {
+      const cell = document.createElement("div");
+      cell.className = "week-matrix__cell";
+      if (d.isToday) cell.classList.add("is-today");
+
+      const key = `${d.isoDay}_${st.slot}`;
+      const events = grouped[key] || [];
+
+      if (events.length > 0) {
+        cell.classList.add("week-cell--has-class");
+        events.forEach((ev) => {
+          const card = document.createElement("div");
+          card.className = "week-matrix__card";
+          card.tabIndex = 0;
+          card.setAttribute("role", "button");
+          card.setAttribute("aria-label", `${ev.title || "Môn học"} Slot ${st.slot}`);
+
+          const header = document.createElement("div");
+          header.className = "week-matrix__card-header";
+
+          const code = document.createElement("span");
+          code.className = "week-matrix__card-code";
+          code.textContent = ev.title || "Môn học";
+
+          const dot = document.createElement("span");
+          const rawStatus = (ev.attendanceStatus || "not yet").toLowerCase();
+          let dotClass = "notyet";
+          if (rawStatus.includes("absent")) dotClass = "absent";
+          else if (rawStatus.includes("attended")) dotClass = "attended";
+          dot.className = `week-matrix__dot ${dotClass}`;
+
+          header.appendChild(code);
+          header.appendChild(dot);
+          card.appendChild(header);
+
+          const loc = document.createElement("span");
+          loc.className = "week-matrix__card-loc";
+          if (ev.isOnline) {
+            loc.className += " online";
+            loc.textContent = "Online";
+          } else if (ev.location) {
+            loc.textContent = (ev.location || "").replace(/\s*-\s*$/, "").trim();
+          }
+          card.appendChild(loc);
+
+          if (ev.rawDate && typeof ev.rawDate.startHour === "number") {
+            const time = document.createElement("span");
+            time.className = "week-matrix__card-time";
+            time.textContent = `${two(ev.rawDate.startHour)}:${two(ev.rawDate.startMinute)}`;
+            card.appendChild(time);
+          }
+
+          if (ev.detailUrl) {
+            const openDetail = () => {
+              const url = ev.detailUrl;
+              try { chrome.tabs.create({ url }); } catch (_) { window.open(url, "_blank"); }
+            };
+            card.addEventListener("click", openDetail);
+            card.addEventListener("keydown", (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                openDetail();
+              }
+            });
+          }
+
+          cell.appendChild(card);
+        });
+      }
+
+      matrix.appendChild(cell);
+    });
+  });
+
+  weekContainer.appendChild(matrix);
+  container.appendChild(weekContainer);
+}
+
+let lastRenderedClassSchedule = [];
+
 function renderClassSchedule(schedule) {
   const container = document.getElementById("scheduleTab");
   if (!container) return;
@@ -1203,9 +1426,13 @@ function renderClassSchedule(schedule) {
 
   // The range filter only narrows what is shown; nothing is removed from storage.
   const stored = Array.isArray(schedule) ? schedule : [];
+  if (stored.length > 0) {
+    lastRenderedClassSchedule = stored;
+  }
   const mode = getClassRangeFilter();
   const visible = filterClassScheduleByRange(stored, mode);
   syncClassFilterButton();
+  syncScheduleViewToggleButtons();
 
   // Absence rate is a fact about the course, not about the currently filtered view — computed
   // from the full stored schedule so it stays accurate even when filtered down to "Hôm nay".
@@ -1252,6 +1479,19 @@ function renderClassSchedule(schedule) {
     }
   }
 
+  if (stored.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "schedule-empty";
+    empty.textContent = "Chưa có lịch học. Nhấn «Đồng bộ lịch học» để tải.";
+    container.appendChild(empty);
+    return;
+  }
+
+  if (currentScheduleViewMode === "week") {
+    renderClassScheduleWeek(container, stored);
+    return;
+  }
+
   // Normalize and sort schedule by date/time ascending
   const toMillis = (ev) => {
     if (ev && ev.rawDate) {
@@ -1269,9 +1509,7 @@ function renderClassSchedule(schedule) {
   if (visible.length === 0) {
     const empty = document.createElement("div");
     empty.className = "schedule-empty";
-    empty.textContent = stored.length
-      ? "Không có tiết học nào trong khoảng đã lọc. Đổi bộ lọc để xem thêm."
-      : "Chưa có lịch học. Nhấn «Đồng bộ lịch học» để tải.";
+    empty.textContent = "Không có tiết học nào trong khoảng đã lọc. Đổi bộ lọc để xem thêm.";
     container.appendChild(empty);
     return;
   }
@@ -1509,6 +1747,36 @@ window.renderClassSchedule = renderClassSchedule;
       } catch (_) {
         window.open(url, "_blank");
       }
+    });
+  }
+
+  // View toggle buttons (List vs Week)
+  const viewListBtn = document.getElementById("viewListBtn");
+  const viewWeekBtn = document.getElementById("viewWeekBtn");
+  if (viewListBtn) {
+    viewListBtn.addEventListener("click", () => {
+      currentScheduleViewMode = "list";
+      try { localStorage.setItem("fptu_schedule_view_mode", "list"); } catch (_) {}
+      syncScheduleViewToggleButtons();
+      let saved = [];
+      try { saved = JSON.parse(localStorage.getItem("classSchedule") || "[]"); } catch (_) {}
+      if ((!saved || saved.length === 0) && lastRenderedClassSchedule.length > 0) {
+        saved = lastRenderedClassSchedule;
+      }
+      renderClassSchedule(saved);
+    });
+  }
+  if (viewWeekBtn) {
+    viewWeekBtn.addEventListener("click", () => {
+      currentScheduleViewMode = "week";
+      try { localStorage.setItem("fptu_schedule_view_mode", "week"); } catch (_) {}
+      syncScheduleViewToggleButtons();
+      let saved = [];
+      try { saved = JSON.parse(localStorage.getItem("classSchedule") || "[]"); } catch (_) {}
+      if ((!saved || saved.length === 0) && lastRenderedClassSchedule.length > 0) {
+        saved = lastRenderedClassSchedule;
+      }
+      renderClassSchedule(saved);
     });
   }
 
