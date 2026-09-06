@@ -1458,8 +1458,8 @@ function renderClassSchedule(schedule) {
   syncClassFilterButton();
   syncScheduleViewToggleButtons();
 
-  // Absence rate is a fact about the course, not about the currently filtered view — computed
-  // from the full stored schedule so it stays accurate even when filtered down to "Hôm nay".
+  // Absence rate and detailed attendance stats per course
+  const attendanceStatsByCourse = typeof computeCourseAttendanceStats === "function" ? computeCourseAttendanceStats(stored) : {};
   const attendanceByCourse = computeAttendanceByCourse(stored);
 
   // Update tab label with count
@@ -1709,14 +1709,14 @@ function renderClassSchedule(schedule) {
     const meta = document.createElement("div");
     meta.className = "class-meta";
 
-    const addMeta = (label, value) => {
+    const addMeta = (label, value, valueClass = "") => {
       const row = document.createElement("div");
       row.className = "meta-row";
       const lab = document.createElement("span");
       lab.className = "meta-label";
       lab.textContent = `${label}:`;
       const val = document.createElement("span");
-      val.className = "meta-value";
+      val.className = "meta-value" + (valueClass ? ` ${valueClass}` : "");
       val.textContent = value || "—";
       row.appendChild(lab);
       row.appendChild(val);
@@ -1726,6 +1726,30 @@ function renderClassSchedule(schedule) {
     if (ev.rawDate) {
       addMeta("Ngày", fmtDate(ev.rawDate));
       addMeta("Giờ", `${fmtTime(ev.rawDate.startHour, ev.rawDate.startMinute)} – ${fmtTime(ev.rawDate.endHour, ev.rawDate.endMinute)}`);
+    }
+
+    const courseStats = attendanceStatsByCourse[ev.title];
+    if (courseStats && courseStats.totalGraded > 0) {
+      const pct = Math.round(courseStats.rate * 1000) / 10;
+      let attText = `${courseStats.attended} có mặt • ${courseStats.absent} vắng (${pct}%)`;
+      let statusClass = "attendance-safe";
+      if (courseStats.rate >= 0.2 || (courseStats.hasFullSchedule && courseStats.remainingAbsent <= 0)) {
+        statusClass = "attendance-danger";
+      } else if (courseStats.rate >= 0.15) {
+        statusClass = "attendance-warning";
+      }
+
+      if (courseStats.hasFullSchedule) {
+        if (courseStats.remainingAbsent > 0) {
+          attText += ` • Còn được nghỉ ${courseStats.remainingAbsent} buổi`;
+        } else if (courseStats.remainingAbsent === 0) {
+          attText += ` • ⚠️ Đã chạm trần 20%, không được nghỉ thêm`;
+        } else {
+          attText += ` • ⛔ Nguy cơ cấm thi (quá 20%)`;
+        }
+      }
+
+      addMeta("Điểm danh", attText, statusClass);
     }
 
     card.appendChild(meta);

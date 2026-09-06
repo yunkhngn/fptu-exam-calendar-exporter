@@ -811,6 +811,60 @@ test("popup boots with saved classSchedule in localStorage and renders list imme
   assert.ok(doc.querySelector("#scheduleTab .class-card"), "class card renders on boot");
 });
 
+test("class card displays attendance summary row when graded sessions exist and omits when not yet", async () => {
+  const { dom, window } = await boot();
+  const doc = dom.window.document;
+
+  // Schedule with 12 sessions for PRM393 (10 attended, 1 absent, 1 not yet) -> full schedule (>= 10), maxAllowed = 2, remaining = 1
+  // and 1 session for EXE201 with 'not yet'
+  const schedule = [
+    ...Array(10).fill(null).map(() => ({
+      title: "PRM393",
+      slot: "Slot 3",
+      attendanceStatus: "Attended",
+      rawDate: { year: 2026, month: 9, day: 8, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 }
+    })),
+    {
+      title: "PRM393",
+      slot: "Slot 3",
+      attendanceStatus: "Absent",
+      rawDate: { year: 2026, month: 9, day: 9, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 }
+    },
+    {
+      title: "PRM393",
+      slot: "Slot 3",
+      attendanceStatus: "Not yet",
+      rawDate: { year: 2026, month: 9, day: 10, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 }
+    },
+    {
+      title: "EXE201",
+      slot: "Slot 1",
+      attendanceStatus: "Not yet",
+      rawDate: { year: 2026, month: 9, day: 11, startHour: 7, startMinute: 30, endHour: 9, endMinute: 50 }
+    }
+  ];
+
+  window.renderClassSchedule(schedule);
+
+  const prmCard = Array.from(doc.querySelectorAll(".class-card")).find(c => c.querySelector(".class-code")?.textContent.includes("PRM393"));
+  assert.ok(prmCard, "PRM393 card rendered");
+
+  const metaRows = Array.from(prmCard.querySelectorAll(".meta-row"));
+  const attRow = metaRows.find(r => r.querySelector(".meta-label")?.textContent.includes("Điểm danh"));
+  assert.ok(attRow, "Điểm danh row exists on PRM393 card");
+
+  const valText = attRow.querySelector(".meta-value").textContent;
+  assert.ok(valText.includes("10 có mặt"), "shows 10 có mặt");
+  assert.ok(valText.includes("1 vắng"), "shows 1 vắng");
+  assert.ok(valText.includes("Còn được nghỉ 1 buổi"), "shows remaining allowed absence");
+
+  // EXE201 only has 'not yet', so its card should NOT have a 'Điểm danh' row
+  const exeCard = Array.from(doc.querySelectorAll(".class-card")).find(c => c.querySelector(".class-code")?.textContent.includes("EXE201"));
+  assert.ok(exeCard, "EXE201 card rendered");
+  const exeAttRow = Array.from(exeCard.querySelectorAll(".meta-row")).find(r => r.querySelector(".meta-label")?.textContent.includes("Điểm danh"));
+  assert.strictEqual(exeAttRow, undefined, "no Điểm danh row on course with 0 graded sessions");
+});
+
 
 
 

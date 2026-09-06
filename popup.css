@@ -408,6 +408,28 @@ html, body {
   word-break: break-word;
 }
 
+.meta-value.attendance-safe {
+  color: var(--text-muted);
+}
+
+.meta-value.attendance-warning {
+  color: #d97706;
+  font-weight: 650;
+}
+
+.meta-value.attendance-danger {
+  color: var(--danger);
+  font-weight: 700;
+}
+
+[data-theme="dark"] .meta-value.attendance-warning {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .meta-value.attendance-danger {
+  color: #f87171;
+}
+
 .tag {
   display: inline-flex;
   align-items: center;
