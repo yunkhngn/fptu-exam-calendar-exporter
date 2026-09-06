@@ -2230,19 +2230,19 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
   background: var(--bg-subtle);
   padding: 3px;
   border-radius: var(--radius-pill);
   border: 1px solid var(--border);
   width: 100%;
-  max-width: 290px;
+  max-width: 380px;
 }
 
 .qr-scope-btn {
   flex: 1;
-  padding: 5px 8px;
-  font-size: 11.5px;
+  padding: 5px 6px;
+  font-size: 11px;
   font-weight: 600;
   border-radius: var(--radius-pill);
   border: none;
@@ -2251,6 +2251,7 @@ html, body {
   cursor: pointer;
   transition: all 0.15s ease;
   white-space: nowrap;
+  text-align: center;
 }
 
 .qr-scope-btn:hover {
@@ -2273,23 +2274,23 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 176px;
-  height: 176px;
+  width: 184px;
+  height: 184px;
   margin: 2px 0;
   box-sizing: border-box;
 }
 
 .qr-display-card svg {
   display: block;
-  width: 156px;
-  height: 156px;
+  width: 164px;
+  height: 164px;
 }
 
 .qr-instructions {
   font-size: 11.5px;
   color: var(--text-muted);
   line-height: 1.35;
-  max-width: 280px;
+  max-width: 340px;
   margin: 0;
 }
 

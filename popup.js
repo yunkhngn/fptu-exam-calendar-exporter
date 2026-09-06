@@ -296,6 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const qrDisplayCard = document.getElementById("qrDisplayCard");
   const copyIcalPayloadBtn = document.getElementById("copyIcalPayloadBtn");
   const modalDownloadIcsBtn = document.getElementById("modalDownloadIcsBtn");
+  const qrInstructions = document.getElementById("qrInstructions");
 
   let currentQrMode = "schedule";
   let currentQrScope = "week";
@@ -394,7 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (_) {}
 
       if (typeof buildQrCalendarPayload === "function") {
-        currentQrPayload = buildQrCalendarPayload({ type: "exam", events: examEvents, now: new Date() });
+        currentQrPayload = buildQrCalendarPayload({ type: "exam", events: examEvents, now: new Date(), maxEvents: 16 });
       } else {
         currentQrPayload = "";
       }
@@ -402,13 +403,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!currentQrPayload) {
         if (qrMetaInfo) qrMetaInfo.textContent = "Không có kỳ thi sắp tới có phòng";
         qrDisplayCard.innerHTML = '<div class="qr-empty-msg">Chưa có lịch thi sắp tới đã có phòng để tạo mã QR. Hãy đồng bộ từ FAP trước.</div>';
+        if (qrInstructions) qrInstructions.textContent = "Quét bằng Camera điện thoại hoặc tải file .ics về máy tính.";
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = true;
         if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = true;
       } else {
         const count = (currentQrPayload.match(/BEGIN:VEVENT/g) || []).length;
         if (qrMetaInfo) qrMetaInfo.textContent = `Tất cả môn thi sắp tới (${count} môn)`;
+        if (qrInstructions) qrInstructions.textContent = "Quét bằng Camera điện thoại để thêm vào Lịch, hoặc tải file .ics về máy.";
         if (typeof QRCode !== "undefined" && QRCode.toSvgString) {
-          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 156, margin: 4, ecLevel: "M" });
+          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 164, margin: 4, ecLevel: "L" });
         }
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = false;
         if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = false;
@@ -429,31 +432,67 @@ document.addEventListener("DOMContentLoaded", () => {
         if (raw) classSchedule = JSON.parse(raw);
       } catch (_) {}
 
+      const scopeLabels = {
+        today: "hôm nay",
+        week: "tuần này",
+        next_week: "tuần tới",
+        "2weeks": "2 tuần tới",
+        all: "tất cả"
+      };
+      const scopeDisplayLabels = {
+        today: "Hôm nay",
+        week: "Tuần này",
+        next_week: "Tuần tới",
+        "2weeks": "2 tuần tới",
+        all: "Tất cả"
+      };
+      const label = scopeDisplayLabels[currentQrScope] || currentQrScope;
+
+      let fullPayload = "";
       if (typeof buildQrCalendarPayload === "function") {
+        fullPayload = buildQrCalendarPayload({
+          type: "schedule",
+          events: classSchedule,
+          scope: currentQrScope,
+          now: new Date(),
+          maxEvents: 0
+        });
         currentQrPayload = buildQrCalendarPayload({
           type: "schedule",
           events: classSchedule,
           scope: currentQrScope,
-          now: new Date()
+          now: new Date(),
+          maxEvents: 16
         });
       } else {
         currentQrPayload = "";
       }
 
       if (!currentQrPayload) {
-        const scopeLabels = { today: "hôm nay", week: "tuần này", next_week: "tuần tới" };
-        const label = scopeLabels[currentQrScope] || currentQrScope;
-        if (qrMetaInfo) qrMetaInfo.textContent = `Không có tiết học ${label}`;
-        qrDisplayCard.innerHTML = `<div class="qr-empty-msg">Không có tiết học nào trong <strong>${label}</strong> để tạo mã QR.</div>`;
+        const lowerLabel = scopeLabels[currentQrScope] || currentQrScope;
+        if (qrMetaInfo) qrMetaInfo.textContent = `Không có tiết học ${lowerLabel}`;
+        qrDisplayCard.innerHTML = `<div class="qr-empty-msg">Không có tiết học nào trong <strong>${lowerLabel}</strong> để tạo mã QR.</div>`;
+        if (qrInstructions) qrInstructions.textContent = "Quét bằng Camera điện thoại hoặc tải file .ics về máy tính.";
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = true;
         if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = true;
       } else {
         const count = (currentQrPayload.match(/BEGIN:VEVENT/g) || []).length;
-        const scopeLabels = { today: "Hôm nay", week: "Tuần này", next_week: "Tuần tới" };
-        const label = scopeLabels[currentQrScope] || currentQrScope;
-        if (qrMetaInfo) qrMetaInfo.textContent = `Lịch học ${label}: ${count} tiết`;
+        const totalCount = (fullPayload.match(/BEGIN:VEVENT/g) || []).length;
+
+        if (totalCount > count) {
+          if (qrMetaInfo) qrMetaInfo.textContent = `Lịch học ${label}: ${count}/${totalCount} buổi (16 buổi sắp tới)`;
+          if (qrInstructions) {
+            qrInstructions.textContent = `Mã QR chứa 16 buổi gần nhất. Tải file .ics bên dưới để thêm toàn bộ ${totalCount} buổi cả kỳ vào điện thoại!`;
+          }
+        } else {
+          if (qrMetaInfo) qrMetaInfo.textContent = `Lịch học ${label}: ${count} buổi`;
+          if (qrInstructions) {
+            qrInstructions.textContent = "Quét bằng Camera điện thoại hoặc tải file .ics về máy tính.";
+          }
+        }
+
         if (typeof QRCode !== "undefined" && QRCode.toSvgString) {
-          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 156, margin: 4, ecLevel: "M" });
+          qrDisplayCard.innerHTML = QRCode.toSvgString(currentQrPayload, { size: 164, margin: 4, ecLevel: "L" });
         }
         if (copyIcalPayloadBtn) copyIcalPayloadBtn.disabled = false;
         if (modalDownloadIcsBtn) modalDownloadIcsBtn.disabled = false;

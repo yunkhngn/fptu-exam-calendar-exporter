@@ -380,10 +380,12 @@
             <button type="button" class="qr-scope-btn" data-scope="today">Hôm nay</button>
             <button type="button" class="qr-scope-btn active" data-scope="week">Tuần này</button>
             <button type="button" class="qr-scope-btn" data-scope="next_week">Tuần tới</button>
+            <button type="button" class="qr-scope-btn" data-scope="2weeks">2 tuần</button>
+            <button type="button" class="qr-scope-btn" data-scope="all">Tất cả</button>
           </div>
           <div id="qrMetaInfo" class="qr-meta-count"></div>
           <div id="qrDisplayCard" class="qr-display-card"></div>
-          <p class="qr-instructions">Quét bằng Camera điện thoại hoặc tải file .ics về máy tính.</p>
+          <p id="qrInstructions" class="qr-instructions">Quét bằng Camera điện thoại hoặc tải file .ics về máy tính.</p>
           <div class="qr-modal-actions">
             <button type="button" id="modalDownloadIcsBtn" class="action-btn action-btn--primary" title="Tải file .ics về máy">
               <svg class="icon" aria-hidden="true"><use href="#icon-download"/></svg>

@@ -698,6 +698,20 @@ test("Export & QR sync modal opens from downloadBtn and exportBtn, renders SVG Q
   assert.strictEqual(todayBtn.classList.contains("active"), true, "today button becomes active");
   assert.ok(qrDisplayCard.querySelector("svg"), "SVG updated for today scope");
 
+  // Switch scope to "2weeks"
+  const twoWeeksBtn = doc.querySelector('.qr-scope-btn[data-scope="2weeks"]');
+  assert.ok(twoWeeksBtn, "2weeks scope button exists");
+  twoWeeksBtn.click();
+  assert.strictEqual(twoWeeksBtn.classList.contains("active"), true, "2weeks button becomes active");
+  assert.ok(qrDisplayCard.querySelector("svg"), "SVG updated for 2weeks scope");
+
+  // Switch scope to "all"
+  const allBtn = doc.querySelector('.qr-scope-btn[data-scope="all"]');
+  assert.ok(allBtn, "all scope button exists");
+  allBtn.click();
+  assert.strictEqual(allBtn.classList.contains("active"), true, "all button becomes active");
+  assert.ok(qrDisplayCard.querySelector("svg"), "SVG updated for all scope");
+
   // 2. Open QR in exam mode
   const sampleExam = [
     {

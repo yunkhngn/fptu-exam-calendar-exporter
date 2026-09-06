@@ -88,4 +88,66 @@ test("buildQrCalendarPayload for schedule filters by scope 'today', 'week', 'nex
   assert.ok(!nextWeekPayload.includes("PRJ301"));
   assert.ok(!nextWeekPayload.includes("SWE201"));
   assert.ok(nextWeekPayload.includes("MAD101"));
+
+  // Scope: 2weeks
+  const twoWeeksPayload = buildQrCalendarPayload({ type: "schedule", events: classes, scope: "2weeks", now });
+  assert.ok(twoWeeksPayload.includes("PRJ301"), "includes this week");
+  assert.ok(twoWeeksPayload.includes("SWE201"), "includes this week Friday");
+  assert.ok(twoWeeksPayload.includes("MAD101"), "includes next week");
+
+  // Scope: all
+  const allPayload = buildQrCalendarPayload({ type: "schedule", events: classes, scope: "all", now });
+  assert.ok(allPayload.includes("PRJ301"));
+  assert.ok(allPayload.includes("SWE201"));
+  assert.ok(allPayload.includes("MAD101"));
 });
+
+test("every VEVENT in buildQrCalendarPayload has distinct UID and DTSTAMP compliant with RFC 5545", () => {
+  const now = new Date(2026, 8, 10, 8, 0);
+  const classes = [
+    {
+      title: "PRJ301",
+      slot: "Slot 1",
+      rawDate: { year: 2026, month: 9, day: 10, startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 }
+    },
+    {
+      title: "PRJ301",
+      slot: "Slot 3",
+      rawDate: { year: 2026, month: 9, day: 10, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 }
+    }
+  ];
+
+  const payload = buildQrCalendarPayload({ type: "schedule", events: classes, scope: "today", now });
+  const uids = payload.match(/^UID:.+$/gm) || [];
+  const dtstamps = payload.match(/^DTSTAMP:.+$/gm) || [];
+
+  assert.strictEqual(uids.length, 2, "must have 2 UID lines for 2 events");
+  assert.strictEqual(dtstamps.length, 2, "must have 2 DTSTAMP lines for 2 events");
+  assert.notStrictEqual(uids[0], uids[1], "UIDs must be distinct across events");
+});
+
+test("buildQrCalendarPayload caps events to maxEvents and sorts chronologically", () => {
+  const now = new Date(2026, 8, 10, 8, 0);
+  // Create 25 events in reverse chronological order
+  const classes = Array.from({ length: 25 }, (_, i) => ({
+    title: `SUBJ${i}`,
+    slot: "Slot 1",
+    rawDate: { year: 2026, month: 9, day: 25 - i, startHour: 7, startMinute: 30, endHour: 9, endMinute: 0 }
+  }));
+
+  const payload = buildQrCalendarPayload({
+    type: "schedule",
+    events: classes,
+    scope: "all",
+    now,
+    maxEvents: 16
+  });
+
+  const eventCount = (payload.match(/BEGIN:VEVENT/g) || []).length;
+  assert.strictEqual(eventCount, 16, "capped to 16 events");
+  // Check that the earliest date appears first
+  const firstEventIndex = payload.indexOf("SUBJ24"); // day 1
+  const laterEventIndex = payload.indexOf("SUBJ20"); // day 5
+  assert.ok(firstEventIndex !== -1 && laterEventIndex !== -1 && firstEventIndex < laterEventIndex, "sorted chronologically");
+});
+
