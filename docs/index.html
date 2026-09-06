@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FPTU Schedule — Tiện ích Đồng bộ Lịch học & Kỳ thi FPTU</title>
   <meta name="description"
-    content="FPTU Schedule v3.6.0: Tiện ích mở rộng Chrome đồng bộ lịch học, lịch thi từ FAP, quét QR chuyển lịch sang điện thoại tức thì, dự đoán điểm qua môn và cảnh báo cấm thi." />
+    content="FPTU Schedule v3.6.5: Tiện ích mở rộng Chrome đồng bộ lịch học, lịch thi từ FAP, thời khóa biểu ma trận tuần, bộ công cụ FAP Survival Kit (Keep-Alive & Khảo sát 1-Click), quét QR chuyển lịch sang điện thoại và cảnh báo cấm thi." />
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon" type="image/png" href="./icon.png" />
 </head>
@@ -19,7 +19,7 @@
         <img class="site-brand__logo" src="icon-128.png" alt="FPTU Schedule Logo" width="36" height="36" />
         <span class="site-brand__title">
           FPTU Schedule
-          <span class="site-brand__badge">v3.6.0</span>
+          <span class="site-brand__badge">v3.6.5</span>
         </span>
       </a>
 
@@ -70,7 +70,7 @@
         <div class="hero__content">
           <div class="hero__kicker">
             <span class="hero__kicker-dot"></span>
-            <span>Bản phát hành chính thức v3.6.0</span>
+            <span>Bản phát hành chính thức v3.6.5</span>
           </div>
 
           <h1>Lịch học, kỳ thi &amp; điểm số <span class="gradient-text">FPTU trong tầm tay</span></h1>
@@ -457,12 +457,72 @@
     <section class="section section--surface" id="features">
       <div class="container">
         <div class="section-head">
-          <span class="section-head__tag">Đổi mới trong v3.6.0</span>
+          <span class="section-head__tag">Đổi mới trong v3.6.5</span>
           <h2>Những tính năng vượt trội cho sinh viên FPTU</h2>
           <p>Thiết kế tinh gọn, tốc độ tức thì và giải quyết trọn vẹn mọi nhu cầu học tập mỗi học kỳ.</p>
         </div>
 
         <div class="feature-cards-grid">
+          <!-- Feat New: Week Matrix -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <h3>Thời khóa biểu Tuần (Week Matrix)</h3>
+            <p>
+              Ma trận 7 ngày x 6 Slot FPT trực quan. Chuyển đổi linh hoạt giữa chế độ Danh sách và Lịch tuần. Tự động highlight ca học đang diễn ra bằng viền phát sáng và làm mờ các slot đã học qua.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Xem trọn vẹn cả tuần học FPT trong một giao diện</span>
+            </div>
+          </article>
+
+          <!-- Feat New: FAP Survival Kit -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+            </div>
+            <h3>Bộ công cụ "FAP Survival Kit"</h3>
+            <p>
+              Tự động gửi heartbeat giữ phiên đăng nhập FAP mỗi 7 phút, không lo bị văng ra trang login hay mất form. Tích hợp toolbar nổi tự động đánh giá 5★ và điền nhận xét giảng viên trong 1 click.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Duy trì phiên FAP &amp; vượt qua mùa khảo sát nhẹ nhàng</span>
+            </div>
+          </article>
+
+          <!-- Feat New: Attendance Ban Guard -->
+          <article class="feat-card">
+            <div class="feat-card__icon">
+              <svg class="icon" viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3>Hạn mức cấm thi FPT 20%</h3>
+            <p>
+              Thống kê trực tiếp trên từng thẻ môn học: số buổi có mặt, vắng, tỷ lệ vắng và tính toán chính xác số buổi được phép nghỉ còn lại trước khi chạm ngưỡng cấm thi 20% theo quy chế FPT.
+            </p>
+            <div class="feat-card__footer">
+              <svg class="icon icon--sm" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Bảo vệ an toàn điều kiện thi suốt cả học kỳ</span>
+            </div>
+          </article>
+
           <!-- Feat 1 -->
           <article class="feat-card">
             <div class="feat-card__icon">
@@ -471,16 +531,15 @@
                 <line x1="12" y1="18" x2="12.01" y2="18"></line>
               </svg>
             </div>
-            <h3>QR Phone Sync 1 chạm</h3>
+            <h3>QR Phone Sync 1 chạm (RFC 5545)</h3>
             <p>
-              Không cần cắm cáp hay gửi email file .ics thủ công. Chỉ cần mở camera điện thoại quét mã QR từ popup, toàn
-              bộ lịch học và lịch thi sẽ tự động thêm vào ứng dụng Lịch của máy.
+              Không cần cắm cáp hay gửi email file .ics thủ công. Quét mã QR offline từ popup để thêm đồng loạt lịch học và lịch thi vào Apple Calendar hoặc Google Calendar mà không bị ghi đè.
             </p>
             <div class="feat-card__footer">
               <svg class="icon icon--sm" viewBox="0 0 24 24">
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
-              <span>Hỗ trợ iOS Calendar &amp; Google Calendar</span>
+              <span>Chuẩn RFC 5545 đồng bộ ổn định trên iOS &amp; Android</span>
             </div>
           </article>
 
@@ -727,7 +786,7 @@
 
           <!-- Card 2: Manual ZIP -->
           <div class="dl-card">
-            <h3>Bản ZIP v3.6.0 (GitHub Release)</h3>
+            <h3>Bản ZIP v3.6.5 (GitHub Release)</h3>
             <p>Dành cho các bạn muốn cài đặt thủ công qua chế độ Developer Mode hoặc trải nghiệm phiên bản đóng gói độc
               lập.</p>
             <ul>
@@ -736,14 +795,14 @@
               <li>Bật <strong>Developer mode</strong> và chọn <strong>Load unpacked</strong></li>
             </ul>
             <a class="btn btn--secondary btn--lg"
-              href="https://github.com/yunkhngn/fptu-schedule/releases/download/v3.6.0/fptu-schedule.zip"
+              href="https://github.com/yunkhngn/fptu-schedule/releases/download/v3.6.5/fptu-schedule.zip"
               target="_blank" rel="noopener">
               <svg class="icon" viewBox="0 0 24 24">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
-              <span>Tải file ZIP (v3.6.0)</span>
+              <span>Tải file ZIP (v3.6.5)</span>
             </a>
           </div>
         </div>
@@ -808,12 +867,37 @@
         </div>
 
         <div class="changelog-container">
-          <!-- Release v3.6.0 -->
+          <!-- Release v3.6.5 -->
           <article class="changelog-card changelog-card--latest">
             <div class="changelog-card__head">
               <div class="changelog-version-tag">
-                <span class="version-name">v3.6.0</span>
+                <span class="version-name">v3.6.5</span>
                 <span class="version-status">Bản mới nhất</span>
+              </div>
+              <time class="changelog-date">06/09/2026</time>
+            </div>
+            <div class="changelog-body">
+              <h4>Tính năng &amp; Nâng cấp nổi bật</h4>
+              <ul class="changelog-list">
+                <li><strong>Thời khóa biểu Ma trận Tuần (Week Timetable Matrix):</strong> Bổ sung chế độ xem dạng lưới 7 ngày x 6 Slot FPT trực quan, ghim cố định điều hướng khi cuộn và hỗ trợ chuyển đổi 1 chạm giữa Danh sách và Lịch tuần.</li>
+                <li><strong>Tô màu Slot thời gian thực:</strong> Highlight viền xanh phát sáng (pulse-border), chấm live nhấp nháy chuyển động và badge <code>ĐANG HỌC</code> cho slot hiện tại; tự động làm mờ và phủ tông xám dịu cho các slot đã qua lịch.</li>
+                <li><strong>Hạn mức vắng &amp; Cảnh báo cấm thi 20%:</strong> Tính toán số buổi có mặt, vắng, tỷ lệ vắng và số buổi nghỉ còn lại trước khi chạm trần 20% cấm thi FPT ngay trên thẻ từng môn học.</li>
+                <li><strong>Nâng cấp xuất QR chuẩn RFC 5545:</strong> Bổ sung trường <code>UID</code> và <code>DTSTAMP</code> chuẩn quốc tế, sửa triệt để lỗi điện thoại Apple Calendar / Google Calendar chỉ nhập được 1 sự kiện hoặc bị ghi đè. Mở rộng phạm vi xuất 2 tuần và tất cả các buổi sắp tới.</li>
+                <li><strong>Bộ công cụ FAP Survival Kit:</strong>
+                  <ul>
+                    <li><strong>Auto Keep-Alive Heartbeat:</strong> Tự động ping duy trì phiên FAP mỗi 7 phút khi có tab FAP mở, ngăn chặn hoàn toàn việc bị văng đăng nhập và mất dữ liệu. Có công tắc Bật/Tắt trong Cài đặt &amp; Tiện ích.</li>
+                    <li><strong>1-Click Khảo sát giảng viên:</strong> Toolbar nổi Dark Glassmorphism trên trang feedback FAP, hỗ trợ đánh giá 5★ toàn bộ câu hỏi và điền nhận xét tích cực lịch sự trong 1 click (giữ an toàn với nút gửi thủ công).</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </article>
+
+          <!-- Release v3.6.0 -->
+          <article class="changelog-card">
+            <div class="changelog-card__head">
+              <div class="changelog-version-tag">
+                <span class="version-name">v3.6.0</span>
               </div>
               <time class="changelog-date">06/09/2026</time>
             </div>

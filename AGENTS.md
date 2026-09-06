@@ -69,5 +69,5 @@ This file defines the project-specific rules, architectural constraints, and eng
   ```bash
   zip -FS -r fptu-schedule.zip manifest.json *.png popup.html popup.js popup.css background.js content.js lib/
   ```
-- **Version Synchronization:**
-  - When the user confirms a release version, synchronize consistency across `manifest.json`, `package.json`, `lib/` badges, and `CHANGELOG.md`.
+- **Version Synchronization & Web Documentation:**
+  - When the user confirms a release version, synchronize consistency across `manifest.json`, `package.json`, `lib/` badges, `CHANGELOG.md`, and the documentation site under `docs/` (`docs/index.html` meta tags, version badges, hero banner, feature cards, download URLs, and changelog cards).
