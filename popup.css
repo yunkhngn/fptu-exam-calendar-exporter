@@ -931,7 +931,7 @@ html, body {
 #scheduleTab .class-card {
   background: var(--bg-elevated);
   border-radius: 14px;
-  padding: 13px 14px 12px;
+  padding: 12px 12px 11px;
   border: 1px solid rgba(15, 23, 42, 0.07);
   box-shadow:
     0 1px 2px rgba(15, 23, 42, 0.04),
@@ -946,53 +946,58 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 6px;
+  flex-wrap: nowrap;
 }
 
 #scheduleTab .class-code {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--text);
-  line-height: 1.25;
+  line-height: 1.2;
   min-width: 0;
+  flex-shrink: 0;
 }
 
 #scheduleTab .class-card__badges {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
+  flex-wrap: nowrap;
   flex-shrink: 0;
+  justify-content: flex-end;
+  margin-left: auto;
 }
 
 #scheduleTab .class-tags {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   flex-wrap: wrap;
-  margin-top: 9px;
+  margin-top: 8px;
 }
 
 #scheduleTab .chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 9px;
+  gap: 4px;
+  padding: 2px 7px;
   border-radius: var(--radius-pill);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 650;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   border: 1px solid transparent;
   background: var(--bg-subtle);
   color: var(--text-muted);
   white-space: nowrap;
   line-height: 1.2;
-  min-height: 22px;
+  min-height: 20px;
 }
 
 #scheduleTab .chip .dot {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 999px;
   background: currentColor;
   opacity: 0.85;

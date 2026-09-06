@@ -328,15 +328,23 @@ test("an online class gets an Online chip; an offline one does not", async () =>
   );
   assert.ok(online.querySelector(".chip.online"), "EXE201 shows the Online chip");
   assert.strictEqual(online.querySelector(".chip.online").textContent.trim(), "Online");
-  assert.ok(online.querySelector(".chip.room"), "the room chip stays even though the class is online");
+  assert.strictEqual(online.querySelector(".chip.room"), null, "the room chip is hidden when class is online");
   assert.strictEqual(offline.querySelector(".chip.online"), null, "PRJ301 gets no Online chip");
+  assert.ok(offline.querySelector(".chip.room"), "PRJ301 offline class shows room chip");
 
   const badges = online.querySelector(".class-card__badges");
-  assert.ok(badges, "Online and the attendance status share a header badge group");
+  assert.ok(badges, "All chips share the header badge group");
   const badgeChips = [...badges.children];
-  assert.strictEqual(badgeChips[0].className.includes("online"), true, "Online sits to the left of attendance");
-  assert.strictEqual(badgeChips[1].className.includes("attendance"), true, "attendance status sits to its right");
-  assert.strictEqual(online.querySelector(".class-tags .chip.online"), null, "Online no longer duplicated in the tag row");
+  assert.strictEqual(badgeChips[0].className.includes("type"), true, "Slot sits first");
+  assert.strictEqual(badgeChips[1].className.includes("online"), true, "Online sits second");
+  assert.strictEqual(badgeChips[2].className.includes("attendance"), true, "attendance status sits to the right");
+  assert.strictEqual(online.querySelector(".class-tags"), null, "class-tags element is removed");
+
+  const offlineBadges = offline.querySelector(".class-card__badges");
+  const offlineChips = [...offlineBadges.children];
+  assert.strictEqual(offlineChips[0].className.includes("type"), true, "Slot sits first for offline");
+  assert.strictEqual(offlineChips[1].className.includes("room"), true, "Room sits second for offline");
+  assert.strictEqual(offlineChips[2].className.includes("attendance"), true, "Attendance sits third for offline");
 });
 
 test("notification button exists in header and opens notification modal", async () => {

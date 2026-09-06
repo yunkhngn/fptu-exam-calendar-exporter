@@ -86,6 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const filterModal = document.getElementById("filterModal");
   const closeFilter = document.getElementById("closeFilter");
   const docsLink = document.getElementById("docsLink");
+  const authorLink = document.getElementById("authorLink");
   
   // Notification settings modal elements
   const notificationBtn = document.getElementById("notificationBtn");
@@ -1294,6 +1295,53 @@ function renderClassSchedule(schedule) {
     code.className = "class-code";
     code.textContent = ev.title || "Môn học";
 
+    // Badges on the right of the header:
+    // Slot -> Location (Online if online, Room if offline) -> Risk (if any) -> Attendance status
+    const headBadges = document.createElement("div");
+    headBadges.className = "class-card__badges";
+
+    // 1. Slot/Type chip
+    const chipType = document.createElement("span");
+    chipType.className = "chip type";
+    const dotType = document.createElement("span"); dotType.className = "dot";
+    chipType.appendChild(dotType);
+    chipType.appendChild(document.createTextNode((ev.slot || ev.type || "Slot ?").toString()));
+    headBadges.appendChild(chipType);
+
+    // 2. Format / Location chip: Online classes hide room, offline classes show room
+    if (ev.isOnline) {
+      const chipOnline = document.createElement("span");
+      chipOnline.className = "chip online";
+      const dotOnline = document.createElement("span"); dotOnline.className = "dot";
+      chipOnline.appendChild(dotOnline);
+      chipOnline.appendChild(document.createTextNode("Online"));
+      headBadges.appendChild(chipOnline);
+    } else if (ev.location) {
+      const chipRoom = document.createElement("span");
+      chipRoom.className = "chip room";
+      const dot = document.createElement("span"); dot.className = "dot";
+      chipRoom.appendChild(dot);
+      const roomText = (ev.location || "").replace(/\s*-\s*$/, "").trim();
+      chipRoom.appendChild(document.createTextNode(roomText));
+      headBadges.appendChild(chipRoom);
+    }
+
+    // 3. Attendance-risk chip — shown on every card of a course whose graded sessions so far
+    // put it at or past the early-warning line, using the same rate for all of that course's
+    // cards regardless of which specific session this one is.
+    const courseAttendance = attendanceByCourse[ev.title];
+    const riskLevel = courseAttendance ? attendanceRiskLevel(courseAttendance.rate) : null;
+    if (riskLevel) {
+      const chipRisk = document.createElement("span");
+      chipRisk.className = `chip risk-${riskLevel}`;
+      const dotRisk = document.createElement("span"); dotRisk.className = "dot";
+      chipRisk.appendChild(dotRisk);
+      const pct = Math.round(courseAttendance.rate * 100);
+      chipRisk.appendChild(document.createTextNode(`${pct}% vắng`));
+      headBadges.appendChild(chipRisk);
+    }
+
+    // 4. Attendance status chip
     const attendanceChip = document.createElement("span");
     attendanceChip.className = "chip attendance";
     const dotAtt = document.createElement("span");
@@ -1305,62 +1353,11 @@ function renderClassSchedule(schedule) {
     if (rawStatus.includes("absent")) { statusClass = "absent"; statusLabel = "Absent"; }
     else if (rawStatus.includes("attended")) { statusClass = "attended"; statusLabel = "Attended"; }
     attendanceChip.classList.add(statusClass);
-    attendanceChip.appendChild(document.createTextNode(" " + statusLabel));
-
-    // Badges on the right of the header: Online (if applicable), then attendance status.
-    // Grouped in their own row so `justify-content: space-between` on the head keeps them
-    // together at the right edge instead of spreading a third item into the middle.
-    const headBadges = document.createElement("div");
-    headBadges.className = "class-card__badges";
-    if (ev.isOnline) {
-      const chipOnline = document.createElement("span");
-      chipOnline.className = "chip online";
-      const dotOnline = document.createElement("span"); dotOnline.className = "dot";
-      chipOnline.appendChild(dotOnline);
-      chipOnline.appendChild(document.createTextNode(" Online"));
-      headBadges.appendChild(chipOnline);
-    }
+    attendanceChip.appendChild(document.createTextNode(statusLabel));
     headBadges.appendChild(attendanceChip);
 
     head.appendChild(code);
     head.appendChild(headBadges);
-
-    const tags = document.createElement("div");
-    tags.className = "class-tags";
-
-    // Slot/Type chip (first)
-    const chipType = document.createElement("span");
-    chipType.className = "chip type";
-    const dotType = document.createElement("span"); dotType.className = "dot";
-    chipType.appendChild(dotType);
-    chipType.appendChild(document.createTextNode(` ${(ev.slot || ev.type || "Slot ?").toString()}`));
-    tags.appendChild(chipType);
-
-    // Attendance-risk chip — shown on every card of a course whose graded sessions so far
-    // put it at or past the early-warning line, using the same rate for all of that course's
-    // cards regardless of which specific session this one is.
-    const courseAttendance = attendanceByCourse[ev.title];
-    const riskLevel = courseAttendance ? attendanceRiskLevel(courseAttendance.rate) : null;
-    if (riskLevel) {
-      const chipRisk = document.createElement("span");
-      chipRisk.className = `chip risk-${riskLevel}`;
-      const dotRisk = document.createElement("span"); dotRisk.className = "dot";
-      chipRisk.appendChild(dotRisk);
-      const pct = Math.round(courseAttendance.rate * 100);
-      chipRisk.appendChild(document.createTextNode(` ${pct}% vắng`));
-      tags.appendChild(chipRisk);
-    }
-
-    // Room chip
-    if (ev.location) {
-      const chipRoom = document.createElement("span");
-      chipRoom.className = "chip room";
-      const dot = document.createElement("span"); dot.className = "dot";
-      chipRoom.appendChild(dot);
-      const roomText = (ev.location || "").replace(/\s*-\s*$/, "").trim();
-      chipRoom.appendChild(document.createTextNode(` ${roomText}`));
-      tags.appendChild(chipRoom);
-    }
 
     // The whole card opens the detail page — see the click/keydown wiring appended to
     // `card` below, right after this event object's chips are all built.
@@ -1444,7 +1441,6 @@ function renderClassSchedule(schedule) {
     }
 
     card.appendChild(head);
-    card.appendChild(tags);
 
     const meta = document.createElement("div");
     meta.className = "class-meta";
@@ -1500,6 +1496,19 @@ window.renderClassSchedule = renderClassSchedule;
     docsLink.addEventListener("click", (e) => {
       e.preventDefault();
       chrome.tabs.create({ url: "https://yunkhngn.github.io/fptu-schedule/" });
+    });
+  }
+
+  // Author profile link event
+  if (authorLink) {
+    authorLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = authorLink.getAttribute("href") || "https://www.facebook.com/yun.khngn/";
+      try {
+        chrome.tabs.create({ url });
+      } catch (_) {
+        window.open(url, "_blank");
+      }
     });
   }
 
