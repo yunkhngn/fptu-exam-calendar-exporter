@@ -791,6 +791,55 @@ test("week timetable matrix view toggle switches between list and week view", as
   assert.ok(doc.querySelector("#scheduleTab .schedule-grid"));
 });
 
+test("week timetable matrix highlights in_progress slots with color and dims past slots", async () => {
+  const { dom, window } = await boot();
+  const doc = dom.window.document;
+
+  const schedule = [
+    {
+      title: "MLN111", // Past event: Monday Sep 7, Slot 3 (12:50 - 15:10)
+      slot: "Slot 3",
+      rawDate: { year: 2026, month: 9, day: 7, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 },
+    },
+    {
+      title: "PRM393", // Currently in progress: Thursday Sep 10, Slot 3 (12:50 - 15:10)
+      slot: "Slot 3",
+      rawDate: { year: 2026, month: 9, day: 10, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 },
+    },
+    {
+      title: "EXE201", // Future event: Friday Sep 11, Slot 2 (10:00 - 12:20)
+      slot: "Slot 2",
+      rawDate: { year: 2026, month: 9, day: 11, startHour: 10, startMinute: 0, endHour: 12, endMinute: 20 },
+    }
+  ];
+
+  const container = doc.createElement("div");
+  const mockNow = new Date(2026, 8, 10, 13, 30); // Thu Sep 10, 2026 at 13:30 (during Slot 3)
+
+  window.renderClassScheduleWeek(container, schedule, mockNow);
+
+  // 1. Check in_progress card (PRM393)
+  const prmCard = container.querySelector('.week-matrix__card.is-in-progress');
+  assert.ok(prmCard, "PRM393 card has .is-in-progress class");
+  assert.ok(prmCard.textContent.includes("PRM393"), "PRM393 card content matches");
+  assert.ok(prmCard.querySelector(".week-matrix__live-dot"), "has pulsing live dot");
+  assert.ok(prmCard.querySelector(".week-matrix__badge-live"), "has Đang học live badge");
+
+  // 2. Check past card (MLN111)
+  const pastCard = container.querySelector('.week-matrix__card.is-past');
+  assert.ok(pastCard, "MLN111 card has .is-past class");
+  assert.ok(pastCard.textContent.includes("MLN111"), "MLN111 card content matches");
+  assert.strictEqual(pastCard.querySelector(".week-matrix__badge-live"), null, "past card does not have live badge");
+
+  // 3. Check future card (EXE201)
+  const allCards = Array.from(container.querySelectorAll(".week-matrix__card"));
+  const exeCard = allCards.find(c => c.textContent.includes("EXE201"));
+  assert.ok(exeCard, "EXE201 card exists");
+  assert.strictEqual(exeCard.classList.contains("is-in-progress"), false, "future card is not in progress");
+  assert.strictEqual(exeCard.classList.contains("is-past"), false, "future card is not past");
+});
+
+
 test("popup boots with saved classSchedule in localStorage and renders list immediately without crashing", async () => {
   const calls = { storageSet: [], tabsCreated: [], errors: [] };
   const dom = new JSDOM(popupDocument(), {

@@ -1281,12 +1281,13 @@ function syncScheduleViewToggleButtons() {
   }
 }
 
-function renderClassScheduleWeek(container, stored) {
+function renderClassScheduleWeek(container, stored, now = new Date()) {
   const getWeekRange = typeof getWeekDateRange === "function" ? getWeekDateRange : (window.getWeekDateRange || globalThis.getWeekDateRange);
   const groupWeek = typeof groupScheduleByWeekAndSlot === "function" ? groupScheduleByWeekAndSlot : (window.groupScheduleByWeekAndSlot || globalThis.groupScheduleByWeekAndSlot);
+  const getTimingStatus = typeof getSlotTimingStatus === "function" ? getSlotTimingStatus : (window.getSlotTimingStatus || globalThis.getSlotTimingStatus);
   if (!getWeekRange || !groupWeek) return;
 
-  const weekRange = getWeekRange(new Date(), currentWeekOffset);
+  const weekRange = getWeekRange(now, currentWeekOffset);
   const grouped = groupWeek(stored, weekRange);
 
   const weekContainer = document.createElement("div");
@@ -1410,6 +1411,17 @@ function renderClassScheduleWeek(container, stored) {
       const key = `${d.isoDay}_${st.slot}`;
       const events = grouped[key] || [];
 
+      // Check slot status for this cell
+      const cellStatus = typeof getTimingStatus === "function"
+        ? getTimingStatus(null, d, st.slot, now)
+        : "upcoming";
+
+      if (cellStatus === "past") {
+        cell.classList.add("is-past");
+      } else if (cellStatus === "in_progress") {
+        cell.classList.add("is-in-progress");
+      }
+
       if (events.length > 0) {
         cell.classList.add("week-cell--has-class");
         events.forEach((ev) => {
@@ -1419,6 +1431,16 @@ function renderClassScheduleWeek(container, stored) {
           card.setAttribute("role", "button");
           card.setAttribute("aria-label", `${ev.title || "Môn học"} Slot ${st.slot}`);
 
+          const evStatus = typeof getTimingStatus === "function"
+            ? getTimingStatus(ev, d, st.slot, now)
+            : cellStatus;
+
+          if (evStatus === "in_progress") {
+            card.classList.add("is-in-progress");
+          } else if (evStatus === "past") {
+            card.classList.add("is-past");
+          }
+
           const header = document.createElement("div");
           header.className = "week-matrix__card-header";
 
@@ -1426,15 +1448,23 @@ function renderClassScheduleWeek(container, stored) {
           code.className = "week-matrix__card-code";
           code.textContent = ev.title || "Môn học";
 
-          const dot = document.createElement("span");
-          const rawStatus = (ev.attendanceStatus || "not yet").toLowerCase();
-          let dotClass = "notyet";
-          if (rawStatus.includes("absent")) dotClass = "absent";
-          else if (rawStatus.includes("attended")) dotClass = "attended";
-          dot.className = `week-matrix__dot ${dotClass}`;
-
           header.appendChild(code);
-          header.appendChild(dot);
+
+          if (evStatus === "in_progress") {
+            const liveDot = document.createElement("span");
+            liveDot.className = "week-matrix__live-dot";
+            liveDot.title = "Đang trong giờ học";
+            header.appendChild(liveDot);
+          } else {
+            const dot = document.createElement("span");
+            const rawStatus = (ev.attendanceStatus || "not yet").toLowerCase();
+            let dotClass = "notyet";
+            if (rawStatus.includes("absent")) dotClass = "absent";
+            else if (rawStatus.includes("attended")) dotClass = "attended";
+            dot.className = `week-matrix__dot ${dotClass}`;
+            header.appendChild(dot);
+          }
+
           card.appendChild(header);
 
           const loc = document.createElement("span");
@@ -1447,11 +1477,25 @@ function renderClassScheduleWeek(container, stored) {
           }
           card.appendChild(loc);
 
+          const footer = document.createElement("div");
+          footer.className = "week-matrix__card-footer";
+
+          if (evStatus === "in_progress") {
+            const liveBadge = document.createElement("span");
+            liveBadge.className = "week-matrix__badge-live";
+            liveBadge.textContent = "Đang học";
+            footer.appendChild(liveBadge);
+          }
+
           if (ev.rawDate && typeof ev.rawDate.startHour === "number") {
             const time = document.createElement("span");
             time.className = "week-matrix__card-time";
             time.textContent = `${two(ev.rawDate.startHour)}:${two(ev.rawDate.startMinute)}`;
-            card.appendChild(time);
+            footer.appendChild(time);
+          }
+
+          if (footer.childNodes.length > 0) {
+            card.appendChild(footer);
           }
 
           if (ev.detailUrl) {
@@ -1799,6 +1843,7 @@ function renderClassSchedule(schedule) {
   container.appendChild(grid);
 }
 window.renderClassSchedule = renderClassSchedule;
+window.renderClassScheduleWeek = renderClassScheduleWeek;
 
   // Sau khi renderClassSchedule đã gắn window; tránh race với callback storage
   const stMerge = getChromeStorageLocal();

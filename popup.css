@@ -1407,11 +1407,134 @@ html, body {
   font-weight: 700;
 }
 
+.week-matrix__card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2px;
+  width: 100%;
+}
+
 .week-matrix__card-time {
   font-size: 7.5px;
   color: var(--text-muted);
   line-height: 1.1;
   opacity: 0.85;
+}
+
+/* 1. Slot đang học (In Progress): Tô màu nổi bật, viền phát sáng, chấm live */
+.week-matrix__cell.is-in-progress {
+  background: rgba(59, 130, 246, 0.08);
+  border-color: rgba(59, 130, 246, 0.45);
+}
+
+.week-matrix__card.is-in-progress {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.1));
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.35), inset 0 0 6px rgba(59, 130, 246, 0.15);
+  animation: pulse-border 2.5s infinite ease-in-out;
+}
+
+@keyframes pulse-border {
+  0%, 100% {
+    border-color: var(--accent);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.35), inset 0 0 6px rgba(59, 130, 246, 0.15);
+  }
+  50% {
+    border-color: #60a5fa;
+    box-shadow: 0 0 14px rgba(96, 165, 250, 0.55), inset 0 0 8px rgba(96, 165, 250, 0.25);
+  }
+}
+
+.week-matrix__card.is-in-progress .week-matrix__card-code {
+  color: #1d4ed8;
+  font-weight: 800;
+}
+
+.week-matrix__badge-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 6.5px;
+  font-weight: 750;
+  color: #ffffff;
+  background: var(--accent);
+  padding: 1px 3px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.1;
+  flex-shrink: 0;
+}
+
+.week-matrix__live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: #3b82f6;
+  box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  animation: pulse-live 1.6s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulse-live {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.8);
+  }
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+/* Dark mode for in-progress */
+[data-theme="dark"] .week-matrix__cell.is-in-progress {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(96, 165, 250, 0.5);
+}
+
+[data-theme="dark"] .week-matrix__card.is-in-progress {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.32), rgba(30, 58, 138, 0.45));
+  border-color: #60a5fa;
+  box-shadow: 0 0 12px rgba(96, 165, 250, 0.45), inset 0 0 8px rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="dark"] .week-matrix__card.is-in-progress .week-matrix__card-code {
+  color: #93c5fd;
+  font-weight: 800;
+}
+
+/* 2. Slot đã qua lịch (Past): Tô xám, giảm tương phản */
+.week-matrix__cell.is-past {
+  opacity: 0.6;
+}
+
+.week-matrix__card.is-past {
+  opacity: 0.42;
+  filter: grayscale(0.85);
+  background: var(--bg-card-subtle);
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.week-matrix__card.is-past .week-matrix__card-code {
+  color: var(--text-muted);
+}
+
+.week-matrix__card.is-past .week-matrix__card-loc {
+  color: var(--text-muted);
+  opacity: 0.75;
+}
+
+.week-matrix__card.is-past:hover {
+  opacity: 0.88;
+  filter: grayscale(0.25);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
 }
 
 #scheduleTab .schedule-empty {

@@ -109,3 +109,41 @@ test("groupScheduleByWeekAndSlot groups events by isoDay_slot and filters outsid
   // Sep 21 is not in this week
   assert.strictEqual(grouped["1_1"], undefined);
 });
+
+test("getSlotTimingStatus identifies in_progress, past, and upcoming slots accurately", () => {
+  const { getSlotTimingStatus, FPT_SLOT_TIMES } = require("../lib/schedule.js");
+  assert.ok(FPT_SLOT_TIMES, "FPT_SLOT_TIMES exported");
+
+  // Now is Thursday Sep 10, 2026 at 13:30 (during Slot 3: 12:50 - 15:10)
+  const now = new Date(2026, 8, 10, 13, 30);
+
+  const pastDay = { year: 2026, month: 9, day: 8 }; // Tuesday (past)
+  const today = { year: 2026, month: 9, day: 10 }; // Thursday (today)
+  const futureDay = { year: 2026, month: 9, day: 11 }; // Friday (future)
+
+  // 1. A slot on a past day is past
+  assert.strictEqual(getSlotTimingStatus(null, pastDay, 3, now), "past");
+
+  // 2. Today, Slot 1 (07:30 - 09:50) ended earlier today -> past
+  assert.strictEqual(getSlotTimingStatus(null, today, 1, now), "past");
+
+  // 3. Today, Slot 2 (10:00 - 12:20) ended earlier today -> past
+  assert.strictEqual(getSlotTimingStatus(null, today, 2, now), "past");
+
+  // 4. Today, Slot 3 (12:50 - 15:10) is currently active -> in_progress
+  assert.strictEqual(getSlotTimingStatus(null, today, 3, now), "in_progress");
+
+  // 5. Today, Slot 3 with custom rawDate (12:50 - 15:10) -> in_progress
+  const evSlot3 = {
+    title: "PRM393",
+    rawDate: { year: 2026, month: 9, day: 10, startHour: 12, startMinute: 50, endHour: 15, endMinute: 10 }
+  };
+  assert.strictEqual(getSlotTimingStatus(evSlot3, today, 3, now), "in_progress");
+
+  // 6. Today, Slot 4 (15:20 - 17:40) hasn't started yet -> upcoming
+  assert.strictEqual(getSlotTimingStatus(null, today, 4, now), "upcoming");
+
+  // 7. A slot on a future day -> upcoming
+  assert.strictEqual(getSlotTimingStatus(null, futureDay, 1, now), "upcoming");
+});
+
