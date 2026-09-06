@@ -46,6 +46,17 @@ function mirrorExamScheduleToStorage(events) {
   } catch (_) {}
 })();
 
+// Schedule view mode state
+let currentScheduleViewMode = "list";
+try {
+  const savedViewMode = localStorage.getItem("fptu_schedule_view_mode");
+  if (savedViewMode === "week" || savedViewMode === "list") {
+    currentScheduleViewMode = savedViewMode;
+  }
+} catch (_) {}
+let currentWeekOffset = 0;
+let lastRenderedClassSchedule = [];
+
 document.addEventListener("DOMContentLoaded", () => {
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "WEEK_RANGE_SYNC_DONE") {
@@ -1176,12 +1187,29 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
     `;
   }
 
+  const isWeek = currentScheduleViewMode === "week";
+  const viewToggleHtml = `
+    <div class="view-toggle" role="group" aria-label="Chế độ xem lịch">
+      <button type="button" id="viewListBtn" class="view-toggle__btn ${!isWeek ? 'active' : ''}" title="Xem dạng danh sách">
+        <svg class="icon icon--xs" aria-hidden="true"><use href="#icon-list"/></svg>
+        <span class="view-toggle__label">Danh sách</span>
+      </button>
+      <button type="button" id="viewWeekBtn" class="view-toggle__btn ${isWeek ? 'active' : ''}" title="Xem thời khóa biểu tuần">
+        <svg class="icon icon--xs" aria-hidden="true"><use href="#icon-grid"/></svg>
+        <span class="view-toggle__label">Lịch tuần</span>
+      </button>
+    </div>
+  `;
+
   return `
     <div class="agenda-banner">
       <div class="agenda-card agenda-card--${agenda.status.toLowerCase()} ${clickableClass}" ${targetUrl ? `data-url="${escapeHtml(targetUrl)}"` : ""}>
         <div class="agenda-card__header">
-          <div class="agenda-badge">${badgeHtml}</div>
-          ${counterHtml ? `<span class="agenda-counter">${escapeHtml(counterHtml)}</span>` : ""}
+          <div class="agenda-badge-group">
+            <div class="agenda-badge">${badgeHtml}</div>
+            ${counterHtml ? `<span class="agenda-counter">${escapeHtml(counterHtml)}</span>` : ""}
+          </div>
+          ${viewToggleHtml}
         </div>
         <div class="agenda-card__body">
           <div class="agenda-title">${titleHtml}</div>
@@ -1193,15 +1221,6 @@ function renderTodayAgendaBanner(schedule, examEvents = []) {
   `;
 }
 window.renderTodayAgendaBanner = renderTodayAgendaBanner;
-
-let currentScheduleViewMode = "list";
-try {
-  const savedViewMode = localStorage.getItem("fptu_schedule_view_mode");
-  if (savedViewMode === "week" || savedViewMode === "list") {
-    currentScheduleViewMode = savedViewMode;
-  }
-} catch (_) {}
-let currentWeekOffset = 0;
 
 function syncScheduleViewToggleButtons() {
   const viewListBtn = document.getElementById("viewListBtn");
@@ -1415,8 +1434,6 @@ function renderClassScheduleWeek(container, stored) {
   container.appendChild(weekContainer);
 }
 
-let lastRenderedClassSchedule = [];
-
 function renderClassSchedule(schedule) {
   const container = document.getElementById("scheduleTab");
   if (!container) return;
@@ -1461,7 +1478,8 @@ function renderClassSchedule(schedule) {
       const card = bannerEl.querySelector(".agenda-card--clickable");
       if (card && card.dataset.url) {
         const url = card.dataset.url;
-        const openUrl = () => {
+        const openUrl = (e) => {
+          if (e && e.target && e.target.closest(".view-toggle")) return;
           try { chrome.tabs.create({ url }); } catch (_) { window.open(url, '_blank'); }
         };
         card.tabIndex = 0;
@@ -1470,8 +1488,9 @@ function renderClassSchedule(schedule) {
         card.addEventListener("click", openUrl);
         card.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
+            if (e.target && e.target.closest(".view-toggle")) return;
             e.preventDefault();
-            openUrl();
+            openUrl(e);
           }
         });
       }
@@ -1750,11 +1769,12 @@ window.renderClassSchedule = renderClassSchedule;
     });
   }
 
-  // View toggle buttons (List vs Week)
-  const viewListBtn = document.getElementById("viewListBtn");
-  const viewWeekBtn = document.getElementById("viewWeekBtn");
-  if (viewListBtn) {
-    viewListBtn.addEventListener("click", () => {
+  // View toggle buttons (List vs Week) - delegated event listener on document
+  document.addEventListener("click", (e) => {
+    const listBtn = e.target.closest("#viewListBtn");
+    if (listBtn) {
+      e.stopPropagation();
+      e.preventDefault();
       currentScheduleViewMode = "list";
       try { localStorage.setItem("fptu_schedule_view_mode", "list"); } catch (_) {}
       syncScheduleViewToggleButtons();
@@ -1764,10 +1784,12 @@ window.renderClassSchedule = renderClassSchedule;
         saved = lastRenderedClassSchedule;
       }
       renderClassSchedule(saved);
-    });
-  }
-  if (viewWeekBtn) {
-    viewWeekBtn.addEventListener("click", () => {
+      return;
+    }
+    const weekBtn = e.target.closest("#viewWeekBtn");
+    if (weekBtn) {
+      e.stopPropagation();
+      e.preventDefault();
       currentScheduleViewMode = "week";
       try { localStorage.setItem("fptu_schedule_view_mode", "week"); } catch (_) {}
       syncScheduleViewToggleButtons();
@@ -1777,8 +1799,9 @@ window.renderClassSchedule = renderClassSchedule;
         saved = lastRenderedClassSchedule;
       }
       renderClassSchedule(saved);
-    });
-  }
+      return;
+    }
+  });
 
   // Get new button elements
   const syncScheduleBtn = document.getElementById("syncScheduleBtn");

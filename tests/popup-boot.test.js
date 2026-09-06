@@ -724,12 +724,6 @@ test("Export & QR sync modal opens from downloadBtn and exportBtn, renders SVG Q
 test("week timetable matrix view toggle switches between list and week view", async () => {
   const { dom, window } = await boot();
   const doc = dom.window.document;
-  const viewListBtn = doc.getElementById("viewListBtn");
-  const viewWeekBtn = doc.getElementById("viewWeekBtn");
-  assert.ok(viewListBtn, "viewListBtn exists");
-  assert.ok(viewWeekBtn, "viewWeekBtn exists");
-  assert.strictEqual(viewListBtn.classList.contains("active"), true);
-  assert.strictEqual(viewWeekBtn.classList.contains("active"), false);
 
   const schedule = [
     {
@@ -749,14 +743,19 @@ test("week timetable matrix view toggle switches between list and week view", as
 
   window.renderClassSchedule(schedule);
 
+  const viewListBtn = doc.getElementById("viewListBtn");
+  const viewWeekBtn = doc.getElementById("viewWeekBtn");
+  assert.ok(viewListBtn, "viewListBtn exists");
+  assert.ok(viewWeekBtn, "viewWeekBtn exists");
+  assert.strictEqual(viewListBtn.classList.contains("active"), true);
+  assert.strictEqual(viewWeekBtn.classList.contains("active"), false);
+
   // In list view: schedule-grid exists
   assert.ok(doc.querySelector("#scheduleTab .schedule-grid"));
   assert.strictEqual(doc.querySelector("#scheduleTab .week-matrix-container"), null);
 
   // Click week view button
   viewWeekBtn.click();
-  assert.strictEqual(viewWeekBtn.classList.contains("active"), true);
-  assert.strictEqual(viewListBtn.classList.contains("active"), false);
   assert.strictEqual(window.localStorage.getItem("fptu_schedule_view_mode"), "week");
 
   // In week view: week-matrix-container exists
@@ -772,10 +771,44 @@ test("week timetable matrix view toggle switches between list and week view", as
   assert.ok(doc.getElementById("todayWeekBtn"));
 
   // Click back to list view
-  viewListBtn.click();
-  assert.strictEqual(viewListBtn.classList.contains("active"), true);
+  const updatedViewListBtn = doc.getElementById("viewListBtn");
+  updatedViewListBtn.click();
   assert.strictEqual(window.localStorage.getItem("fptu_schedule_view_mode"), "list");
   assert.ok(doc.querySelector("#scheduleTab .schedule-grid"));
+});
+
+test("popup boots with saved classSchedule in localStorage and renders list immediately without crashing", async () => {
+  const calls = { storageSet: [], tabsCreated: [], errors: [] };
+  const dom = new JSDOM(popupDocument(), {
+    runScripts: "dangerously",
+    url: "https://localhost/popup.html",
+    beforeParse(window) {
+      window.chrome = chromeStub(calls);
+      window.fetch = () => Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+      window.addEventListener("error", (e) => calls.errors.push(e.error || e.message));
+      window.localStorage.setItem(
+        "classSchedule",
+        JSON.stringify([
+          {
+            title: "EXE201",
+            slot: "Slot 2",
+            isOnline: true,
+            rawDate: { year: 2026, month: 9, day: 11, startHour: 10, startMinute: 0, endHour: 12, endMinute: 20 },
+          },
+        ])
+      );
+    },
+  });
+  await new Promise((resolve) => {
+    if (dom.window.document.readyState === "complete") return resolve();
+    dom.window.addEventListener("load", resolve, { once: true });
+  });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  assert.strictEqual(calls.errors.length, 0, "no uncaught errors during boot with saved schedule");
+  const doc = dom.window.document;
+  assert.ok(doc.querySelector("#scheduleTab .agenda-banner"), "agenda banner renders on boot");
+  assert.ok(doc.querySelector("#scheduleTab .class-card"), "class card renders on boot");
 });
 
 

@@ -807,6 +807,40 @@ html, body {
   gap: 8px;
 }
 
+.agenda-badge-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.agenda-card .view-toggle {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.agenda-card .view-toggle__btn {
+  padding: 4px 8px;
+  min-height: 24px;
+  font-size: 11px;
+}
+
+[data-theme="dark"] .agenda-card .view-toggle {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+[data-theme="dark"] .agenda-card .view-toggle__btn.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
 .agenda-badge {
   display: inline-flex;
   align-items: center;
