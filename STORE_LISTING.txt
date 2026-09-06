@@ -1,6 +1,29 @@
 ================================================================================
-CHROME WEB STORE - WHAT'S NEW IN VERSION 3.6.0 (ENGLISH)
+CHROME WEB STORE - WHAT'S NEW IN VERSION 3.6.5 (ENGLISH)
 [Ready to paste into Chrome Web Store Description / Release Notes]
+================================================================================
+
+WHAT'S NEW IN VERSION 3.6.5:
+
+• WEEK TIMETABLE MATRIX VIEW
+Interactive 7-day (Monday to Sunday) x 6 FPT slots visual grid timetable. Toggle seamlessly between List View and Week Matrix View with a single click, with sticky headers kept in place while scrolling.
+
+• REAL-TIME SLOT STATUS HIGHLIGHTING
+Live visual status for classes: in-progress sessions feature a pulsing border, live indicator dot, and IN CLASS badge; past slots are automatically dimmed and grayscale-filtered to help you stay focused.
+
+• ATTENDANCE TRACKER & 20% BAN GUARD
+Displays detailed per-subject attendance statistics on every class card, including attended count, absent count, absence rate, and the exact remaining absences allowed before reaching FPT University's 20% exam ban threshold.
+
+• RFC 5545 COMPLIANT QR CALENDAR EXPORT
+Added unique UID and DTSTAMP properties to every exported calendar event, fixing mobile calendar batch-sync issues on Apple Calendar and Google Calendar. Added 2-week and all-upcoming export scopes.
+
+• FAP SURVIVAL KIT (KEEP-ALIVE & 1-CLICK SURVEY)
+- Auto Keep-Alive Heartbeat: Automatically refreshes your FAP session every 7 minutes while at least one FAP tab is open, preventing unexpected logouts and lost forms.
+- 1-Click Lecturer Feedback: Floating Dark Glassmorphism toolbar on FAP survey pages that auto-fills 5★ ratings and inserts polite, authentic student feedback comments in one click (manual submit for student review).
+
+
+================================================================================
+CHROME WEB STORE - WHAT'S NEW IN VERSION 3.6.0 (ENGLISH)
 ================================================================================
 
 WHAT'S NEW IN VERSION 3.6.0:
