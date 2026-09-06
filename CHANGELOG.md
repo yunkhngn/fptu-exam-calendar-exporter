@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.6.5] - 2026-09-06
+
+### Added
+- **Week Timetable Matrix (Lịch Tuần)**: Giao diện thời khóa biểu dạng lưới 7 ngày x 6 Slot FPT trực quan, hỗ trợ xem linh hoạt theo tuần, ghim cố định điều hướng không bị che khuất, chuyển đổi tức thì giữa chế độ Danh sách và Lịch tuần.
+- **Slot Status Highlighting**: Nhận diện ca học thời gian thực — viền xanh phát sáng hiệu ứng nhịp thở (`pulse-border`), chấm live nhấp nháy chuyển động và huy hiệu `ĐANG HỌC` cho slot hiện tại; tự động làm mờ và phủ tông xám dịu cho các slot đã qua lịch.
+- **Attendance Tracker & 20% Ban Guard**: Tự động tính toán tổng số buổi có mặt, số buổi vắng, tỷ lệ vắng và số buổi được phép nghỉ còn lại trước khi chạm ngưỡng cấm thi 20% của trường Đại học FPT ngay trên từng thẻ môn học.
+- **FAP Keep-Alive Heartbeat**: Tự động gửi heartbeat chu kỳ mỗi 7 phút khi có tab FAP đang mở để làm mới cookie `ASP.NET_SessionId`, ngăn chặn hoàn toàn việc bị văng đăng nhập và mất form khi đang học tập. Có công tắc Bật/Tắt trong Cài đặt & Tiện ích.
+- **1-Click FAP Lecturer Feedback (Khảo sát giảng viên)**: Thanh công cụ nổi Dark Glassmorphism trên các trang khảo sát FAP (`/Feedback/*`) hỗ trợ đánh giá 5★ toàn bộ câu hỏi và tự động điền nhận xét tích cực, lịch sự trong 1 click.
+- **Enhanced QR Calendar Export**: Bổ sung `UID` và `DTSTAMP` chuẩn RFC 5545 giúp điện thoại di động (Apple Calendar, Google Calendar) nhập đầy đủ tất cả các buổi học mà không bị ghi đè, thêm phạm vi xuất 2 tuần và tất cả.
+
+---
+
 ## [3.6.0] - 2026-09-06
 
 ### Added
