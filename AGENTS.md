@@ -58,10 +58,16 @@ This file defines the project-specific rules, architectural constraints, and eng
 
 ## 5. Release & Packaging Workflow
 
+- **User-Gated Release Lifecycle:**
+  - **No Premature Releases or Packaging:** Do NOT build `fptu-schedule.zip`, create git release tags, or publish GitHub releases during intermediate development. Only package and release when the user explicitly requests or signs off on a release.
+  - **User-Decided Versioning:** The release version number is **strictly decided/approved by the USER** (e.g., v3.6.5). Never unilaterally assume or bump the release version without explicit user instruction.
+- **Professional English & Zero-Emoji Release Documentation:**
+  - All release notes (GitHub releases, `CHANGELOG.md`, `STORE_LISTING.txt`, commit messages for releases) must be written exclusively in **professional English**.
+  - **Strict Zero-Emoji Rule:** Absolutely NO character emojis anywhere in release titles, headers, bullet points, or store listings (e.g., do not use 🚀, 📦, 📅, ⏱️, 🛡️, ⚡). Maintain clean, modern typography using standard markdown (bolding, backticks, bulleted lists).
+  - Structure all changes thoroughly by feature categories (e.g., `Added`, `Changed`, `Fixed`, `Security & Compliance`).
 - **Packaging Command:**
   ```bash
   zip -FS -r fptu-schedule.zip manifest.json *.png popup.html popup.js popup.css background.js content.js lib/
   ```
 - **Version Synchronization:**
-  - When bumping versions, ensure consistency across `manifest.json`, `package.json`, and `CHANGELOG.md`.
-  - Write release notes in professional English, structured by feature categories.
+  - When the user confirms a release version, synchronize consistency across `manifest.json`, `package.json`, `lib/` badges, and `CHANGELOG.md`.
