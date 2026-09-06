@@ -190,6 +190,11 @@ html, body {
   box-shadow: 0 1px 0 var(--border), 0 8px 10px -10px rgba(15, 23, 42, 0.25);
 }
 
+.tab-bar.is-stuck.no-shadow,
+#examList:has(#scheduleTab.active .agenda-banner) .tab-bar.is-stuck {
+  box-shadow: none;
+}
+
 .tab-navigation {
   display: flex;
   gap: 4px;
@@ -779,15 +784,6 @@ html, body {
   margin: 0 -16px 12px;
   padding: 4px 16px 6px;
   background: var(--bg-app);
-  transition: box-shadow 0.15s ease;
-}
-
-.agenda-banner.is-stuck {
-  box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.15);
-}
-
-[data-theme="dark"] .agenda-banner.is-stuck {
-  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.4);
 }
 
 .agenda-card {

@@ -609,12 +609,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // The tab bar is position:sticky; drop a shadow on it only once content
     // is actually scrolling underneath, so it stays flat at rest.
     const tabBar = document.querySelector(".tab-bar");
+    let syncStuck = () => {};
     if (tabBar && examListSection) {
-      const syncStuck = () => {
+      syncStuck = () => {
         const isScrolling = examListSection.scrollTop > 0;
         tabBar.classList.toggle("is-stuck", isScrolling);
-        const banner = document.querySelector(".agenda-banner");
-        if (banner) banner.classList.toggle("is-stuck", isScrolling);
+        const hasStickyBanner = !!document.querySelector("#scheduleTab.active .agenda-banner");
+        tabBar.classList.toggle("no-shadow", isScrolling && hasStickyBanner);
       };
       examListSection.addEventListener("scroll", syncStuck, { passive: true });
       syncStuck();
@@ -622,6 +623,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Mặc định: Lịch học (khớp tab active trên HTML)
     activateTab("schedule");
+    syncStuck();
   }
 
   // Load filter preferences
