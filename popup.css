@@ -771,9 +771,23 @@ html, body {
   border-color: #b91c1c;
 }
 
-/* ---- Today's Agenda Banner ---- */
+/* ---- Today's Agenda Banner (Sticky when scrolling list) ---- */
 .agenda-banner {
-  margin-bottom: 12px;
+  position: sticky;
+  top: 50px;
+  z-index: 4;
+  margin: 0 -16px 12px;
+  padding: 4px 16px 6px;
+  background: var(--bg-app);
+  transition: box-shadow 0.15s ease;
+}
+
+.agenda-banner.is-stuck {
+  box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.15);
+}
+
+[data-theme="dark"] .agenda-banner.is-stuck {
+  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.4);
 }
 
 .agenda-card {

@@ -610,7 +610,12 @@ document.addEventListener("DOMContentLoaded", () => {
     // is actually scrolling underneath, so it stays flat at rest.
     const tabBar = document.querySelector(".tab-bar");
     if (tabBar && examListSection) {
-      const syncStuck = () => tabBar.classList.toggle("is-stuck", examListSection.scrollTop > 0);
+      const syncStuck = () => {
+        const isScrolling = examListSection.scrollTop > 0;
+        tabBar.classList.toggle("is-stuck", isScrolling);
+        const banner = document.querySelector(".agenda-banner");
+        if (banner) banner.classList.toggle("is-stuck", isScrolling);
+      };
       examListSection.addEventListener("scroll", syncStuck, { passive: true });
       syncStuck();
     }
